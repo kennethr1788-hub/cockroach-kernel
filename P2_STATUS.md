@@ -1,6 +1,6 @@
 # P2 Disposable CockroachDB Clean Room
 
-**Status:** `CK_P2_PENDING_JUDGE`
+**Status:** `CK_P2_CLEANROOM_GREEN`
 **Parent gate:** `CK_P1_CONTRACT_GREEN`
 **Started UTC:** 2026-07-25T20:14:09Z
 **Trial completion UTC:** 2026-07-25T20:35:33Z
@@ -30,5 +30,5 @@ matching migration, seed, rollback, process, and residue results.
 
 ## Gate
 
-`CK_P2_CLEANROOM_GREEN` is pending one independent GLM review of the frozen
-trial packet. No later phase may begin before that review.
+`CK_P2_CLEANROOM_GREEN` is issued from the independent GLM `GREEN` receipt in
+`P2_JUDGE_RECEIPT.md`. No P3 work is included in this gate.
