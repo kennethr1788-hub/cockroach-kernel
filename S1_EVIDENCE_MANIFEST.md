@@ -29,5 +29,20 @@
   `S1_SECOND_LIFECYCLE_PREFLIGHT_RECEIPT.md`, SHA-256
   `fa7704775d76c8cfeb32e3a4de7e504304bb12e33dc922dd5a15724952d84a05`;
 - later exact billing recheck: still unavailable (`[]`), not fabricated;
-- final S1 workload evidence: pending;
-- teardown: campaign-scoped running and all-status inventories both `[]`.
+- R3 retry packet SHA-256:
+  `82fc0dcdd38a814e40a39f85c57b1f35948d46792575c7fdd2db24283768ef87`;
+- R3 attempt: one; Pod `wo1iq5wtk04q49`;
+- R3 workload: technical GREEN, 61 receipts and 61 telemetry records;
+- R3 final evidence hash:
+  `7e712179b9b4e6204cfd9a8142cb7b37c4334342221eaca4ece2d060df8b98ef`;
+- R3 evidence archive SHA-256:
+  `72fb147adc9a61b8f6d0fe24539579599928994c1fac1514cb6a754f96d56865`;
+- R3 local evidence tree SHA-256:
+  `dc2cda67c3297c6a52ad00a25412b6621cff32b7fec78098cf027f786ae9e5b4`;
+- R3 secret/private-path scans: no findings;
+- R3 teardown: scoped running and all-status inventory `[]`, Pod get 404;
+- exact provider billing: delayed (`[]`) for both S1 Pod IDs; authenticated
+  console states billing is one hour behind;
+- operator billing decision: Kenneth accepted the visible account-side charge
+  and removed delayed itemization as a project-local blocker;
+- final S1 gate: pending independent review of the completed packet.

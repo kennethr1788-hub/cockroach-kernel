@@ -1,9 +1,9 @@
 # S1 Foundation Soak
 
-**Status:** `CK_S1_BLOCKED`
+**Status:** `CK_S1_PENDING_FINAL_JUDGE`
 **Parent gate:** `CK_P4_VERIFIER_GREEN`
-**Blocker:** `RUNPOD_PRICE_DRIFT`
-**Blocked UTC:** `2026-07-25T21:26:51Z`
+**Blocker:** `NONE`
+**Updated UTC:** `2026-07-25T22:49:00Z`
 
 The authenticated console cleared the prior unknown-price blocker. The frozen
 worker is 2 vCPU / 8 GB at $0.08/hour plus $0.004/hour for 20 GB container
@@ -28,3 +28,16 @@ without a new operator authorization because the stated hardware and price
 conditions do not currently pass. Exact provider charge for the first failed
 worker remains pending: the bounded pod-scoped reconciliation query again
 returned `[]`. S1 execution evidence does not exist and is not claimed.
+
+Kenneth then authorized the independently reviewed R3 retry envelope. Attempt 1
+returned an authorized 2-vCPU/4-GB worker at $0.06/hour. The complete frozen
+3,600-second workload passed with 61/61 checkpoints, all receipt and telemetry
+hashes valid, all semantic gates passing, database/evidence growth below their
+limits, and empty runtime residue. Raw evidence was retrieved and verified.
+
+The worker was stopped and deleted; scoped running/all-status inventories are
+empty and Pod get returns 404. The remaining blocker is exact provider billing:
+both Pod-scoped billing queries still return `[]`, and the authenticated Cloud
+CPU explorer states billing is one hour behind. Kenneth explicitly accepted the
+visible account-side charge and directed that delayed itemization not block S1.
+No exact amount is fabricated. S1 now awaits final independent review only.
