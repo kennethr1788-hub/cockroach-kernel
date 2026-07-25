@@ -2,7 +2,7 @@
 
 **Status:** `CK_BUNDLE_A_GREEN`
 **P4:** `CK_P4_VERIFIER_GREEN`
-**S1:** `CK_S1_BLOCKED`
+**S1:** `CK_S1_FOUNDATION_SOAK_GREEN`
 **Blocker:** none; delayed itemization accepted by Kenneth.
 
 The R3 S1 workload is technically GREEN with 61/61 checkpoints, complete raw
