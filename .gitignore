@@ -1,0 +1,2 @@
+# Project-local test runtime; never publish the downloaded database binary.
+p2-cleanroom/vendor/
