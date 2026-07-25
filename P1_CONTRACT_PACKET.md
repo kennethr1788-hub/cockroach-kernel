@@ -1,6 +1,6 @@
 # Cockroach Kernel — P1 Contract Packet
 
-**Status:** `P1_PACKET_FROZEN_PENDING_INDEPENDENT_JUDGE`
+**Status:** `CK_P1_CONTRACT_GREEN`
 **Project identity:** Cockroach Kernel (one project; internal capabilities are
 not separately named products)
 **Created UTC:** 2026-07-25T19:43:35Z
@@ -88,7 +88,7 @@ Worker output cannot define authority or self-approve.
 - `CK_P0_RULES_GREEN`: GREEN (`e81948d`)
 - `CK_P1_VERTICAL_SLICE_GREEN`: OPEN — contract frozen; execution evidence absent
 - `CK_P1_TOOL_SELECTION_GREEN`: OPEN — selection frozen; meaningful-use evidence absent
-- `CK_P1_CONTRACT_GREEN`: BLOCKED pending independent judge review of this packet
+- `CK_P1_CONTRACT_GREEN`: GREEN — independent GLM review receipt `P1_JUDGE_RECEIPT.md`
 
 No implementation, deployment, spend, or submission is authorized by this
 packet alone.
