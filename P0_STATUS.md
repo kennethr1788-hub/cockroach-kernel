@@ -7,7 +7,8 @@
 ## Rules source
 
 - Official rules: <https://cockroachdb-ai.devpost.com/rules>
-- Read-only snapshot SHA-256: `68d0fd32095eb66fc13059077a34b7af7b2a621e189da4d819df2a34d384a074`
+- Read-only snapshot SHA-256: `54eb1092e47cb59cdec8848fd7da9e76e2a48787a9694751e68a6ed0b4b5cbad`
+- Snapshot rechecked UTC: `2026-07-25T19:29:27Z`
 - The source states that the project must be an agentic application using CockroachDB as its persistent memory layer, deployed on AWS, with meaningful integration.
 - Submission deadline shown by the official source: 2026-08-18 5:00 PM EDT.
 
@@ -24,23 +25,19 @@ The following facts are not available for model attestation:
 
 - entrant eligibility and supported-country status;
 - conflict exclusions;
-- Devpost registration;
-- team/submitter authority;
-- ownership and permissions for code, dependencies, AWS/CockroachDB accounts, data, and media;
-- prior-work disclosure and publicity/media permissions;
-- acceptance of the AWS deployment, free judge-access, and testing path.
+- acceptance of the declared AWS/CockroachDB platform, clean-clone test path, free judging access, and runnable-demo path.
 
 Until Kenneth supplies explicit confirmations and evidence locations, `CK_P0_RULES_GREEN` cannot be issued and implementation gates cannot be claimed.
 
-## Item 7 attestation
+## Registration and item 7 final attestation
 
-**Status:** `CHECKED_WITH_LIMITATIONS`
-**UTC:** `2026-07-25T18:32:34Z`
-**Evidence/source:** Kenneth's explicit confirmation in the current Codex conversation.
+**Status:** `CHECKED`
+**UTC:** `2026-07-25T19:27:09Z`
+**Evidence/source:** Logged-in Devpost account, current Codex conversation, and Kenneth's independently reviewed project/license/media records.
 
-Kenneth confirms that Cockroach Kernel is a new project created during the hackathon submission period; no pre-existing source code, private data, credentials, or project components were incorporated; earlier brainstorming was conceptual context only; and submitted code, schemas, fixtures, integrations, and media were created for this project during the submission period. Third-party dependencies and media remain subject to license and permission verification.
+Kenneth confirms that his Devpost account is registered and joined to the CockroachDB × AWS Hackathon. He also confirms that Cockroach Kernel is new work created during the submission period; no pre-existing source code, private data, credentials, or project components were incorporated; all dependencies, APIs, AWS/CockroachDB services, media, music, trademarks, and other assets are used with required licenses or permissions; and the publicity, video, and media-use requirements are accepted.
 
-This does not close the separate license/media-rights evidence requirement.
+**Limitation:** None known.
 
 ## Items 1–6 consolidated attestation
 
