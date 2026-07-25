@@ -13,7 +13,10 @@
 - Linux runtime binary SHA-256: `97a8836b3e816745ba698f47616ff5038ba55f5e252a2959924e9e2d41014d7f`;
 - secret/private-path scans: no findings;
 - short local driver exercise: semantic checkpoint passed and runtime residue was empty; not S1 duration evidence;
-- worker/pod ID: none;
-- spend: `$0`;
+- worker/pod ID: `48bqdill8w3vt0`, stopped and deleted;
+- returned worker: 2 vCPU / 4 GB, `$0.06/hour`, mismatched frozen RAM/price;
+- payload uploaded: no;
+- workload started: no;
+- immediate exact billing result: unavailable (`[]`), not fabricated;
 - final S1 workload evidence: pending;
-- teardown: no worker created at freeze.
+- teardown: campaign-scoped running and all-status inventories both `[]`.
