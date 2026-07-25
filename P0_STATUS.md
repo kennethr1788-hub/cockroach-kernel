@@ -32,3 +32,12 @@ The following facts are not available for model attestation:
 
 Until Kenneth supplies explicit confirmations and evidence locations, `CK_P0_RULES_GREEN` cannot be issued and implementation gates cannot be claimed.
 
+## Item 7 attestation
+
+**Status:** `CHECKED_WITH_LIMITATIONS`
+**UTC:** `2026-07-25T18:32:34Z`
+**Evidence/source:** Kenneth's explicit confirmation in the current Codex conversation.
+
+Kenneth confirms that Cockroach Kernel is a new project created during the hackathon submission period; no pre-existing source code, private data, credentials, or project components were incorporated; earlier brainstorming was conceptual context only; and submitted code, schemas, fixtures, integrations, and media were created for this project during the submission period. Third-party dependencies and media remain subject to license and permission verification.
+
+This does not close the separate license/media-rights evidence requirement.
