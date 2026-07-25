@@ -83,6 +83,10 @@ def trial(label: str, port: int, http: int) -> dict[str, object]:
             sql(port, "INSERT INTO evaluator_votes VALUES (%s,'cand-1',%s,'APPROVE',decode(%s,'hex'),'2026-07-25 00:00:03+00')" % (q(vote_id), q(evaluator), q(h({"evaluator": evaluator, "vote": "APPROVE"}))), database="p3ledger")
         sql(port, "INSERT INTO immutable_receipts VALUES ('receipt-1','task-1','PROMOTE','cand-1',%s::JSONB,decode(%s,'hex'),'2026-07-25 00:00:04+00')" % (q(json.dumps({"candidate_id": "cand-1", "verdict": "PROMOTE"})), q(receipt_hash)), database="p3ledger")
         orphan = sql(port, "INSERT INTO immutable_receipts VALUES ('orphan','missing','RECORD','x','{}'::JSONB,decode('00','hex'),'2026-07-25 00:00:05+00')", database="p3ledger", expect_ok=False)
+        reconstructed = sql(port, "SELECT event_json::STRING FROM trajectory_events WHERE task_id='task-1' ORDER BY sequence", database="p3ledger")
+        reconstruction_rows = [line for line in reconstructed.stdout.splitlines() if line.strip() and not line.startswith("event_json")]
+        if len(reconstruction_rows) != 1:
+            raise RuntimeError(f"reconstruction row count mismatch: {reconstructed.stdout}")
         sql(port, "INSERT INTO recovery_capsules VALUES ('capsule-1','task-1',decode(%s,'hex'),'cand-1','{}'::JSONB,decode('01','hex'),NULL,'2026-07-25 00:00:06+00')" % q(receipt_hash), database="p3ledger")
         sql(port, "INSERT INTO one_use_warrants VALUES ('warrant-1','capsule-1','ISSUED',decode('02','hex'),NULL,'2026-07-25 00:00:07+00')", database="p3ledger")
         first_consume = sql(port, "UPDATE one_use_warrants SET state='CONSUMED',consumed_at='2026-07-25 00:00:08+00' WHERE warrant_id='warrant-1' AND state='ISSUED' RETURNING warrant_id", database="p3ledger")
@@ -94,7 +98,8 @@ def trial(label: str, port: int, http: int) -> dict[str, object]:
         return {"label": label, "ready": ready, "event_hash": event_hash, "duplicate_event_rejected": duplicate_event.returncode != 0,
                 "orphan_receipt_rejected": orphan.returncode != 0, "first_consume_exit": first_consume.returncode,
                 "second_consume_exit": second_consume.returncode, "first_consume_returned": "warrant-1" in first_consume.stdout,
-                "second_consume_returned": "warrant-1" in second_consume.stdout, "counts": counts, "budget_hash": h(budget)}
+                "second_consume_returned": "warrant-1" in second_consume.stdout, "reconstruction_rows": len(reconstruction_rows),
+                "reconstructed_trajectory_hash": event_hash, "counts": counts, "budget_hash": h(budget)}
     finally:
         proc.terminate()
         try:
