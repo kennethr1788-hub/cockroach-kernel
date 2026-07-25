@@ -7,8 +7,10 @@
 - `ALLOWED_SCOPE`: this repository and `p2-cleanroom/`; synthetic fixtures only
 - `FORBIDDEN_SCOPE`: HOME runtime, live memory, credentials, client data, live
   clusters, AWS, RunPod, public remotes, and unrelated repositories
-- `RESULT`: `OPEN`
+- `RESULT`: `BLOCKED`
+- `BLOCKER`: `LOCAL_COCKROACH_RUNTIME_UNAVAILABLE`
 - `EVIDENCE`: `P2_STATUS.md`, `p2-cleanroom/`
-- `NEXT_GATE`: `CK_P2_CLEANROOM_GREEN`
+- `NEXT_GATE`: restore a verified local CockroachDB runtime, then rerun the
+  bounded clean-clone trials from fresh roots
 - `TEARDOWN`: not yet executed; no external resources created
 - `UTC_CREATED`: `2026-07-25T20:14:09Z`
