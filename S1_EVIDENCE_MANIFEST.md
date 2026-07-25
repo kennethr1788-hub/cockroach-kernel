@@ -45,4 +45,7 @@
   console states billing is one hour behind;
 - operator billing decision: Kenneth accepted the visible account-side charge
   and removed delayed itemization as a project-local blocker;
-- final S1 gate: pending independent review of the completed packet.
+- final packet SHA-256:
+  `46e6a9081c949d586d9ea4812a31e6baf033342bef380bdf4a8ed50e73cf25b1`;
+- final independent GLM 5.2 verdict: GREEN;
+- final S1 gate: `CK_S1_FOUNDATION_SOAK_GREEN`.

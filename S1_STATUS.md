@@ -1,9 +1,9 @@
 # S1 Foundation Soak
 
-**Status:** `CK_S1_PENDING_FINAL_JUDGE`
+**Status:** `CK_S1_FOUNDATION_SOAK_GREEN`
 **Parent gate:** `CK_P4_VERIFIER_GREEN`
 **Blocker:** `NONE`
-**Updated UTC:** `2026-07-25T22:49:00Z`
+**Green UTC:** `2026-07-25T22:52:29Z`
 
 The authenticated console cleared the prior unknown-price blocker. The frozen
 worker is 2 vCPU / 8 GB at $0.08/hour plus $0.004/hour for 20 GB container
@@ -40,4 +40,8 @@ empty and Pod get returns 404. The remaining blocker is exact provider billing:
 both Pod-scoped billing queries still return `[]`, and the authenticated Cloud
 CPU explorer states billing is one hour behind. Kenneth explicitly accepted the
 visible account-side charge and directed that delayed itemization not block S1.
-No exact amount is fabricated. S1 now awaits final independent review only.
+No exact amount is fabricated. S1 then awaited final independent review only.
+
+Independent GLM 5.2 returned GREEN on completed packet SHA-256
+`46e6a9081c949d586d9ea4812a31e6baf033342bef380bdf4a8ed50e73cf25b1`.
+S1 is GREEN. No later phase was started.
