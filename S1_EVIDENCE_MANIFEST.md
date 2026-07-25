@@ -18,5 +18,16 @@
 - payload uploaded: no;
 - workload started: no;
 - immediate exact billing result: unavailable (`[]`), not fabricated;
+- second-lifecycle authorization: received, conditional on exact 2 vCPU / 4 GB
+  at no more than `$0.06/hour` compute and `$0.065/hour` total active rate;
+- second-lifecycle authenticated quote: smallest offered class was 2 vCPU /
+  8 GB at `$0.08/hour`; authorized 2 vCPU / 4 GB class was not shown;
+- second worker created: no; mandatory `RUNPOD_PRICE_DRIFT` preflight stop;
+- second-lifecycle packet/judge: not created or requested because the price gate
+  failed first;
+- second-lifecycle preflight receipt:
+  `S1_SECOND_LIFECYCLE_PREFLIGHT_RECEIPT.md`, SHA-256
+  `fa7704775d76c8cfeb32e3a4de7e504304bb12e33dc922dd5a15724952d84a05`;
+- later exact billing recheck: still unavailable (`[]`), not fabricated;
 - final S1 workload evidence: pending;
 - teardown: campaign-scoped running and all-status inventories both `[]`.
