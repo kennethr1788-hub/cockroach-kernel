@@ -41,3 +41,13 @@ Until Kenneth supplies explicit confirmations and evidence locations, `CK_P0_RUL
 Kenneth confirms that Cockroach Kernel is a new project created during the hackathon submission period; no pre-existing source code, private data, credentials, or project components were incorporated; earlier brainstorming was conceptual context only; and submitted code, schemas, fixtures, integrations, and media were created for this project during the submission period. Third-party dependencies and media remain subject to license and permission verification.
 
 This does not close the separate license/media-rights evidence requirement.
+
+## Items 1–6 consolidated attestation
+
+**Status:** `CHECKED_WITH_LIMITATIONS`
+**UTC:** `2026-07-25T19:16:38Z`
+**Evidence/source:** Kenneth's logged-in Devpost account and explicit statement in the current Codex conversation.
+
+Kenneth confirms items 1–6 exactly as previously stated. No separate documentation is available or required beyond his account and this explicit attestation.
+
+**Limitations:** Items 2, 4, and 6 are self-attested and not independently verifiable from the account. The Devpost account visibly supports the United States location, birth year 1990, a CockroachDB hackathon draft, and a solo roster showing Kenneth Ruedas only; the account's visible homepage still showed a `Join hackathon` link, so registration remains supported by the draft plus attestation rather than independently resolved by the page badge.
