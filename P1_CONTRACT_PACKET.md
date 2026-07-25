@@ -11,8 +11,8 @@ not separately named products)
 - Correction layer: `COCKROACH_KERNEL_PLAN_CORRECTIONS_20260725_R1.md`
 - Stage 1 assignments: `COCKROACH_KERNEL_STAGE1_BUILDER_ASSIGNMENTS_20260725_R1.md`
 - Rules URL: https://cockroachdb-ai.devpost.com/rules
-- Rules snapshot SHA-256: `d3a96ebc72aea5b7052ef44ae2ef74810745feb9048c1212372d3e94bb223459`
-- Rules rechecked UTC: `2026-07-25T19:35:00Z`
+- Rules snapshot SHA-256: `6032e19ff30e254ec7a8ca73e3da42cccb83d7ec5b42114c1067fdbef6a55aa6`
+- Rules rechecked UTC: `2026-07-25T19:45:06Z`
 
 Legacy planning labels are excluded from this contract. The submission is one
 new project; prior concepts are not implementation or evidence.
