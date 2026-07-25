@@ -1,16 +1,14 @@
 # HUMAN_ACTION_REQUIRED
 
-**Gate:** `CK_P0_BLOCKED`
+**Gate:** `CK_P0_RULES_GREEN`
 **Last valid state:** disposable sandbox created; no implementation or RunPod activity
 
-Kenneth has explicitly confirmed items 1–6 and has now explicitly confirmed Devpost registration and item 7 in the current conversation. The final item-7 evidence source is his logged-in Devpost account, the current conversation, and his independently reviewed project/license/media records. Items 2, 4, and 6 remain self-attested and not independently verifiable from the account.
+Kenneth has explicitly confirmed all eight human-owned P0 items in the current conversation. The final item-8 evidence source is his explicit confirmation, project plan, testing instructions, and the official competition rules. Items 2, 4, and 6 remain self-attested and not independently verifiable from the account.
 
-Remaining P0 evidence requirements:
-
-8. Kenneth's explicit acceptance of the declared AWS/CockroachDB platform, clean-clone test path, free judging access through judging, and runnable-demo path for Cockroach Kernel.
+No human-owned P0 checklist item remains open.
 
 No model, judge, cached context, or browser session may close these gates.
 
-**Rules recheck:** official rules re-read and snapshot hash recomputed at `2026-07-25T19:29:27Z`; SHA-256 `54eb1092e47cb59cdec8848fd7da9e76e2a48787a9694751e68a6ed0b4b5cbad`.
+**Rules recheck:** official rules re-read and snapshot hash recomputed at `2026-07-25T19:33:48Z`; SHA-256 `7ca34c638eb8cf9da9a73870caa61373891372e91f56262e243d8bc51812c427`.
 
-**Resume condition:** obtain the remaining item-8 confirmation with evidence location, UTC timestamp, and limitations; then re-read the official rules and recompute the snapshot hash before proceeding.
+**Resume condition:** P0 human gates are closed. The next allowed action is the separately gated P1 contract phase; do not infer P1 completion from this file.

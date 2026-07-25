@@ -7,9 +7,9 @@
 - `ALLOWED_SCOPE`: this sandbox only; synthetic fixtures only
 - `SUCCESS_CRITERIA`: P0 facts and rules snapshot recorded without inference
 - `KILL_LINE`: any missing human-owned fact, private-path access, credential request, or scope expansion
-- `RESULT`: `BLOCKED`
+- `RESULT`: `GREEN`
 - `EVIDENCE_PATHS`: `P0_STATUS.md`, `HUMAN_ACTION_REQUIRED.md`
 - `RESIDUE_SCAN`: no application files or external resources created
 - `TEARDOWN_STATUS`: sandbox retained as blocked evidence
-- `NEXT_GATE`: `CK_P0_RULES_GREEN` after human confirmation and fresh rules hash
+- `NEXT_GATE`: P1 contract phase, after a new phase checkpoint and packet hash
 - `UTC_CREATED`: `2026-07-25T18:23:29Z`
