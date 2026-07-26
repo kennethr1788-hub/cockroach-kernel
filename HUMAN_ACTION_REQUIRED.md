@@ -51,9 +51,9 @@ Lambda Functions and Service Quotas in `us-west-2` without signup redirect.
 No password, MFA, token, cookie, access key, account identifier, or payment
 detail was recorded.
 
-No AWS account-setup human action remains. The next expected human gate is the
-Managed MCP OAuth screen, where Kenneth alone must grant read-only access
-restricted to `cockroach-kernel`. The build must stop when that gate is reached.
+No AWS account-setup human action remains. The later Managed MCP OAuth gate was
+subsequently authorized, exercised read-only, revoked, and closed as recorded
+in the final section of this file.
 
 Offline runway completed at `2026-07-26T13:56:37Z`:
 
@@ -86,34 +86,32 @@ Resume command:
 Resume P5 from P5_STATUS.md and P5_KIMI_OAUTH_RECEIPT.md. Revalidate Git, routes, hashes, and worktrees; rerun the bounded Kimi assignment and a smaller Vibe assignment; do not advance to P6 until P5 mechanical tests and GLM+AGY judges are GREEN on one packet hash.
 ```
 
-# Active P9 Managed MCP OAuth Gate
+# Resolved P9 Managed MCP OAuth Gate
 
-- `BLOCKER`: `MCP_OAUTH_HUMAN_GATE`
+- `BLOCKER`: `RESOLVED_AND_REVOKED`
 - `LAST_GREEN_EXECUTION_GATE`: `CK_P8_GOLDEN_GREEN`
 - `P9_AWS_STATE`: `GREEN_THROUGH_MCP_HUMAN_GATE`
 - `P9_AWS_EVIDENCE_ARCHIVE_SHA256`: `68d7288acca74494f63d37db27d14a5073dd9ebebfef51cd708c874f082fcf6c`
-- `CURRENT_CHECKPOINT`: `a2fac49a5b666df548ec67069d16dff416722b93`
-- `UTC_RECORDED`: `2026-07-26T19:54:00Z`
+- `CURRENT_CHECKPOINT`: `P9_MCP_LIVE_PROOF_RECEIPT_R1.md`
+- `UTC_RECORDED`: `2026-07-26T20:20:11Z`
 
-The CockroachDB Cloud Connect dialog is open on the Codex Managed MCP OAuth
-instructions. Kenneth must personally authorize **read-only** access restricted
-to only the existing `cockroach-kernel` cluster. Do not select write access,
-authorize another cluster, paste a password/token/API key, or bypass the OAuth
-flow.
+Kenneth explicitly authorized the bounded read-only single-cluster OAuth proof.
+The visible consent state had Read Data checked and Write Data unchecked. The
+exact SELECT completed against database `cockroach_kernel`; the exact UPDATE
+probe was refused by the SELECT-only MCP tool surface. The returned row set was
+empty, so receipt linkage remains unproved.
 
-After Kenneth gives explicit approval in this conversation, Icarus may launch
-the normal `codex mcp login` flow using only a temporary project-scoped MCP
-configuration. Do not edit `~/.codex/config.toml`. Codex may place the OAuth
-grant in its normal secure credential store; no credential bytes may be read,
-printed, logged, committed, or transferred. After the bounded read-only MCP
-proof, logout and remove the temporary project configuration.
+The OAuth grant has been revoked, post-cleanup auth status is `not_logged_in`,
+the temporary project configuration is removed, and the global Codex config
+hash is unchanged. No credential bytes were read or recorded.
 
-Exact confirmation required:
+The prior confirmation was received and consumed:
 
 ```text
 I authorize CockroachDB Managed MCP OAuth for read-only access to only the cockroach-kernel cluster. I understand Codex may securely store the temporary OAuth grant, and I authorize logout and cleanup after the bounded P9 proof.
 ```
 
-After confirmation, continue only with the bounded read-only MCP query and
-audit trace, then freeze the final P9 packet and obtain GLM plus AGY GREEN. Do
-not start S3 until `CK_P9_INTEGRATION_GREEN` is real.
+No human action is currently useful. First build and run the missing two-trial
+live P9 coordinator evidence. Only after non-empty receipt linkage exists will
+a fresh one-time read-only OAuth confirmation be required for the final linked
+query. Do not start S3 until `CK_P9_INTEGRATION_GREEN` is real.

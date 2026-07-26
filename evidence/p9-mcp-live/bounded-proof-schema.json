@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "server",
+    "operations_attempted",
+    "read_query_exact",
+    "read_succeeded",
+    "read_row_count",
+    "read_result_sha256",
+    "write_probe_exact",
+    "write_denied",
+    "write_denial_summary",
+    "credential_material_observed",
+    "unexpected_tool_used",
+    "limitations"
+  ],
+  "properties": {
+    "status": {"type": "string", "enum": ["GREEN", "BLOCKED"]},
+    "server": {"type": "string", "const": "cockroachdb-cloud"},
+    "operations_attempted": {"type": "integer", "minimum": 0, "maximum": 2},
+    "read_query_exact": {"type": "boolean"},
+    "read_succeeded": {"type": "boolean"},
+    "read_row_count": {"type": ["integer", "null"], "minimum": 0, "maximum": 1},
+    "read_result_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+    "write_probe_exact": {"type": "boolean"},
+    "write_denied": {"type": "boolean"},
+    "write_denial_summary": {"type": ["string", "null"], "maxLength": 256},
+    "credential_material_observed": {"type": "boolean"},
+    "unexpected_tool_used": {"type": "boolean"},
+    "limitations": {"type": "array", "maxItems": 8, "items": {"type": "string", "maxLength": 256}}
+  }
+}

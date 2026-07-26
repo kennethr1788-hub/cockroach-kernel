@@ -2,16 +2,16 @@
 
 - `CURRENT_PHASE`: `P9_LIVE_INTEGRATION_AUTHORIZED`
 - `LAST_GREEN_GATE`: `CK_P8_GOLDEN_GREEN`
-- `NEXT_ALLOWED_ACTION`: Kenneth authorizes Managed MCP OAuth read-only access to only cockroach-kernel; then execute bounded MCP read-only proof and final P9 judges
+- `NEXT_ALLOWED_ACTION`: freeze and implement only the missing P9 live evidence coordinator/harness; run two distinct complete synthetic vertical-slice trials before requesting a fresh one-time linked MCP proof
 - `FORBIDDEN_ACTIONS`: S3 before P9 GREEN; RunPod before S3 preflight GREEN; P10 or later; public actions; release; submission; HOME/live-memory mutation; credential exposure
-- `CURRENT_COMMIT`: `eb427eb11cffa642e83338105e7c6fa56de43b38`
-- `PENDING_BLOCKERS`: Managed MCP OAuth read-only single-cluster scope requires Kenneth; bounded live MCP proof and final P9 GLM plus AGY packet missing
+- `CURRENT_COMMIT`: `27fa9bf830e8340296f083b0b48e14c89b618a42`
+- `PENDING_BLOCKERS`: live Managed MCP read returned zero rows; canonical two distinct complete P9 live vertical-slice trials and non-empty receipt linkage are missing; final P9 packet and GLM plus AGY reviews are not ready
 - `REQUIRED_JUDGE_STATE`: P9 final requires GLM plus AGY on one frozen hash; S3 preflight requires GLM plus Claude; S3 final requires GLM plus Claude plus AGY
 - `REPLACEMENT_AUTHORIZATION_SHA256`: `7661fd8de8284cfd69dfcf584f05e6b0584bb736047e626d594a4595047e486e`
 - `FINAL_PACKET_SHA256`: `c7de73f394151f5cc850cf085a32140e74887bf2873a37448a056966cc8f2378`
 - `P8_STATUS`: `CK_P8_GOLDEN_GREEN`
 - `BAND_B_STATUS`: `CK_BAND_B_GREEN`
-- `P9_STATUS`: `P9_PREMUTATION_GREEN; CK_P9_INTEGRATION_GREEN remains blocked`
+- `P9_STATUS`: `MCP read-only boundary GREEN and revoked; CK_P9_INTEGRATION_GREEN blocked on missing live vertical-slice evidence`
 - `P9_OFFLINE_PACKET_SHA256`: `725f8edf8487a9a34572b2315eab795318a74a7ee0ebf0849e5f982be4468e7d`
 - `P9_OFFLINE_JUDGE_STATE`: `P9_OFFLINE_ARCHITECTURE_GREEN`
 - `P9_PREMUTATION_PACKET_SHA256`: `8b36c7a3f0e10d7ce7654656a8288a4a5763d1dae330fe5eeeff4658079c3b62`
@@ -22,6 +22,8 @@
 - `P9_AWS_RETRY_R2_JUDGE_STATE`: `GLM_5_2_GREEN`
 - `P9_AWS_LIVE_STATE`: `GREEN_THROUGH_MCP_HUMAN_GATE`
 - `P9_AWS_EVIDENCE_ARCHIVE_SHA256`: `68d7288acca74494f63d37db27d14a5073dd9ebebfef51cd708c874f082fcf6c`
-- `LATEST_CHECKPOINT`: `P9_AWS_LIVE_RECEIPT_R1.md`
+- `P9_MCP_FINAL_EVENTS_SHA256`: `3baf276f0c18dd53c4ef0ea695dc59176a0bdccb858da09adade23524bdc72a5`
+- `P9_MCP_AUTH_STATE`: `LOGGED_OUT_AND_TEMP_CONFIG_REMOVED`
+- `LATEST_CHECKPOINT`: `P9_MCP_LIVE_PROOF_RECEIPT_R1.md`
 - `P9_S3_AUTHORIZATION_PROMPT`: `COCKROACH_KERNEL_P9_S3_EXECUTION_PROMPT_20260726_R2.md`
 - `P9_S3_AUTHORIZATION_SHA256`: `cb46e382f98d9a4d52a882a3d35f1b0ae4db9047e07f713d2212196dc3204214`
