@@ -1,7 +1,7 @@
 # S2 Status
 
-- `STATUS`: `S2_REPLACEMENT_PREFLIGHT`
-- `BLOCKER`: `REPLACEMENT_PREFLIGHT_OPEN`
+- `STATUS`: `S2_REPLACEMENT_PREFLIGHT_GREEN`
+- `BLOCKER`: `NONE_BEFORE_CREATION_SLOT`
 - `LAST_GREEN_GATE`: `CK_P7_RECOVERY_GREEN`
 - `TARGET_GATE`: `CK_S2_RECOVERY_SOAK_GREEN`
 - `LOCAL_SMOKE`: `R3_GREEN`
@@ -24,3 +24,6 @@ authorization bound to SHA-256
 `7661fd8de8284cfd69dfcf584f05e6b0584bb736047e626d594a4595047e486e`.
 No new worker may be created until the machine-readable hash-custody record and
 replacement packet are frozen and GLM plus Claude return GREEN on the same hash.
+Those requirements are now satisfied on packet SHA-256
+`b072143dd3ba99250b4abccc171a6640efd644819fd46afb383a007ff6a81a53`.
+The next allowed action is the first still-open frozen creation slot.
