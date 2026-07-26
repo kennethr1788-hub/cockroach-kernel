@@ -57,6 +57,14 @@ Required evidence to resume live P9:
 3. No paid support plan or unbounded service commitment is introduced without
    a separate explicit authorization.
 
+Offline runway completed at `2026-07-26T13:56:37Z`:
+
+- `P9_OFFLINE_RUNWAY_READY`
+- packet SHA-256
+  `725f8edf8487a9a34572b2315eab795318a74a7ee0ebf0849e5f982be4468e7d`
+- independent state `P9_OFFLINE_ARCHITECTURE_GREEN`
+- live state remains `CK_P9_BLOCKED`
+
 Resume command:
 
 ```text
