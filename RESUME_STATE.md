@@ -1,9 +1,10 @@
 # Resume State
 
-- `CURRENT_PHASE`: `S2_BLOCKED_AFTER_UPLOAD`
+- `CURRENT_PHASE`: `S2_REPLACEMENT_PREFLIGHT`
 - `LAST_GREEN_GATE`: `CK_P7_RECOVERY_GREEN`
-- `NEXT_ALLOWED_ACTION`: Kenneth must explicitly authorize one replacement S2 campaign; then revise lifecycle deadlines and re-run GLM plus Claude on the new exact packet
-- `FORBIDDEN_ACTIONS`: any replacement S2 worker under the exhausted R3 authorization; P8 or later; AWS; public actions; HOME/live-memory mutation
-- `CURRENT_COMMIT`: `9380020c415cfb7f4adeb9928b5fea635487985d`
-- `PENDING_BLOCKERS`: executor used a stale recalled binary hash after upload and prematurely deleted the valid worker; no replacement is authorized
-- `REQUIRED_JUDGE_STATE`: after fresh operator authorization and revised packet, GLM and Claude GREEN on the same exact preflight hash before replacement creation
+- `NEXT_ALLOWED_ACTION`: freeze machine-readable runtime hashes and a replacement S2 packet, then obtain GLM plus Claude GREEN on one exact hash
+- `FORBIDDEN_ACTIONS`: replacement worker creation before the new same-hash preflight gate; P8 or later; AWS; public actions; HOME/live-memory mutation
+- `CURRENT_COMMIT`: `f763685183a6abc07ff1f587433da79b0c5fa8ad`
+- `PENDING_BLOCKERS`: replacement preflight packet and required GLM plus Claude verdicts are open
+- `REQUIRED_JUDGE_STATE`: GLM and Claude GREEN on the same exact replacement-preflight packet before worker creation
+- `REPLACEMENT_AUTHORIZATION_SHA256`: `7661fd8de8284cfd69dfcf584f05e6b0584bb736047e626d594a4595047e486e`

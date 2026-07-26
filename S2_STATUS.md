@@ -1,7 +1,7 @@
 # S2 Status
 
-- `STATUS`: `CK_S2_BLOCKED`
-- `BLOCKER`: `EXECUTOR_USED_STALE_BINARY_HASH_AFTER_UPLOAD`
+- `STATUS`: `S2_REPLACEMENT_PREFLIGHT`
+- `BLOCKER`: `REPLACEMENT_PREFLIGHT_OPEN`
 - `LAST_GREEN_GATE`: `CK_P7_RECOVERY_GREEN`
 - `TARGET_GATE`: `CK_S2_RECOVERY_SOAK_GREEN`
 - `LOCAL_SMOKE`: `R3_GREEN`
@@ -19,4 +19,8 @@ matched. The executor then compared the extracted binary to a stale hash from
 resumed summary data instead of the authoritative receipt and prematurely
 deleted the worker. The authoritative hash and remote hash were identical.
 Because upload had begun, retry authority had expired. No replacement or second
-campaign is authorized without fresh explicit operator authorization.
+campaign was authorized under R3. Kenneth has now supplied explicit replacement
+authorization bound to SHA-256
+`7661fd8de8284cfd69dfcf584f05e6b0584bb736047e626d594a4595047e486e`.
+No new worker may be created until the machine-readable hash-custody record and
+replacement packet are frozen and GLM plus Claude return GREEN on the same hash.
