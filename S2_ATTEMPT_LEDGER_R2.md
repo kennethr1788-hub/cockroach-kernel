@@ -1,0 +1,27 @@
+# S2 Replacement Attempt Ledger R2
+
+## Attempt 1
+
+- `ATTEMPT`: `1`
+- `POD_ID`: `m6sj0mkio2yc4y`
+- `POD_NAME`: `ck-s2-20260726-r2-a01`
+- `CREATED_UTC`: `2026-07-26T03:20:25.248Z`
+- `RESULT`: `CAMPAIGN_READY`
+- `SHAPE`: `2 vCPU / 4 GiB RAM / 0 GPU`
+- `IMAGE`: `runpod/base:1.0.2-ubuntu2204`
+- `CONTAINER_DISK_GB`: `20`
+- `PERSISTENT_OR_NETWORK_VOLUME_GB`: `0`
+- `COMPUTE_RATE_USD_PER_HOUR`: `0.06`
+- `MAX_ACTIVE_RATE_USD_PER_HOUR`: `0.085`
+- `STOP_AFTER`: `2026-07-26T11:10:00Z`
+- `TERMINATE_AFTER`: `2026-07-26T11:20:00Z`
+- `TRANSFER_ARCHIVE_SHA256`: `f080f48a7c68271af067b751ca8943ffa5c9d3350be33e3382c81cad46a9f2eb`
+- `TRANSFER_MANIFEST_SHA256`: `c3cc695f261bfef6a1ccbd8aa86e688d4f9bcdb06c2361cd50dbcb9ec96cd1c0`
+- `MANIFEST_LINES`: `61`, all GREEN
+- `RUNTIME_ARCHIVE_SHA256`: `3eca6d7bc6fefa3ba0847e89733fc69f61226c80b8fab0af6578e1be672f27d3`
+- `RUNTIME_BINARY_SHA256`: `97a8836b3e816745ba698f47616ff5038ba55f5e252a2959924e9e2d41014d7f`
+- `GUARD_STATE`: `BOUND_AND_HEARTBEATING`
+- `UNRELATED_RESOURCE_TOUCHED`: `NO`
+
+No retry has been consumed beyond attempt 1. No other S2 worker exists.
+Production retry authority ends when the six-hour process starts.
