@@ -13,33 +13,29 @@ No model, judge, cached context, or browser session may close these gates.
 
 **Resume condition:** P0 human gates are closed. The next allowed action is the separately gated P1 contract phase; do not infer P1 completion from this file.
 
-# P9 Cloud Authentication Action
+# Resolved P9 Cloud Authentication Action
 
-- `BLOCKER`: `AUTH_HUMAN_GATE`
+- `BLOCKER`: `RESOLVED`
 - `LAST_GREEN_GATE`: `CK_P8_GOLDEN_GREEN`
 - `BLOCKED_PHASE`: `P9`
 - `UTC_RECORDED`: `2026-07-26T11:46:52Z`
-- `EVIDENCE`: `P9_AUTH_PREFLIGHT_REPORT.md`
+- `EVIDENCE`: `P9_AUTH_PREFLIGHT_REPORT.md`, `P9_AUTH_RESOLUTION_RECEIPT.md`
 
-Kenneth must personally sign in to the AWS Console and CockroachDB Cloud
-Console using the two existing Chrome handoff tabs. Complete any password, MFA,
-CAPTCHA, terms, organization, account, or permission-selection challenge
-without sharing credentials with a model or terminal.
+Kenneth personally signed in to the AWS Console and CockroachDB Cloud. Visible,
+read-only Chrome verification showed the authenticated AWS Console Home and the
+intended `cockroach-kernel` CockroachDB Cloud overview. No credential material
+was read or recorded.
 
-Evidence required to resume:
-
-1. AWS Console visibly shows an authenticated account and region surface.
-2. CockroachDB Cloud visibly shows the intended organization/project/cluster.
-3. Kenneth states in this conversation that both sign-ins are complete.
+No P9 authentication human action remains at this boundary.
 
 Do not paste passwords, tokens, API keys, cookies, account recovery codes, or
 MFA values into this conversation. Do not create a long-lived credential merely
 to close this gate.
 
-Resume command:
+Next safe action:
 
 ```text
-Resume Cockroach Kernel P9 from P9_STATUS.md after I have personally signed in to both AWS Console and CockroachDB Cloud in Chrome. Revalidate visible authentication, rules, Git, hashes, account/region/project/cluster, quotas, pricing, free judge access, and the feature matrix. Freeze the P9 packet before any external mutation. Continue under COCKROACH_KERNEL_P9_S3_EXECUTION_PROMPT_20260726_R2.md and stop at the next human gate.
+Resume Cockroach Kernel P9 from P9_STATUS.md and P9_AUTH_RESOLUTION_RECEIPT.md. Complete the remaining read-only account, region, quota, pricing, free judge access, and feature-matrix preflight. Freeze the P9 packet and obtain its required independent judge result before any cloud mutation. Continue under COCKROACH_KERNEL_P9_S3_EXECUTION_PROMPT_20260726_R2.md and stop at the next human gate.
 ```
 # Resolved P5 Kimi OAuth Action
 
