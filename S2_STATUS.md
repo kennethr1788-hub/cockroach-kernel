@@ -1,7 +1,7 @@
 # S2 Status
 
-- `STATUS`: `S2_CAMPAIGN_READY`
-- `BLOCKER`: `NONE_BEFORE_PRODUCTION_START`
+- `STATUS`: `S2_PRODUCTION_RUNNING`
+- `BLOCKER`: `NONE_CURRENTLY`
 - `LAST_GREEN_GATE`: `CK_P7_RECOVERY_GREEN`
 - `TARGET_GATE`: `CK_S2_RECOVERY_SOAK_GREEN`
 - `LOCAL_SMOKE`: `R3_GREEN`
@@ -11,7 +11,8 @@
 - `CURRENT_LIFECYCLE_GUARD`: `BOUND_AND_HEARTBEATING`
 - `REPLACEMENT_POD_ID`: `m6sj0mkio2yc4y`
 - `REPLACEMENT_CAMPAIGN_READY`: `YES`
-- `TEST_START_UTC`: `NOT_STARTED`
+- `TEST_START_UTC`: `2026-07-26T03:25:32Z`
+- `PRODUCTION_PID`: `1143`
 - `P8_STATUS`: `NOT_STARTED`
 - `BAND_B_STATUS`: `OPEN`
 
@@ -30,5 +31,5 @@ Those requirements are now satisfied on packet SHA-256
 `b072143dd3ba99250b4abccc171a6640efd644819fd46afb383a007ff6a81a53`.
 Attempt 1 matched the frozen worker envelope, guard, transfer, manifest,
 runtime, and Linux-smoke gates. The next allowed action is the one authorized
-21,600-second production start. No retry is authorized after that process
-starts.
+21,600-second production process is now running. No retry, restart, or
+replacement is authorized.
