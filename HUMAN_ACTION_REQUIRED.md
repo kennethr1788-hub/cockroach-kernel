@@ -37,6 +37,31 @@ Next safe action:
 ```text
 Resume Cockroach Kernel P9 from P9_STATUS.md and P9_AUTH_RESOLUTION_RECEIPT.md. Complete the remaining read-only account, region, quota, pricing, free judge access, and feature-matrix preflight. Freeze the P9 packet and obtain its required independent judge result before any cloud mutation. Continue under COCKROACH_KERNEL_P9_S3_EXECUTION_PROMPT_20260726_R2.md and stop at the next human gate.
 ```
+
+# P9 AWS Account Setup Action
+
+- `BLOCKER`: `AWS_ACCOUNT_SETUP_HUMAN_GATE`
+- `LAST_GREEN_GATE`: `CK_P8_GOLDEN_GREEN`
+- `BLOCKED_PHASE`: `P9_LIVE_INTEGRATION`
+- `UTC_RECORDED`: `2026-07-26T12:45:48Z`
+- `EVIDENCE`: `P9_AWS_ACCOUNT_SETUP_RECEIPT.md`
+
+Kenneth must personally complete AWS account setup. Do not share payment,
+identity, phone, address, password, MFA, token, cookie, or access-key material
+with a model or terminal. Do not create an IAM access key to close this gate.
+
+Required evidence to resume live P9:
+
+1. Kenneth states that AWS account setup is complete.
+2. Lambda Functions opens in `us-west-2` without redirecting to signup.
+3. No paid support plan or unbounded service commitment is introduced without
+   a separate explicit authorization.
+
+Resume command:
+
+```text
+Resume live Cockroach Kernel P9 from P9_AWS_ACCOUNT_SETUP_RECEIPT.md after I have completed AWS account setup. Verify Lambda Functions in us-west-2, account quotas, pricing, free-access path, Git, hashes, and the frozen offline packet. Do not create resources until the P9 pre-mutation judge gate is valid.
+```
 # Resolved P5 Kimi OAuth Action
 
 - `BLOCKER`: `RESOLVED`
