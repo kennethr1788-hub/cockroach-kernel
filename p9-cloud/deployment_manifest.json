@@ -1,0 +1,46 @@
+{
+  "version": "p9-deployment-v1",
+  "status": "OFFLINE_TEMPLATE_ONLY",
+  "region": "us-west-2",
+  "function": {
+    "name": "ck-p9-evaluator",
+    "role_name": "ck-p9-lambda-exec",
+    "memory_mib": 128,
+    "timeout_seconds": 3,
+    "reserved_concurrency": 1,
+    "provisioned_concurrency": 0,
+    "function_url": false,
+    "network_calls": false
+  },
+  "logs": {
+    "group": "/aws/lambda/ck-p9-evaluator",
+    "retention_days": 1
+  },
+  "limits": {
+    "max_invocations": 1000,
+    "max_request_bytes": 16384,
+    "max_response_bytes": 16384,
+    "incremental_aws_cost_usd": 5
+  },
+  "cockroach": {
+    "cluster": "cockroach-kernel",
+    "database": "cockroach_kernel",
+    "schema": "ck",
+    "runtime_user": "ck_runtime",
+    "region": "us-west-2",
+    "ca_path_class": "PROJECT_LOCAL_IGNORED_RUNTIME_ONLY"
+  },
+  "managed_mcp": {
+    "authentication": "OAUTH",
+    "cluster_scope": "cockroach-kernel",
+    "access": "READ_ONLY",
+    "view": "ck.mcp_receipt_view",
+    "max_rows": 64
+  },
+  "live_blockers": [
+    "AWS_ACCOUNT_SETUP_HUMAN_GATE",
+    "LIVE_ACCOUNT_ID_SUBSTITUTION",
+    "LIVE_IAM_SIMULATION",
+    "LIVE_MCP_OAUTH_SCOPE_PROOF"
+  ]
+}
