@@ -2,10 +2,10 @@
 
 - `CURRENT_PHASE`: `P9_LIVE_INTEGRATION_AUTHORIZED`
 - `LAST_GREEN_GATE`: `CK_P8_GOLDEN_GREEN`
-- `NEXT_ALLOWED_ACTION`: checkpoint and execute only the AWS retry approved by P9 AWS retry packet R1; stop at Managed MCP OAuth human gate
+- `NEXT_ALLOWED_ACTION`: Kenneth authorizes Managed MCP OAuth read-only access to only cockroach-kernel; then execute bounded MCP read-only proof and final P9 judges
 - `FORBIDDEN_ACTIONS`: S3 before P9 GREEN; RunPod before S3 preflight GREEN; P10 or later; public actions; release; submission; HOME/live-memory mutation; credential exposure
 - `CURRENT_COMMIT`: `eb427eb11cffa642e83338105e7c6fa56de43b38`
-- `PENDING_BLOCKERS`: AWS retry and two live invocations missing; Managed MCP OAuth read-only single-cluster scope requires Kenneth; final P9 GLM plus AGY packet missing
+- `PENDING_BLOCKERS`: Managed MCP OAuth read-only single-cluster scope requires Kenneth; bounded live MCP proof and final P9 GLM plus AGY packet missing
 - `REQUIRED_JUDGE_STATE`: P9 final requires GLM plus AGY on one frozen hash; S3 preflight requires GLM plus Claude; S3 final requires GLM plus Claude plus AGY
 - `REPLACEMENT_AUTHORIZATION_SHA256`: `7661fd8de8284cfd69dfcf584f05e6b0584bb736047e626d594a4595047e486e`
 - `FINAL_PACKET_SHA256`: `c7de73f394151f5cc850cf085a32140e74887bf2873a37448a056966cc8f2378`
@@ -20,6 +20,8 @@
 - `P9_AWS_RETRY_JUDGE_STATE`: `GLM_5_2_GREEN`
 - `P9_AWS_RETRY_PACKET_R2_SHA256`: `698ec0439e91eacb6b9b540a13db2f0823402fca6a0ec0d577a8efa685afe49b`
 - `P9_AWS_RETRY_R2_JUDGE_STATE`: `GLM_5_2_GREEN`
-- `LATEST_CHECKPOINT`: `P9_AWS_RETRY_JUDGE_RECEIPT_R2.md`
+- `P9_AWS_LIVE_STATE`: `GREEN_THROUGH_MCP_HUMAN_GATE`
+- `P9_AWS_EVIDENCE_ARCHIVE_SHA256`: `68d7288acca74494f63d37db27d14a5073dd9ebebfef51cd708c874f082fcf6c`
+- `LATEST_CHECKPOINT`: `P9_AWS_LIVE_RECEIPT_R1.md`
 - `P9_S3_AUTHORIZATION_PROMPT`: `COCKROACH_KERNEL_P9_S3_EXECUTION_PROMPT_20260726_R2.md`
 - `P9_S3_AUTHORIZATION_SHA256`: `cb46e382f98d9a4d52a882a3d35f1b0ae4db9047e07f713d2212196dc3204214`

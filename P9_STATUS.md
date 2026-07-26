@@ -2,7 +2,7 @@
 
 - `STATUS`: `P9_LIVE_IN_PROGRESS`
 - `LIVE_STATUS`: `CK_P9_BLOCKED`
-- `BLOCKER`: `AWS_RETRY_AND_MCP_OAUTH_REMAIN`
+- `BLOCKER`: `MCP_OAUTH_HUMAN_GATE`
 - `AUTH_GATE`: `GREEN`
 - `OFFLINE_ARCHITECTURE_GATE`: `GREEN`
 - `AWS_ACCOUNT_SETUP_GATE`: `GREEN`
@@ -20,7 +20,7 @@
 - `P9_AWS_RETRY_R2_JUDGE_STATE`: `GLM_5_2_GREEN`
 - `P9_LIVE_PACKET_SHA256`: `NOT_FROZEN`
 - `RULES_SOURCE_SHA256`: `f42e7cb158fb7f8017dd9c928237937a203a1f7a362413b4fa5987ca38c85979`
-- `UTC_RECORDED`: `2026-07-26T19:43:00Z`
+- `UTC_RECORDED`: `2026-07-26T19:51:00Z`
 - `RUNPOD_ATTEMPTS`: `0`
 - `AWS_INCREMENTAL_COST`: `$0.00`
 - `RUNPOD_EXPOSURE`: `$0.00`
@@ -60,6 +60,13 @@ packet hash `17077cf3913e88bab2b02440cd256814253f4544555310b46a2b39928fab4de2`.
 RunPod read-only inventory verified no running Pod and no `ck-s3` resource.
 No external resource was created, changed, stopped, or deleted.
 
-Next allowed action: checkpoint the approved retry packet, apply only its exact
-AWS retry and invocation sequence, and stop at the Managed MCP OAuth human gate. Kenneth alone must
-authorize read-only access restricted to `cockroach-kernel`. Do not start S3.
+The final reviewed AWS lifecycle is GREEN through the human gate. Exact IAM
+simulation, configuration readback, two byte-identical live advisory
+invocations, response validation, and a bounded log-stream visibility check all
+passed. Raw sanitized evidence is preserved under
+`evidence/p9-aws-live-green/`; exact AWS project resources remain preserved
+through S3 as authorized.
+
+Next allowed action: Kenneth authorizes Managed MCP OAuth read-only access to
+only `cockroach-kernel`. Then run the bounded read-only MCP proof, freeze the
+final P9 packet, and obtain GLM plus AGY GREEN. Do not start S3.
