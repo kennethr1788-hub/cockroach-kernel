@@ -17,6 +17,8 @@ ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 HEX64_RE = re.compile(r"^[0-9a-f]{64}$")
 VERSION = "p5-v1"
 MAX_RECORD_BYTES = 65536
+MAX_RETRY_COUNT = 3
+MAX_TIMEOUT_MS = 60000
 
 LANES = (
     "syntax_structure",
@@ -193,9 +195,13 @@ def validate_provenance(provenance: Any) -> None:
         raise ManifestError("MISSING_PROVENANCE")
     if not isinstance(provenance["policy_version"], str) or not provenance["policy_version"]:
         raise ManifestError("MISSING_PROVENANCE")
-    if not isinstance(provenance["retry_count"], int) or provenance["retry_count"] < 0:
+    if (isinstance(provenance["retry_count"], bool) or
+            not isinstance(provenance["retry_count"], int) or
+            not 0 <= provenance["retry_count"] <= MAX_RETRY_COUNT):
         raise ManifestError("MISSING_PROVENANCE")
-    if not isinstance(provenance["timeout_ms"], int) or provenance["timeout_ms"] <= 0:
+    if (isinstance(provenance["timeout_ms"], bool) or
+            not isinstance(provenance["timeout_ms"], int) or
+            not 1 <= provenance["timeout_ms"] <= MAX_TIMEOUT_MS):
         raise ManifestError("MISSING_PROVENANCE")
     if not isinstance(provenance["dissent"], bool):
         raise ManifestError("MISSING_PROVENANCE")

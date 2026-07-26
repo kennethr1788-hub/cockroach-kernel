@@ -43,11 +43,22 @@ The output was advisory only and did not supply code or acceptance authority.
 
 - CLI version: `2.21.0`
 - Binary SHA-256: `49eda5eccca6991033113b0cf30ea7b740078d222d4a74a97d667db14e3da4a4`
-- Status: required adversarial contribution pending after this candidate commit
+- Route: native bounded `plan` agent with only `read_file` and `grep`
+- Scope: isolated synthetic worktree; no edits or external tools
+- First attempt: stopped at one-turn bound without a final contribution
+- Second attempt: exit `0`; proposed ten bounded adversarial vectors
+- Accepted findings: retry and timeout upper bounds were absent; explicit
+  boundary/type tests were missing; prompt/output injection and dissent linkage
+  deserved separate coverage.
+- Rejected as factually incorrect: the claim that integer types were not
+  enforced; the implementation already rejected non-integer values. Separate
+  boolean-confusion tests were added because Python booleans are integers.
+- Codex-integrated result: bounded retry/timeout enforcement and seven
+  adversarial tests in `test_manifest_adversarial.py`.
 
 ## Codex integration evidence
 
-- Focused unit tests: 13/13 passing
+- Focused unit and adversarial tests: 20/20 passing
 - Two fresh-root CockroachDB trials: 5 manifests, 5 results, 5 advisory
   verdicts; duplicate output rejected; database result hashes matched fixture
   hashes; aggregate hash stable at
