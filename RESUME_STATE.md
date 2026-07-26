@@ -1,9 +1,9 @@
 # Resume State
 
-- `CURRENT_PHASE`: `P5`
-- `LAST_GREEN_GATE`: `CK_BUNDLE_A_GREEN`
-- `NEXT_ALLOWED_ACTION`: rerun the bounded Kimi P5 assignment, then complete reduced Vibe and Devstral contributions and Codex integration
-- `FORBIDDEN_ACTIONS`: P6 or later; RunPod; AWS; public actions; HOME/live-memory mutation
-- `CURRENT_COMMIT`: `d93c19ab8691e3ba00b0401160b0ac0c7f669f5a`
-- `PENDING_BLOCKERS`: Vibe tasks must be reduced below its bounded token ceiling
-- `REQUIRED_JUDGE_STATE`: GLM and AGY GREEN after P5 mechanical evidence
+- `CURRENT_PHASE`: `P6`
+- `LAST_GREEN_GATE`: `CK_P5_LANES_GREEN`
+- `NEXT_ALLOWED_ACTION`: freeze P6 typed handoff and quorum contract, then run bounded builder assignments
+- `FORBIDDEN_ACTIONS`: P7 or later; RunPod; AWS; public actions; HOME/live-memory mutation
+- `CURRENT_COMMIT`: `b54534e`
+- `PENDING_BLOCKERS`: none at P5 closeout
+- `REQUIRED_JUDGE_STATE`: GLM and Claude GREEN after P6 mechanical evidence
