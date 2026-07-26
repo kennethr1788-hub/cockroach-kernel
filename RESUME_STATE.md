@@ -1,9 +1,9 @@
 # Resume State
 
 - `CURRENT_PHASE`: `P6`
-- `LAST_GREEN_GATE`: `CK_P5_LANES_GREEN`
-- `NEXT_ALLOWED_ACTION`: commit the mechanically passing P6 candidate, freeze one exact packet, and run GLM plus Claude
+- `LAST_GREEN_GATE`: `CK_P6_QUORUM_GREEN`
+- `NEXT_ALLOWED_ACTION`: freeze the P7 declared-loss recovery contract before implementation
 - `FORBIDDEN_ACTIONS`: P7 or later; RunPod; AWS; public actions; HOME/live-memory mutation
-- `CURRENT_COMMIT`: `84616f5`
-- `PENDING_BLOCKERS`: P6 independent GLM and Claude verdicts not yet run
-- `REQUIRED_JUDGE_STATE`: GLM and Claude GREEN after P6 mechanical evidence
+- `CURRENT_COMMIT`: `a9481f7`
+- `PENDING_BLOCKERS`: none at P6 closeout
+- `REQUIRED_JUDGE_STATE`: Claude and AGY GREEN after P7 mechanical evidence

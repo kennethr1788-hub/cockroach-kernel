@@ -15,7 +15,8 @@
 - `RESIDUE`: no `p6-db-*` root, symlink, database process, or socket remained
 - `GITLEAKS`: no leaks found
 - `DETECT_SECRETS`: empty result set
-- `JUDGES`: not run at this manifest revision
+- `JUDGES`: GLM GREEN and Claude GREEN on R3 packet SHA-256
+  `7c887c71aae6c7dffebd95a1fa793261d6ddf7567c3a30e90b46fe1cceae2c10`
 
 ## Primary evidence
 
