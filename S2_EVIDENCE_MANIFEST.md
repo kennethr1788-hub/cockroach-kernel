@@ -28,7 +28,16 @@
 - `s2-evidence/r2/private-path-scan.txt`: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`
 - `s2-evidence/r2/symlink-scan.txt`: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`
 
+## Final same-hash panel
+
+- `S2_FINAL_PACKET_R1.md`: `46e1135cd285f0023a12b10bd033808c3f628e577f737f905ef2a27789fdfb9f`
+- `S2_FINAL_GLM_RECEIPT_R1.md`: `ca1a134ff86a10c16034f5879d31721cef39319ecabe2b8e3e8a7f607aa06734`
+- `S2_FINAL_CLAUDE_INVALID_ATTEMPT_R1.md`: `0928ef75e1c9b79e7d8f5369ab37d2a89c8862a7d51b2c64ef3aa4f6c376ea93`
+- `S2_FINAL_CLAUDE_RECEIPT_R1.md`: `b21e708b2a9db859a0655ecb935e07e07551658a90b13c9100c0bfff12a6149d`
+- `S2_FINAL_AGY_RECEIPT_R1.md`: `8ee74d18cc8e410c4a2b86ff4f4c6bc8ce3f1541b18acdd37001a91da2b9f6b3`
+- `S2_FINAL_JUDGE_PANEL_R1.md`: `eb93a9f556a042b52ebdb62370d488be4e83707648108bb6d939854a5c47d578`
+
 The remote retrieval manifest contains 273 entries and every entry matched
 locally. The extracted tree has 274 files because it also contains the remote
-retrieval manifest itself. Final judge receipts are intentionally absent until
-one exact final packet is committed and frozen.
+retrieval manifest itself. The invalid Claude attempt is preserved but excluded
+from the panel; all three valid verdicts share the final packet hash.

@@ -1,13 +1,13 @@
 # S2 Checkpoint
 
-- `CURRENT_PHASE`: `S2_FINAL_JUDGING`
-- `LAST_GREEN_GATE`: `CK_P7_RECOVERY_GREEN`
-- `NEXT_ALLOWED_ACTION`: freeze one final S2 packet and obtain same-hash GLM, Claude, and AGY verdicts
+- `CURRENT_PHASE`: `S2_COMPLETE_STOP_BOUNDARY`
+- `LAST_GREEN_GATE`: `CK_S2_RECOVERY_SOAK_GREEN`
+- `NEXT_ALLOWED_ACTION`: stop; P8 requires its own execution authorization and preconditions
 - `FORBIDDEN_ACTIONS`: any replacement/restart after production begins; more than one S2 worker; P8 or later; AWS; public actions; HOME/live-memory mutation
 - `START_COMMIT`: `42170e14fd52056691978c02b8b5759bc67956d5`
 - `IMPLEMENTATION_COMMIT`: `19979c92ca54a744b88317d043644f04f1b51892`
-- `STATUS`: `S2_MECHANICAL_GREEN_FINAL_JUDGES_PENDING`
-- `BLOCKER`: `FINAL_JUDGES_PENDING`
+- `STATUS`: `CK_S2_RECOVERY_SOAK_GREEN`
+- `BLOCKER`: `NONE`
 - `REPLACEMENT_POD_ID`: `m6sj0mkio2yc4y`
 - `POD_ID`: `btdc8bhvws6cbs` (deleted; exact-ID absent; campaign inventory empty)
 - `REPLACEMENT_AUTHORIZATION_SHA256`: `7661fd8de8284cfd69dfcf584f05e6b0584bb736047e626d594a4595047e486e`
@@ -16,3 +16,6 @@
 - `TEARDOWN`: `GREEN`
 - `ACTIVE_S2_INVENTORY`: `[]`
 - `P8_STATUS`: `NOT_STARTED`
+- `FINAL_PACKET_SHA256`: `46e1135cd285f0023a12b10bd033808c3f628e577f737f905ef2a27789fdfb9f`
+- `FINAL_PANEL`: `GLM_GREEN_CLAUDE_GREEN_AGY_GREEN`
+- `BAND_B_STATUS`: `OPEN`

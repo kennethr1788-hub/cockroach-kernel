@@ -1,7 +1,7 @@
 # S2 Status
 
-- `STATUS`: `S2_MECHANICAL_GREEN_FINAL_JUDGES_PENDING`
-- `BLOCKER`: `FINAL_JUDGES_PENDING`
+- `STATUS`: `CK_S2_RECOVERY_SOAK_GREEN`
+- `BLOCKER`: `NONE`
 - `LAST_GREEN_GATE`: `CK_P7_RECOVERY_GREEN`
 - `TARGET_GATE`: `CK_S2_RECOVERY_SOAK_GREEN`
 - `LOCAL_SMOKE`: `R3_GREEN`
@@ -36,5 +36,7 @@ with exact 72/24/6 cadence and all assertions passing. All evidence was
 hash-verified locally before exact-ID teardown. Provider lookup is 404, S2
 inventory is empty, and the detached guard ended `TEARDOWN_GREEN`. Delayed
 billing is recorded as a conservative aggregate `CALCULATED_MAXIMUM` of
-`$0.525317756`, below the `$2.00` envelope. S2 remains open until GLM, Claude,
-and AGY return GREEN on one exact final packet hash.
+`$0.525317756`, below the `$2.00` envelope. GLM 5.2, Claude Opus 4.8, and AGY
+returned valid GREEN on final packet SHA-256
+`46e1135cd285f0023a12b10bd033808c3f628e577f737f905ef2a27789fdfb9f`.
+S2 is GREEN. P8 is not started and Band B remains open.
