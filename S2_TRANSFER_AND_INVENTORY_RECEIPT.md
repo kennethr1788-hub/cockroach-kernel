@@ -27,7 +27,7 @@ unrelated source are excluded.
 - private/absolute-home path scan: zero findings;
 - gitleaks: exit 0, no leaks;
 - detect-secrets: zero files and zero findings;
-- detect-secrets report SHA-256:
+- scanner receipt digest:
   `56f86775e23c8ff584aa0271db73706cb2c406da9154c27aaf5666fd68564e5d`.
 
 Remote extraction must regenerate the 61-line sorted SHA-256 manifest and
