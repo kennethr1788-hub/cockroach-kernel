@@ -38,24 +38,22 @@ Next safe action:
 Resume Cockroach Kernel P9 from P9_STATUS.md and P9_AUTH_RESOLUTION_RECEIPT.md. Complete the remaining read-only account, region, quota, pricing, free judge access, and feature-matrix preflight. Freeze the P9 packet and obtain its required independent judge result before any cloud mutation. Continue under COCKROACH_KERNEL_P9_S3_EXECUTION_PROMPT_20260726_R2.md and stop at the next human gate.
 ```
 
-# P9 AWS Account Setup Action
+# Resolved P9 AWS Account Setup Action
 
-- `BLOCKER`: `AWS_ACCOUNT_SETUP_HUMAN_GATE`
+- `BLOCKER`: `RESOLVED`
 - `LAST_GREEN_GATE`: `CK_P8_GOLDEN_GREEN`
 - `BLOCKED_PHASE`: `P9_LIVE_INTEGRATION`
-- `UTC_RECORDED`: `2026-07-26T12:45:48Z`
-- `EVIDENCE`: `P9_AWS_ACCOUNT_SETUP_RECEIPT.md`
+- `UTC_RECORDED`: `2026-07-26T19:22:00Z`
+- `EVIDENCE`: `P9_AWS_ACCOUNT_SETUP_RESOLUTION_RECEIPT_R2.md`
 
-Kenneth must personally complete AWS account setup. Do not share payment,
-identity, phone, address, password, MFA, token, cookie, or access-key material
-with a model or terminal. Do not create an IAM access key to close this gate.
+Kenneth completed AWS account setup. Authenticated visible verification reached
+Lambda Functions and Service Quotas in `us-west-2` without signup redirect.
+No password, MFA, token, cookie, access key, account identifier, or payment
+detail was recorded.
 
-Required evidence to resume live P9:
-
-1. Kenneth states that AWS account setup is complete.
-2. Lambda Functions opens in `us-west-2` without redirecting to signup.
-3. No paid support plan or unbounded service commitment is introduced without
-   a separate explicit authorization.
+No AWS account-setup human action remains. The next expected human gate is the
+Managed MCP OAuth screen, where Kenneth alone must grant read-only access
+restricted to `cockroach-kernel`. The build must stop when that gate is reached.
 
 Offline runway completed at `2026-07-26T13:56:37Z`:
 
@@ -63,12 +61,12 @@ Offline runway completed at `2026-07-26T13:56:37Z`:
 - packet SHA-256
   `725f8edf8487a9a34572b2315eab795318a74a7ee0ebf0849e5f982be4468e7d`
 - independent state `P9_OFFLINE_ARCHITECTURE_GREEN`
-- live state remains `CK_P9_BLOCKED`
+- pre-mutation state is `P9_PREMUTATION_GREEN`; final live state remains blocked
 
 Resume command:
 
 ```text
-Resume live Cockroach Kernel P9 from P9_AWS_ACCOUNT_SETUP_RECEIPT.md after I have completed AWS account setup. Verify Lambda Functions in us-west-2, account quotas, pricing, free-access path, Git, hashes, and the frozen offline packet. Do not create resources until the P9 pre-mutation judge gate is valid.
+Resume live P9 from P9_PREMUTATION_JUDGE_RECEIPT_R2.md. Apply only the exact reviewed migration, grants, Lambda role/function/log configuration, readback, and negative tests. Stop at the Managed MCP OAuth gate for my personal read-only, single-cluster authorization. Do not start S3.
 ```
 # Resolved P5 Kimi OAuth Action
 
