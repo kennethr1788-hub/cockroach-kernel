@@ -1,15 +1,34 @@
-# S2 Blocked Evidence Manifest
+# S2 Evidence Manifest R2
 
-- `S2_PREFLIGHT_PACKET_R3.md`: `f99a5deda6715fe50a186420594d5797820fe263e06e1b9d5c420a91a5abf6b8`
-- `S2_PREFLIGHT_GLM_RECEIPT_R3.md`: `5b346a0f3f378366fb44f606691a31e0d8426b07d5afa9dab12067766411fd38`
-- `S2_PREFLIGHT_CLAUDE_RECEIPT_R3.md`: `253b00314ab9661c36f73041ab7df8a7439642605cb8961bb250d7011211f264`
-- `S2_ATTEMPT_01_RECEIPT.md`: `aa76e432f59b3238b7ddda724581ef405f4e747d1d8d3af776041452f00a91b9`
-- `S2_STATUS.md`: `fca77d3e5291e850ecbd8079b6abc7275245c21416aa554adb98fa8787f79648`
-- `S2_CHECKPOINT.md`: `61090ec3e7690cefa09b7a703bcd3ad5be78c10b196a4ce0b5c63efe33a98d17`
-- `RESUME_STATE.md`: `205b108c9ed7c4464d55ea50035d4574a0c7c65bb3d94f327b5761ddb0dd0baa`
-- `S2_TRANSFER_AND_INVENTORY_RECEIPT.md`: `d5807e1312e964e25f2e18a01a7272306c324a13510ac43df77c3d4f7934e52e`
-- `s2-soak/run_soak.py`: `b4b788b59f7ab95358251623ef89088c4c31c218a431f6d240b7980f9f81d01c`
-- `s2-soak/lifecycle_guard.py`: `4644aa756f47c3d53b82c239657ce22605d4a9caab3e6a8651c4f459d95c6f0c`
+## Frozen preflight and custody
 
-This is a blocked-attempt manifest, not a final S2 GREEN packet. No final GLM,
-Claude, or AGY S2 judgment was run because the six-hour campaign never began.
+- `S2_REPLACEMENT_PREFLIGHT_PACKET_R1.md`: `b072143dd3ba99250b4abccc171a6640efd644819fd46afb383a007ff6a81a53`
+- `S2_RUNTIME_HASHES_R1.json`: `5cbd3a2174ab19d1a33ab21546e7fc4fe0bbc896cbc75f7b2b32f26823588e7c`
+- `S2_REPLACEMENT_SCHEDULE_R1.json`: `dc766db950cd39fe81bc0bd6c39b63be07c72ade677b88f7ae7a489eaaea2e39`
+- `S2_CAMPAIGN_READY_RECEIPT_R2.md`: `8e01dce2b7dd95953912220396d3d2f5a6aafd4efdcd13abe77514deca64b2e2`
+- `S2_PRODUCTION_START_RECEIPT_R2.md`: `7d01129fce3c7ece7db0afab18975a92f40a7ab430e89f4ac5dc25d5143a1eb3`
+
+## Completed execution and closeout
+
+- `S2_EXECUTION_REPORT_R2.md`: `11aa92bd291549b9314fdbcf30e071e9543c78de26d318a6de5703d54fecfa4f`
+- `S2_REMOTE_LOCAL_HASH_RECEIPT_R2.md`: `6b3f664f358ed3a6cc7ae39db5cdc8595a254e9bf5bf3d439ce5d4e9b4abb837`
+- `S2_TEARDOWN_RECEIPT_R2.md`: `669f5d0caf92aa4ee8ce380bdc6477fdd67ab56fee3cdf7f3f790657c532655f`
+- `S2_BILLING_RECEIPT_R2.md`: `7c4dece6c97ec3ba681e200506676d9a93ce62b27626e50cb1b194281cc6e936`
+- `S2_RESIDUE_SCAN_RECEIPT_R2.md`: `6b0e7240d5c80368a392b28bce68885649fae86a5cabff01b27e341646105017`
+- `S2_REPLACEMENT_ATTEMPT_LEDGER_R2.md`: `c86ec5bc9d5ec461a5dbfed8e6000301dca15446205c8c9f38ef13511ead5479`
+
+## Raw retrieved evidence
+
+- `s2-evidence/r2/ck-s2-r2-a01-evidence.tar.gz`: `d52fdbaa0b4e2335ebae66b4bb27ea56787465921b4b9311663a260be93f13fa`
+- `s2-evidence/r2/ck-s2-r2-a01-retrieval-manifest.json`: `db544d29e8ad6c7551a447c3a777bd33799017958f8753bc10010d711fbace07`
+- `s2-evidence/r2/lifecycle-guard.jsonl`: `45450ca57402a3a3f9a0608c010acac30aeb258726f01b4df6ac7f8dd6bd7332`
+- `s2-evidence/r2/billing-query.json`: `37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570`
+- `s2-evidence/r2/gitleaks.json`: `37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570`
+- `s2-evidence/r2/detect-secrets.json`: `d1bd75517bf54453b215c5476067066a8a936c9a27bdeeb1caf91bfca6972a3e`
+- `s2-evidence/r2/private-path-scan.txt`: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`
+- `s2-evidence/r2/symlink-scan.txt`: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`
+
+The remote retrieval manifest contains 273 entries and every entry matched
+locally. The extracted tree has 274 files because it also contains the remote
+retrieval manifest itself. Final judge receipts are intentionally absent until
+one exact final packet is committed and frozen.
