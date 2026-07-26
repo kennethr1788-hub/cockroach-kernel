@@ -28,7 +28,7 @@ class TestIamTemplate(unittest.TestCase):
         self.assertNotIn("*", statement["Action"])
         self.assertEqual(
             statement["Resource"],
-            "arn:aws:logs:us-west-2:${AWS_ACCOUNT_ID}:log-group:/aws/lambda/ck-p9-evaluator:log-stream:*",
+            "arn:aws:logs:us-west-2:${AWS_ACCOUNT_ID}:log-group:/aws/lambda/ck-p9-evaluator:*",
         )
         self.assertEqual(statement["Resource"].count("*"), 1)
 

@@ -2,10 +2,10 @@
 
 - `CURRENT_PHASE`: `P9_LIVE_INTEGRATION_AUTHORIZED`
 - `LAST_GREEN_GATE`: `CK_P8_GOLDEN_GREEN`
-- `NEXT_ALLOWED_ACTION`: apply only the exact CockroachDB migration/grants and AWS Lambda role/function/log sequence approved by P9 pre-mutation packet R2; stop at Managed MCP OAuth human gate
+- `NEXT_ALLOWED_ACTION`: checkpoint and execute only the AWS retry approved by P9 AWS retry packet R1; stop at Managed MCP OAuth human gate
 - `FORBIDDEN_ACTIONS`: S3 before P9 GREEN; RunPod before S3 preflight GREEN; P10 or later; public actions; release; submission; HOME/live-memory mutation; credential exposure
 - `CURRENT_COMMIT`: `eb427eb11cffa642e83338105e7c6fa56de43b38`
-- `PENDING_BLOCKERS`: live migration/IAM/Lambda/readback evidence missing; two live trials missing; Managed MCP OAuth read-only single-cluster scope requires Kenneth; final P9 GLM plus AGY packet missing
+- `PENDING_BLOCKERS`: AWS retry and two live invocations missing; Managed MCP OAuth read-only single-cluster scope requires Kenneth; final P9 GLM plus AGY packet missing
 - `REQUIRED_JUDGE_STATE`: P9 final requires GLM plus AGY on one frozen hash; S3 preflight requires GLM plus Claude; S3 final requires GLM plus Claude plus AGY
 - `REPLACEMENT_AUTHORIZATION_SHA256`: `7661fd8de8284cfd69dfcf584f05e6b0584bb736047e626d594a4595047e486e`
 - `FINAL_PACKET_SHA256`: `c7de73f394151f5cc850cf085a32140e74887bf2873a37448a056966cc8f2378`
@@ -16,6 +16,8 @@
 - `P9_OFFLINE_JUDGE_STATE`: `P9_OFFLINE_ARCHITECTURE_GREEN`
 - `P9_PREMUTATION_PACKET_SHA256`: `8b36c7a3f0e10d7ce7654656a8288a4a5763d1dae330fe5eeeff4658079c3b62`
 - `P9_PREMUTATION_JUDGE_STATE`: `GLM_5_2_GREEN`
-- `LATEST_CHECKPOINT`: `P9_PREMUTATION_JUDGE_RECEIPT_R2.md`
+- `P9_AWS_RETRY_PACKET_SHA256`: `17077cf3913e88bab2b02440cd256814253f4544555310b46a2b39928fab4de2`
+- `P9_AWS_RETRY_JUDGE_STATE`: `GLM_5_2_GREEN`
+- `LATEST_CHECKPOINT`: `P9_AWS_RETRY_JUDGE_RECEIPT_R1.md`
 - `P9_S3_AUTHORIZATION_PROMPT`: `COCKROACH_KERNEL_P9_S3_EXECUTION_PROMPT_20260726_R2.md`
 - `P9_S3_AUTHORIZATION_SHA256`: `cb46e382f98d9a4d52a882a3d35f1b0ae4db9047e07f713d2212196dc3204214`

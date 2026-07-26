@@ -1,8 +1,8 @@
 # P9 Status
 
-- `STATUS`: `P9_PREMUTATION_GREEN`
+- `STATUS`: `P9_LIVE_IN_PROGRESS`
 - `LIVE_STATUS`: `CK_P9_BLOCKED`
-- `BLOCKER`: `LIVE_INTEGRATION_EVIDENCE_MISSING`
+- `BLOCKER`: `AWS_RETRY_AND_MCP_OAUTH_REMAIN`
 - `AUTH_GATE`: `GREEN`
 - `OFFLINE_ARCHITECTURE_GATE`: `GREEN`
 - `AWS_ACCOUNT_SETUP_GATE`: `GREEN`
@@ -14,16 +14,18 @@
 - `AUTHORIZATION_SHA256`: `cb46e382f98d9a4d52a882a3d35f1b0ae4db9047e07f713d2212196dc3204214`
 - `P9_OFFLINE_PACKET_SHA256`: `725f8edf8487a9a34572b2315eab795318a74a7ee0ebf0849e5f982be4468e7d`
 - `P9_PREMUTATION_PACKET_SHA256`: `8b36c7a3f0e10d7ce7654656a8288a4a5763d1dae330fe5eeeff4658079c3b62`
+- `P9_AWS_RETRY_PACKET_SHA256`: `17077cf3913e88bab2b02440cd256814253f4544555310b46a2b39928fab4de2`
+- `P9_AWS_RETRY_JUDGE_STATE`: `GLM_5_2_GREEN`
 - `P9_LIVE_PACKET_SHA256`: `NOT_FROZEN`
 - `RULES_SOURCE_SHA256`: `f42e7cb158fb7f8017dd9c928237937a203a1f7a362413b4fa5987ca38c85979`
-- `UTC_RECORDED`: `2026-07-26T19:22:00Z`
+- `UTC_RECORDED`: `2026-07-26T19:43:00Z`
 - `RUNPOD_ATTEMPTS`: `0`
 - `AWS_INCREMENTAL_COST`: `$0.00`
 - `RUNPOD_EXPOSURE`: `$0.00`
 
 Kenneth personally completed the AWS Console and CockroachDB Cloud sign-ins.
-Read-only Chrome verification showed the AWS `Console Home` surface in
-`us-east-2` and the CockroachDB Cloud `cockroach-kernel` overview on AWS in
+Read-only Chrome verification showed the AWS Lambda surface in `us-west-2` and
+the CockroachDB Cloud `cockroach-kernel` overview on AWS in
 `us-west-2`, with no sign-in form on either page. No password, token, cookie,
 API key, MFA value, or account credential was read or recorded.
 
@@ -40,14 +42,22 @@ two clean-clone trials, deterministic mock/replay, local CockroachDB v26.2.3
 schema/grant trials, secret/private-path scans, and independent offline
 architecture review are GREEN. This proves no live cloud behavior.
 
-No live CockroachDB or AWS mutation has occurred yet. P9 final judge evidence
-and S3 remain blocked. The next sequence is limited to the exact reversible
-migration, grants, Lambda role/function/log configuration, readback, and
-negative tests in the approved packet.
+The live CockroachDB migration is applied: six tables, one view, the vector
+index, and 15 exact runtime grants are present; zero forbidden runtime grants
+were observed. The SQL Shell blocks role-switch statements, so the current
+runtime-denial proof is grant-derived and that limitation remains explicit.
+
+The first AWS lifecycle reached an active function and passed configuration
+readback, then failed the IAM simulation because the reviewed log-stream ARN
+did not match AWS's effective resource representation. The failure trap removed
+the exact role, function, log group, and alarm; post-rollback counts are zero.
+The minimal exact-log-group ARN correction passes 95 tests, both secret
+scanners, live custom-policy simulation, and independent GLM 5.2 review over
+packet hash `17077cf3913e88bab2b02440cd256814253f4544555310b46a2b39928fab4de2`.
 
 RunPod read-only inventory verified no running Pod and no `ck-s3` resource.
 No external resource was created, changed, stopped, or deleted.
 
-Next allowed action: checkpoint the approved packet, apply only its exact live
-P9 sequence, and stop at the Managed MCP OAuth human gate. Kenneth alone must
+Next allowed action: checkpoint the approved retry packet, apply only its exact
+AWS retry and invocation sequence, and stop at the Managed MCP OAuth human gate. Kenneth alone must
 authorize read-only access restricted to `cockroach-kernel`. Do not start S3.
