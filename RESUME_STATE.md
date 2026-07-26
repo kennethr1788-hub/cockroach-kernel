@@ -2,9 +2,9 @@
 
 - `CURRENT_PHASE`: `P9_LIVE_INTEGRATION_AUTHORIZED`
 - `LAST_GREEN_GATE`: `CK_P8_GOLDEN_GREEN`
-- `NEXT_ALLOWED_ACTION`: freeze and implement only the missing P9 live evidence coordinator/harness; run two distinct complete synthetic vertical-slice trials before requesting a fresh one-time linked MCP proof
+- `NEXT_ALLOWED_ACTION`: checkpoint P9_COMPLETION_CONTRACT_R1.md, then implement only the missing P9 live evidence coordinator/harness; run two distinct complete synthetic vertical-slice trials before the fresh linked MCP proof
 - `FORBIDDEN_ACTIONS`: S3 before P9 GREEN; RunPod before S3 preflight GREEN; P10 or later; public actions; release; submission; HOME/live-memory mutation; credential exposure
-- `CURRENT_COMMIT`: `37780dbc1723e36c7850f5c766282667cc644d76`
+- `CURRENT_COMMIT`: `10b1a40a48b8d0e2543a532e8e2d9d9de3036c30`
 - `PENDING_BLOCKERS`: live Managed MCP read returned zero rows; canonical two distinct complete P9 live vertical-slice trials and non-empty receipt linkage are missing; final P9 packet and GLM plus AGY reviews are not ready
 - `REQUIRED_JUDGE_STATE`: P9 final requires GLM plus AGY on one frozen hash; S3 preflight requires GLM plus Claude; S3 final requires GLM plus Claude plus AGY
 - `REPLACEMENT_AUTHORIZATION_SHA256`: `7661fd8de8284cfd69dfcf584f05e6b0584bb736047e626d594a4595047e486e`
@@ -12,6 +12,8 @@
 - `P8_STATUS`: `CK_P8_GOLDEN_GREEN`
 - `BAND_B_STATUS`: `CK_BAND_B_GREEN`
 - `P9_STATUS`: `MCP read-only boundary GREEN and revoked; CK_P9_INTEGRATION_GREEN blocked on missing live vertical-slice evidence`
+- `P9_COMPLETION_CONTRACT`: `P9_COMPLETION_CONTRACT_R1.md`
+- `P9_COMPLETION_CONTRACT_SHA256`: `a36ad159c6b353afd1e13a2705882e7e8541bd05f2ed37da1f5d4f5bbeee4be4`
 - `P9_OFFLINE_PACKET_SHA256`: `725f8edf8487a9a34572b2315eab795318a74a7ee0ebf0849e5f982be4468e7d`
 - `P9_OFFLINE_JUDGE_STATE`: `P9_OFFLINE_ARCHITECTURE_GREEN`
 - `P9_PREMUTATION_PACKET_SHA256`: `8b36c7a3f0e10d7ce7654656a8288a4a5763d1dae330fe5eeeff4658079c3b62`

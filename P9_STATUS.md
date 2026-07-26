@@ -9,7 +9,7 @@
 - `PREMUTATION_GATE`: `GREEN`
 - `LAST_GREEN_GATE`: `CK_P8_GOLDEN_GREEN`
 - `TARGET_GATE`: `CK_P9_INTEGRATION_GREEN`
-- `CURRENT_COMMIT`: `37780dbc1723e36c7850f5c766282667cc644d76`
+- `CURRENT_COMMIT`: `10b1a40a48b8d0e2543a532e8e2d9d9de3036c30`
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `AUTHORIZATION_SHA256`: `cb46e382f98d9a4d52a882a3d35f1b0ae4db9047e07f713d2212196dc3204214`
 - `P9_OFFLINE_PACKET_SHA256`: `725f8edf8487a9a34572b2315eab795318a74a7ee0ebf0849e5f982be4468e7d`
@@ -18,6 +18,8 @@
 - `P9_AWS_RETRY_JUDGE_STATE`: `GLM_5_2_GREEN`
 - `P9_AWS_RETRY_PACKET_R2_SHA256`: `698ec0439e91eacb6b9b540a13db2f0823402fca6a0ec0d577a8efa685afe49b`
 - `P9_AWS_RETRY_R2_JUDGE_STATE`: `GLM_5_2_GREEN`
+- `P9_COMPLETION_CONTRACT`: `P9_COMPLETION_CONTRACT_R1.md`
+- `P9_COMPLETION_CONTRACT_SHA256`: `a36ad159c6b353afd1e13a2705882e7e8541bd05f2ed37da1f5d4f5bbeee4be4`
 - `P9_LIVE_PACKET_SHA256`: `NOT_FROZEN`
 - `P9_MCP_OAUTH_GATE`: `GREEN_AND_REVOKED`
 - `P9_MCP_READ_BOUNDARY`: `GREEN_ZERO_ROWS`
@@ -77,8 +79,9 @@ exact UPDATE probe was refused by the SELECT-only tool surface, the grant was
 revoked, and the temporary project configuration was removed. The final read
 returned zero rows, so it did not prove receipt linkage.
 
-Next allowed action: freeze and implement only the missing live P9 evidence
-coordinator/harness, then run two distinct complete synthetic vertical-slice
+Next allowed action: checkpoint the frozen completion contract and implement
+only the missing live P9 evidence coordinator/harness, then run two distinct
+complete synthetic vertical-slice
 trials with authoritative CockroachDB rows, vector linkage, distinct Lambda
 requests, changefeed evidence, local deterministic authority, and cleanup.
 After non-empty receipt linkage exists, obtain a fresh one-time Kenneth OAuth
