@@ -83,6 +83,11 @@ Final structured result SHA-256:
 Secret-pattern scan over the evidence returned zero matches. No unexpected
 tool call appears in the final raw events.
 
+The full-repository Gitleaks baseline still reports four pre-existing findings
+outside this P9 change: one each in `P0_STATUS.md` and `S1_RETRY_PACKET_R3.md`,
+plus two vendor-notice false positives. No finding is in the new OAuth receipt,
+MCP receipt, or `evidence/p9-mcp-live/` tree.
+
 ## Cleanup
 
 - `codex mcp logout` exited zero using the same ephemeral configuration.
@@ -113,4 +118,3 @@ AWS/CockroachDB boundaries, and prove non-empty receipt linkage. Only then ask
 Kenneth for a fresh one-time read-only Managed MCP OAuth authorization, repeat
 the exact linked SELECT proof, revoke it, freeze the final packet, and run GLM
 plus AGY on one hash.
-

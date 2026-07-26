@@ -4,7 +4,7 @@
 - `LAST_GREEN_GATE`: `CK_P8_GOLDEN_GREEN`
 - `NEXT_ALLOWED_ACTION`: freeze and implement only the missing P9 live evidence coordinator/harness; run two distinct complete synthetic vertical-slice trials before requesting a fresh one-time linked MCP proof
 - `FORBIDDEN_ACTIONS`: S3 before P9 GREEN; RunPod before S3 preflight GREEN; P10 or later; public actions; release; submission; HOME/live-memory mutation; credential exposure
-- `CURRENT_COMMIT`: `27fa9bf830e8340296f083b0b48e14c89b618a42`
+- `CURRENT_COMMIT`: `37780dbc1723e36c7850f5c766282667cc644d76`
 - `PENDING_BLOCKERS`: live Managed MCP read returned zero rows; canonical two distinct complete P9 live vertical-slice trials and non-empty receipt linkage are missing; final P9 packet and GLM plus AGY reviews are not ready
 - `REQUIRED_JUDGE_STATE`: P9 final requires GLM plus AGY on one frozen hash; S3 preflight requires GLM plus Claude; S3 final requires GLM plus Claude plus AGY
 - `REPLACEMENT_AUTHORIZATION_SHA256`: `7661fd8de8284cfd69dfcf584f05e6b0584bb736047e626d594a4595047e486e`

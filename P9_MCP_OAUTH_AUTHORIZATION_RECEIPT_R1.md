@@ -29,4 +29,3 @@
   project configuration, and verify the global config hash is unchanged.
 - This receipt does not close P9 and does not authorize S3, RunPod, P10, P11,
   release, or any public action.
-
