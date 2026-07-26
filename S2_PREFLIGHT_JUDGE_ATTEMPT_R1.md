@@ -7,7 +7,7 @@
 - `GLM_ROUTE`: direct verified `glm-5.2`
 - `GLM_WRAPPER_SHA256`:
   `a0b0ce72f2275b1489c2a3e4c759aecd1c1c7dc1f1bc9143fa1045b7ca7505f9`
-- `GLM_DIRECT_WRAPPER_SHA256`:
+- `DIRECT_WRAPPER_SHA256`:
   `0b94755754de89557ffb9d00b45b8d8fef6578614d00563db2320e940f83748f`
 - `RESULT`: `INVALID_NO_VERDICT`
 - `RAW_RESULT`: `HTTP 200: empty response content (finish_reason=length)`
