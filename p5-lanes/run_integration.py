@@ -60,13 +60,15 @@ def trial(label: str, port: int, http_port: int) -> dict[str, object]:
     log_path = root / "cockroach.log"
     env = os.environ.copy()
     env["HOME"] = str(fake_home)
-    log_handle = log_path.open("w", encoding="utf-8")
-    process = subprocess.Popen(
-        [str(BIN), "start-single-node", "--insecure", f"--store={root / 'store'}",
-         f"--listen-addr=127.0.0.1:{port}",
-         f"--http-addr=127.0.0.1:{http_port}"],
-        stdout=log_handle, stderr=subprocess.STDOUT, env=env)
+    log_handle = None
+    process = None
     try:
+        log_handle = log_path.open("w", encoding="utf-8")
+        process = subprocess.Popen(
+            [str(BIN), "start-single-node", "--insecure", f"--store={root / 'store'}",
+             f"--listen-addr=127.0.0.1:{port}",
+             f"--http-addr=127.0.0.1:{http_port}"],
+            stdout=log_handle, stderr=subprocess.STDOUT, env=env)
         for _ in range(30):
             if sql(port, "SELECT 1", expect_ok=False).returncode == 0:
                 break
@@ -158,13 +160,15 @@ def trial(label: str, port: int, http_port: int) -> dict[str, object]:
                 "hashes_match": returned_hashes == expected_hashes,
                 "lanes": list(LANES)}
     finally:
-        process.terminate()
-        try:
-            process.wait(timeout=10)
-        except subprocess.TimeoutExpired:
-            process.kill()
-            process.wait(timeout=5)
-        log_handle.close()
+        if process is not None:
+            process.terminate()
+            try:
+                process.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait(timeout=5)
+        if log_handle is not None:
+            log_handle.close()
         shutil.rmtree(root)
 
 
