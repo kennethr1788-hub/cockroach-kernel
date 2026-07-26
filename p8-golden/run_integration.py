@@ -143,6 +143,20 @@ def trial(label: str, port: int, http_port: int) -> dict[str, object]:
                 quote(json.dumps(rollback)), quote(rollback["receipt_hash"])), database)
         after_rollback = data_line(sql(
             port, "SELECT policy_id FROM p8_policies WHERE status='GOLDEN'", database).stdout)
+        duplicate_rollback = sql(
+            port,
+            "BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;"
+            "UPDATE p8_policies SET status='SUPERSEDED' WHERE policy_id=%s AND status='GOLDEN';"
+            "UPDATE p8_policies SET status='GOLDEN' WHERE policy_id=%s AND status='SUPERSEDED';"
+            "INSERT INTO p8_rollbacks VALUES ('rollback-p8-001',decode(%s,'hex'),%s,%s,%s::JSONB,decode(%s,'hex'));"
+            "COMMIT;" % (
+                quote(fx.SAFE_POLICY["policy_id"]), quote(fx.BASE_POLICY["policy_id"]),
+                quote(results["proposal-safe"]["receipt"]["receipt_hash"]),
+                quote(fx.SAFE_POLICY["policy_id"]), quote(fx.BASE_POLICY["policy_id"]),
+                quote(json.dumps(rollback)), quote(rollback["receipt_hash"])),
+            database, expect_ok=False)
+        after_duplicate_rollback = data_line(sql(
+            port, "SELECT policy_id FROM p8_policies WHERE status='GOLDEN'", database).stdout)
         counts = data_line(sql(port,
             "SELECT (SELECT count(*) FROM p8_policies),"
             "(SELECT count(*) FROM p8_incident_sets),"
@@ -158,6 +172,8 @@ def trial(label: str, port: int, http_port: int) -> dict[str, object]:
             "duplicate_commit_exit": duplicate.returncode,
             "after_promotion": after_promotion,
             "after_rollback": after_rollback,
+            "duplicate_rollback_rejected": duplicate_rollback.returncode != 0,
+            "after_duplicate_rollback": after_duplicate_rollback,
             "counts": counts,
             "proposal_outcomes": {
                 name: ((value["receipt"] if "receipt" in value else value)["outcome"])
@@ -185,9 +201,11 @@ if __name__ == "__main__":
     assert comparable[0] == comparable[1], outputs
     assert all(item["interrupted_rejected"] and item["after_interrupt"] == "0\t0\t0"
                and item["first_commit_exit"] == 0 and item["duplicate_commit_exit"] == 0
-               and item["after_promotion"] == "1\t7\t1"
+               and item["after_promotion"] == "1\t8\t1"
                and item["after_rollback"] == fx.BASE_POLICY["policy_id"]
-               and item["counts"] == "2\t1\t7\t1\t1"
+               and item["duplicate_rollback_rejected"]
+               and item["after_duplicate_rollback"] == fx.BASE_POLICY["policy_id"]
+               and item["counts"] == "2\t1\t8\t1\t1"
                and item["proposal_outcomes"]["proposal-safe"] == "PROMOTE"
                and all(outcome == "REJECT" for name, outcome in item["proposal_outcomes"].items()
                        if name != "proposal-safe")

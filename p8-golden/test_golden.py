@@ -51,6 +51,7 @@ class TestReplay(unittest.TestCase):
             "proposal-weaken-ordinary": "SAFETY_INVARIANT_FAILED",
             "proposal-weaken-critical": "SAFETY_INVARIANT_FAILED",
             "proposal-unsafe-correlation": "SAFETY_INVARIANT_FAILED",
+            "proposal-unsafe-correlation-low": "SAFETY_INVARIANT_FAILED",
             "proposal-stale": "STALE_BASE_POLICY",
             "proposal-noop": "NO_POLICY_CHANGE",
         }
@@ -60,6 +61,18 @@ class TestReplay(unittest.TestCase):
                 self.assertEqual(result["outcome"], "REJECT")
                 self.assertEqual(result["reason"], reason)
                 self.assertRegex(result["receipt_hash"], r"^[0-9a-f]{64}$")
+
+    def test_every_fixture_proposal_has_exactly_one_outcome_receipt(self):
+        for name, proposal in fx.PROPOSALS.items():
+            with self.subTest(name=name):
+                result = g.replay_proposal(proposal, fx.BASE_POLICY, fx.INCIDENTS)
+                receipt = result["receipt"] if "receipt" in result else result
+                self.assertIn(receipt["outcome"], ("PROMOTE", "REJECT"))
+                self.assertRegex(receipt["receipt_hash"], r"^[0-9a-f]{64}$")
+                self.assertEqual(receipt["proposal_hash"], g.sha256_hex(proposal))
+                self.assertEqual(receipt["incident_set_hash"],
+                                 g.incident_set_hash(fx.INCIDENTS))
+                self.assertNotIn("authority", result)
 
     def test_malformed_and_unsupported_are_receipted(self):
         malformed = copy.deepcopy(fx.PROPOSALS["proposal-safe"])

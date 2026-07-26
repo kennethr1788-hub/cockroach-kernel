@@ -78,6 +78,9 @@ PROPOSALS = {
     "proposal-unsafe-correlation": proposal(
         "proposal-unsafe-correlation",
         dict(BASE_POLICY, policy_id="policy-p8-bad-correlation", correlation_limit=5)),
+    "proposal-unsafe-correlation-low": proposal(
+        "proposal-unsafe-correlation-low",
+        dict(BASE_POLICY, policy_id="policy-p8-bad-correlation-low", correlation_limit=1)),
     "proposal-stale": proposal("proposal-stale", SAFE_POLICY, "0" * 64),
     "proposal-noop": proposal("proposal-noop", dict(BASE_POLICY)),
     "proposal-regression": proposal(
