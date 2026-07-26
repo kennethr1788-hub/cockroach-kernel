@@ -11,6 +11,7 @@ import time
 import unittest
 
 import protocol
+import coordinator_guard
 
 
 def metrics() -> dict[str, int]:
@@ -97,6 +98,19 @@ class ProtocolTests(unittest.TestCase):
             records = [json.loads(line) for line in
                        (evidence / "coordinator.ndjson").read_bytes().splitlines()]
             self.assertEqual(records[-1]["event"], "COORDINATOR_BLOCKED")
+
+    def test_guard_ignores_only_in_progress_final_fragment(self):
+        with tempfile.TemporaryDirectory(prefix="s3-chain-fragment-") as temporary:
+            path = Path(temporary) / "chain.ndjson"
+            core = {
+                "version": "proof-log-v1", "campaign_id": "ck-s3-fragment-proof",
+                "sequence": 1, "previous_hash": protocol.GENESIS_HASH,
+                "event": "HEARTBEAT", "details": {},
+                "utc": "2026-07-26T00:00:00Z", "monotonic_ns": 1,
+            }
+            record = {**core, "event_hash": protocol.sha256(core)}
+            path.write_bytes(protocol.canonical(record) + b"\n{\"partial\":")
+            self.assertEqual(coordinator_guard.read_chain(path), [record])
 
     def test_coordinator_waits_for_completion_marker(self):
         with tempfile.TemporaryDirectory(prefix="s3-completion-marker-") as temporary:

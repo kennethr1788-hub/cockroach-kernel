@@ -1,6 +1,6 @@
 # S3 Status
 
-- `STATUS`: `S3_PREFLIGHT_R2_LOCAL_GREEN_JUDGES_PENDING`
+- `STATUS`: `S3_PREFLIGHT_R2_INVALIDATED_R3_PACKET_PENDING`
 - `LAST_GREEN_GATE`: `CK_P9_INTEGRATION_GREEN`
 - `P9_COMMIT`: `fc296743dd97699a78a4777c8affcd47930f92e6`
 - `S3_PREFLIGHT_IMPLEMENTATION_COMMIT`: `9f9e1675b9d12e70e5531a196e33e28c76b9b68a`
@@ -10,9 +10,10 @@
 - `AUTHORIZATION_PROMPT_SHA256`: `51cdae6c688dafa0715a3120b74fb6ec162a34b5d25c4680268e4450f463394b`
 - `RUNPOD_ATTEMPTS`: `0`
 - `RUNPOD_EXPOSURE`: `$0.00`
-- `NEXT_ALLOWED_ACTION`: `FREEZE_R2_PACKET_FOR_GLM_AND_CLAUDE`
+- `NEXT_ALLOWED_ACTION`: `FREEZE_R3_PACKET_FOR_GLM_AND_CLAUDE`
 - `FORBIDDEN_ACTION`: `RUNPOD_CREATION_BEFORE_BOTH_PREFLIGHT_JUDGES_GREEN`
-- `UTC_RECORDED`: `2026-07-26T23:12:11Z`
+- `UTC_RECORDED`: `2026-07-26T23:46:46Z`
 
-S3 is not GREEN. Local preflight evidence is complete, but the same-hash GLM
-and Claude Opus 4.8 preflight gate has not yet run.
+S3 is not GREEN. R2 is invalid because Claude found a premature-teardown path.
+The R3 local correction is complete, but both GLM and Claude Opus 4.8 must
+return GREEN on the exact same R3 packet before any RunPod worker is created.

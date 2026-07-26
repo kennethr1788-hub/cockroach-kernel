@@ -113,9 +113,19 @@ screen -dmS <COORDINATOR_GUARD_SESSION> caffeinate -dimsu
   --deadline-epoch <DELETE_EPOCH>
   --stale-seconds 90
   --startup-grace-seconds 60
+  --heartbeat-seconds 5
   --log <LOCAL_ATTEMPT_ROOT>/coordinator-guard.ndjson
   --stop-marker <LOCAL_ATTEMPT_ROOT>/stop.json
 ```
+
+On every poll the guard verifies canonical JSON, sequence, previous-hash, and
+event-hash integrity for all three guarded logs. A log is exempt from further
+growth only when its last verified event is the corresponding terminal GREEN
+event: `COORDINATOR_GREEN`, `BRIDGE_GREEN`, or `TEARDOWN_GREEN`. This permits
+the bridge to complete after its twelfth scheduled request without triggering
+premature teardown while the remote worker finishes the final hour. A static
+nonterminal log, a malformed terminal record, or an unexpected process exit
+remains fail-stop.
 
 ## Remote production worker
 

@@ -2,8 +2,9 @@
 
 - `STATUS`: `LOCAL_PREFLIGHT_GREEN_PENDING_INDEPENDENT_JUDGES`
 - `UTC_RECORDED`: `2026-07-26T23:12:11Z`
-- `P9_REGRESSION_TESTS`: `113_OF_113_GREEN`
-- `S3_UNIT_TESTS`: `9_OF_9_GREEN`
+- `P9_CLOUD_REGRESSION_SUBSET`: `113_OF_113_GREEN`
+- `P9_PARENT_TOTAL_AT_P9_GATE`: `229_OF_229_GREEN`
+- `S3_UNIT_TESTS`: `10_OF_10_GREEN`
 - `GIT_DIFF_CHECK`: `GREEN`
 - `RUNPOD_S3_SCOPED_INVENTORY`: `[]`
 
@@ -32,10 +33,14 @@ No related local coordinator, worker, or database process remained.
 - result: `EXPECTED_REFUSAL:COORDINATOR_UNAVAILABLE`;
 - cloud calls: zero;
 - updated coordinator-guard proof SHA-256:
-  `703075d8f6595cf4067049789350e020ac49da365ea49a4af965666cee894468`;
+  `a94d19dccc93be4df0c9b23cc2d24e5fad66fa7e4a47e68ab2ce2cadda4af214`;
 - normal case: guard exited GREEN without stopping the fake worker;
 - stale/failure case: guard emitted a stop marker and deleted the exact fake
-  worker.
+  worker;
+- bridge-terminal-tail case: a hash-valid terminal `BRIDGE_GREEN` log remained
+  static beyond the stale window while the other guarded logs advanced; the
+  guard did not misclassify that completed process as stale and reached only
+  the deliberately accelerated test deadline.
 
 ## Bundle proof
 
@@ -43,10 +48,10 @@ No related local coordinator, worker, or database process remained.
   `5c33c443e8e4d0e0b8c6c539ddd94c4c291625a73e4c257daec5fc69ae38140f`;
 - worker tree manifest SHA-256:
   `c3d7613ce0d06031e2e3a11e692e7c707431328b740a8b92fabc51b96b479793`;
-- host archive: 54,288 bytes, SHA-256
-  `b1f49a1df501c56a46eec7b35772ef190a1807b3cf40d84b3ece411bccfc3ff5`;
+- host archive: 56,343 bytes, SHA-256
+  `073f41533224232e8ee64f90e9a11aa8488f756c481ac565112bf54201bbda46`;
 - host tree manifest SHA-256:
-  `98b31d0bb095d74e328161688466a63ab9552d52e75b32ee4ea75d4c511fe083`;
+  `5dfb70ca791b063a0ae87bb67c39480065609ed769871e5a81ba6e195f15a42a`;
 - host `gitleaks`: zero;
 - host `detect-secrets`: zero;
 - host private-path/key scan: zero;

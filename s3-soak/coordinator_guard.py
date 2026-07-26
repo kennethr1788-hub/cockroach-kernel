@@ -59,6 +59,9 @@ def read_chain(path: Path) -> list[dict[str, Any]]:
     raw = path.read_bytes()
     if len(raw) > 16 * 1024 * 1024:
         raise GuardFailure("CHAIN_LOG_OVERSIZED")
+    if raw and not raw.endswith(b"\n"):
+        complete, separator, _partial = raw.rpartition(b"\n")
+        raw = complete + separator
     previous = protocol.GENESIS_HASH
     records = []
     for expected, line in enumerate(raw.splitlines(), 1):
@@ -145,11 +148,13 @@ def main() -> int:
     parser.add_argument("--deadline-epoch", type=int, required=True)
     parser.add_argument("--stale-seconds", type=int, default=90)
     parser.add_argument("--startup-grace-seconds", type=int, default=60)
+    parser.add_argument("--heartbeat-seconds", type=int, default=5)
     parser.add_argument("--log", type=Path, required=True)
     parser.add_argument("--stop-marker", type=Path, required=True)
     args = parser.parse_args()
     if (min(args.coordinator_pid, args.bridge_pid, args.runpod_guard_pid) <= 1 or
-            args.deadline_epoch <= int(time.time())):
+            args.deadline_epoch <= int(time.time()) or
+            not 1 <= args.heartbeat_seconds <= 30):
         raise GuardFailure("ARGUMENT_INVALID")
     protocol_file = args.protocol_file.resolve()
     allowlist = args.resource_allowlist.resolve()
@@ -194,14 +199,21 @@ def main() -> int:
                     if now - started > args.startup_grace_seconds:
                         raise GuardFailure("GUARDED_LOG_MISSING")
                     continue
+                guarded_records = read_chain(path)
+                parsed[path] = guarded_records
+                terminal_event = {
+                    args.coordinator_log.resolve(): "COORDINATOR_GREEN",
+                    args.bridge_log.resolve(): "BRIDGE_GREEN",
+                    args.runpod_guard_log.resolve(): "TEARDOWN_GREEN",
+                }[path]
+                terminal_green = guarded_records[-1].get("event") == terminal_event
                 size = path.stat().st_size
                 prior_size, prior_time = last_sizes.get(path, (-1, now))
                 if size != prior_size:
                     prior_time = now
-                elif now - prior_time > args.stale_seconds:
+                elif not terminal_green and now - prior_time > args.stale_seconds:
                     raise GuardFailure("GUARDED_LOG_STALE")
                 last_sizes[path] = (size, prior_time)
-                parsed[path] = read_chain(path)
             coordinator_records = parsed.get(args.coordinator_log.resolve(), [])
             bridge_records = parsed.get(args.bridge_log.resolve(), [])
             runpod_records = parsed.get(args.runpod_guard_log.resolve(), [])
@@ -241,7 +253,7 @@ def main() -> int:
                     raise GuardFailure(reason) from exc
             log.emit("HEARTBEAT", {"guarded_logs": len(parsed),
                                     "completion_marker": False})
-            time.sleep(5)
+            time.sleep(args.heartbeat_seconds)
         raise GuardFailure("GUARD_DEADLINE")
     except Exception as exc:
         try:
