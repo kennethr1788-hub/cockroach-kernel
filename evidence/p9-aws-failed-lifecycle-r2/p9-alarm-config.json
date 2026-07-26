@@ -1,0 +1,8 @@
+{
+    "AlarmName": "ck-p9-invocations-1000",
+    "MetricName": "Invocations",
+    "Threshold": 1000.0,
+    "Period": 3600,
+    "EvaluationPeriods": 1,
+    "TreatMissingData": "notBreaching"
+}

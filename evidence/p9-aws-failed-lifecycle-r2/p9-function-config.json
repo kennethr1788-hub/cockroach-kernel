@@ -1,0 +1,10 @@
+{
+    "FunctionName": "ck-p9-evaluator",
+    "Runtime": "python3.12",
+    "Handler": "lambda_handler.lambda_handler",
+    "MemorySize": 128,
+    "Timeout": 3,
+    "State": "Active",
+    "LastUpdateStatus": "Successful",
+    "CodeSha256": "KcEUCzbFWqeJnzGGYje6kdDQKTj5r4YHm+4h8M1t8iA="
+}
