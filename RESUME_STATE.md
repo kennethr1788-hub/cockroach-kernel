@@ -2,11 +2,11 @@
 
 - `CURRENT_PHASE`: `S3_PREFLIGHT`
 - `LAST_GREEN_GATE`: `CK_P9_INTEGRATION_GREEN`
-- `NEXT_ALLOWED_ACTION`: Freeze and mechanically verify the feature-complete S3 preflight packet at the P9 GREEN checkpoint; obtain required GLM plus Claude GREEN before any RunPod creation
+- `NEXT_ALLOWED_ACTION`: Commit the verified S3 preflight delta, freeze one sanitized byte-complete packet, and obtain required GLM plus Claude GREEN before any RunPod creation
 - `FORBIDDEN_ACTIONS`: RunPod creation before S3 preflight GREEN; feature additions after P9; P10 or later; public actions; release; submission; HOME/live-memory mutation; credential exposure; more than one worker; any worker credential transfer
 - `CURRENT_COMMIT_AT_P9_PACKET_FREEZE`: `61d77d1704a3f074427f9f82b300abaaa201f79c`
 - `P9_IMPLEMENTATION_COMMIT`: `cbd58b3af9e1ce5c4ddf8885866b88e7e7c1ca0f`
-- `PENDING_BLOCKERS`: S3 preflight packet, GLM plus Claude preflight review, RunPod campaign-ready proof, 43,200-second production soak, teardown, and final GLM plus Claude plus AGY review remain incomplete
+- `PENDING_BLOCKERS`: GLM plus Claude preflight review, RunPod campaign-ready proof, 43,200-second production soak, teardown, and final GLM plus Claude plus AGY review remain incomplete
 - `REQUIRED_JUDGE_STATE`: S3 preflight requires GLM plus Claude on one hash; S3 final requires GLM plus Claude plus AGY on one hash
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
@@ -17,5 +17,8 @@
 - `RUNPOD_ATTEMPTS`: `0`
 - `RUNPOD_EXPOSURE`: `$0.00`
 - `LATEST_CHECKPOINT`: `P9_FINAL_CHECKPOINT_R1.md`
+- `S3_LOCAL_PREFLIGHT`: `GREEN_PENDING_INDEPENDENT_JUDGES`
+- `S3_CONTRACT`: `S3_CONTRACT_R1.md`
+- `S3_RUNTIME_HASHES`: `S3_RUNTIME_HASHES_R1.json`
 - `AUTHORIZATION_PROMPT`: `COCKROACH_KERNEL_P9_COMPLETION_S3_RETRY_EXECUTION_PROMPT_20260726_R1.md`
 - `AUTHORIZATION_PROMPT_SHA256`: `51cdae6c688dafa0715a3120b74fb6ec162a34b5d25c4680268e4450f463394b`

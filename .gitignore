@@ -1,2 +1,14 @@
 # Project-local test runtime; never publish the downloaded database binary.
 p2-cleanroom/vendor/
+
+# S3 project-local cloud CLIs, temporary OAuth/session caches, and certificates.
+.s3-runtime/
+
+# Raw S3 preflight/run evidence remains local; bounded receipts carry hashes.
+s3-live-smoke-*/
+s3-local-smoke-*/
+s3-local-offline-refusal-*/
+s3-*.stdout
+
+# Python compilation residue is never release evidence.
+__pycache__/
