@@ -4,7 +4,8 @@
 - `LAST_GREEN_GATE`: `CK_P8_GOLDEN_GREEN`
 - `NEXT_ALLOWED_ACTION`: Kenneth approves the visible macOS Keychain access dialog for /usr/bin/security to read only the existing cockroach-kernel-sql-runtime item without sharing the password; then rerun the canonical P9 completion plus S3 prompt and revalidate before live trials
 - `FORBIDDEN_ACTIONS`: S3 before P9 GREEN; RunPod before S3 preflight GREEN; P10 or later; public actions; release; submission; HOME/live-memory mutation; credential exposure
-- `CURRENT_COMMIT`: `10b1a40a48b8d0e2543a532e8e2d9d9de3036c30`
+- `CURRENT_COMMIT`: `ebcd07b06008c5b571bca89c1246eafe7cb821c9`
+- `LATEST_CHECKPOINT_TAG`: `ck-p9-keychain-human-gate-r1`
 - `PENDING_BLOCKERS`: COCKROACH_RUNTIME_KEYCHAIN_HUMAN_GATE; two distinct complete P9 live vertical-slice trials and non-empty receipt linkage are missing; final P9 packet and GLM plus AGY reviews are not ready; S3 has not started
 - `REQUIRED_JUDGE_STATE`: P9 final requires GLM plus AGY on one frozen hash; S3 preflight requires GLM plus Claude; S3 final requires GLM plus Claude plus AGY
 - `REPLACEMENT_AUTHORIZATION_SHA256`: `7661fd8de8284cfd69dfcf584f05e6b0584bb736047e626d594a4595047e486e`
