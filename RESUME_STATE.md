@@ -2,10 +2,11 @@
 
 - `CURRENT_PHASE`: `S3_PREFLIGHT`
 - `LAST_GREEN_GATE`: `CK_P9_INTEGRATION_GREEN`
-- `NEXT_ALLOWED_ACTION`: Commit the verified S3 preflight delta, freeze one sanitized byte-complete packet, and obtain required GLM plus Claude GREEN before any RunPod creation
+- `NEXT_ALLOWED_ACTION`: Freeze one sanitized byte-complete packet and obtain required GLM plus Claude GREEN before any RunPod creation
 - `FORBIDDEN_ACTIONS`: RunPod creation before S3 preflight GREEN; feature additions after P9; P10 or later; public actions; release; submission; HOME/live-memory mutation; credential exposure; more than one worker; any worker credential transfer
 - `CURRENT_COMMIT_AT_P9_PACKET_FREEZE`: `61d77d1704a3f074427f9f82b300abaaa201f79c`
 - `P9_IMPLEMENTATION_COMMIT`: `cbd58b3af9e1ce5c4ddf8885866b88e7e7c1ca0f`
+- `S3_PREFLIGHT_IMPLEMENTATION_COMMIT`: `9f9e1675b9d12e70e5531a196e33e28c76b9b68a`
 - `PENDING_BLOCKERS`: GLM plus Claude preflight review, RunPod campaign-ready proof, 43,200-second production soak, teardown, and final GLM plus Claude plus AGY review remain incomplete
 - `REQUIRED_JUDGE_STATE`: S3 preflight requires GLM plus Claude on one hash; S3 final requires GLM plus Claude plus AGY on one hash
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
@@ -16,7 +17,7 @@
 - `P9_JUDGE_EVIDENCE`: `evidence/p9-final-judges-r1/`
 - `RUNPOD_ATTEMPTS`: `0`
 - `RUNPOD_EXPOSURE`: `$0.00`
-- `LATEST_CHECKPOINT`: `P9_FINAL_CHECKPOINT_R1.md`
+- `LATEST_CHECKPOINT`: `S3_PREFLIGHT_CHECKPOINT_R1.md`
 - `S3_LOCAL_PREFLIGHT`: `GREEN_PENDING_INDEPENDENT_JUDGES`
 - `S3_CONTRACT`: `S3_CONTRACT_R1.md`
 - `S3_RUNTIME_HASHES`: `S3_RUNTIME_HASHES_R1.json`
