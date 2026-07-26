@@ -1,0 +1,40 @@
+glm-zai: served by glm-5.2
+PACKET_SHA256
+9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb
+
+GLM_VERDICT
+GREEN
+
+BLOCKERS
+None. All six required criteria are directly supported by packet evidence.
+
+Criterion 1 (two distinct end-to-end live traces): Supported. Two traces (`ck-p9-live-promote-r1`, `ck-p9-live-refuse-r1`) each provide distinct request, receipt, Lambda-response, worker-result, and projection hashes. Atomic commit of task/trajectory/receipt/vector is stated for both. Bounded vector query returned distance-zero linked rows. Primary and resumed changefeed inspection hashes are provided, with both request IDs plus resolved cursor emitted.
+
+Criterion 2 (local authority, advisory cloud): Supported. The packet explicitly states the local P4 verifier is the sole authority for PROMOTE/REFUSE/INVALID and Lambda output is strict-schema validated and ADVISORY only. The unsafe trace was refused locally on HASH_MISMATCH despite a HTTP-200 Lambda response.
+
+Criterion 3 (fresh-process keyless replay): Supported. Two empty-root processes consumed only canonical reconciled files, produced distinct valid/refusal result hashes, continued only for the valid capsule, and preserved refusal for the unsafe capsule. Absence of imports, network, credentials, hidden session state, and bytecode writes is stated. Replay label is KEYLESS_LOCAL_REPLAY.
+
+Criterion 4 (MCP call properties): Supported. Nonempty rows pre-existed; one bounded read-only select_query from mcp_receipt_view; OAuth consent showed Read-Data checked/disabled and Write-Data unchecked; single declared cluster scope; grant revoked to Not-logged-in; no OAuth/cookie/callback/account/org/cluster/connection identifiers in final evidence; global Codex config hash unchanged.
+
+Criterion 5 (cleanup/credentials/costs/boundaries/limitations): Supported. Web-shell cleanup rejected BEGIN, then succeeded with ID-scoped deletes in dependency order; independent readback returned zero across all entity types; CA cert removed; OAuth revoked; no child/changefeed/RunPod remained; 4 Lambda calls below 1,000 ceiling; cost under $0.01; Gitleaks zero; detect-secrets candidates classified. Preserved-failures section is explicit and honest. Fail-closed behavior demonstrated (rejected BEGIN, rejected invalid Lambda JSON, refused unsafe capsule).
+
+Criterion 6 (tests/clones/hashes/provenance sufficient, no S3/submission overclaim): Supported. 113/113 P9 plus inherited 116 (5+6+20+41+29+15) = 229/229 total. Two independent no-hardlink clones of cbd58b3 each passed 113/113 and reproduced identical replay hashes. Builder contributions and persona-source receipts have declared SHA-256 values. Packet explicitly states P9 does not prove the 12-hour S3 soak or any public/submission gate.
+
+NON_BLOCKING_RISKS
+- Exact-hash verification is not independently reproducible by this reviewer (no shell/filesystem authority). The verdict relies on internal consistency of declared hashes and the stated independent clean-clone reproduction.
+- The two clean clones share the same implementation commit; a latent tree-wide systematic error would affect both identically, though this is mitigated by the inherited P3-P8 suite passing at the same tree.
+- Live CockroachDB SQL-shell role-switch negative remains grant-derived (console limitation acknowledged), so the role-boundary negative is not a live-role-switch test per se.
+- Builder/persona provenance files are referenced by hash but their raw content is not embedded in this packet.
+- Preserved-failure honesty is self-reported; no external witness hash is provided for the pre-fix failing runs.
+
+EVIDENCE_GAPS
+None that block GREEN under the stated criteria. The following are noted for completeness but fall outside P9 requirements:
+- Raw builder-contribution and persona-source receipt file contents are not included in the 63,636-byte evidence total described.
+- The live traces' raw canonical JSON payloads (not just their hashes) are not embedded.
+- No second-account or cross-region independent verification of the AWS Lambda call is provided (single AWS account in us-west-2).
+
+RECUSAL_CHECK
+No recusal required. This reviewer is non-authoring, has no shell/filesystem/code/cloud/credential/public-action authority, and has no declared conflict of interest. The packet's authority boundary (judge only CK_P9_INTEGRATION_GREEN, not S3/P10/release/video/public-repo/submission) is respected.
+
+REQUIRED_RERUNS
+None required for CK_P9_INTEGRATION_GREEN. All six criteria are directly supported.

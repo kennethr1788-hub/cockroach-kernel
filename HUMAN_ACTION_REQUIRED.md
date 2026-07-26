@@ -1,34 +1,21 @@
 # HUMAN_ACTION_REQUIRED
 
-## Current P9 Keychain Approval Gate
+## Current gate
 
-- `BLOCKER`: `COCKROACH_RUNTIME_KEYCHAIN_HUMAN_GATE`
-- `LAST_GREEN_GATE`: `CK_P8_GOLDEN_GREEN`
-- `BLOCKED_PHASE`: `P9`
-- `CONTRACT_SHA256`: `a36ad159c6b353afd1e13a2705882e7e8541bd05f2ed37da1f5d4f5bbeee4be4`
-- `UTC_RECORDED`: `2026-07-26T21:32:05Z`
-- `EVIDENCE`: `P9_COMPLETION_LOCAL_CHECKPOINT_R1.md`
+- `BLOCKER`: `NONE_AT_P9_BOUNDARY`
+- `LAST_GREEN_GATE`: `CK_P9_INTEGRATION_GREEN`
+- `UTC_RECORDED`: `2026-07-26T22:17:54Z`
+- `EVIDENCE`: `P9_FINAL_CHECKPOINT_R1.md`
 
-The existing project credential is stored in macOS Keychain for account
-`ck_runtime` and service `cockroach-kernel-sql-runtime`. A read-only connection
-attempt caused macOS to hold `/usr/bin/security` for visible human approval.
-The execution prompt classifies this as a human challenge, so execution stopped
-without reading or exposing the password and without a database query.
+The prior Keychain and Managed MCP human gates were explicitly approved,
+consumed only for the bounded P9 proof, and closed. Credential bytes were not
+recorded. The Managed MCP grant is revoked and the temporary database client
+root is removed.
 
-Kenneth must personally approve the visible macOS Keychain access dialog for
-`/usr/bin/security` to read only this existing item. Do not paste or share the
-password, create a replacement credential, grant broader access, or allow any
-other Keychain item.
-
-After approving it, reply exactly:
-
-```text
-Keychain access approved for the existing ck_runtime / cockroach-kernel-sql-runtime item. Resume the canonical P9 completion plus S3 prompt from the blocked checkpoint.
-```
-
-On resume, revalidate Git and all hashes. Run the two live trials first. S3
-remains forbidden until P9 has a frozen final packet and independent GLM plus
-AGY GREEN.
+No human action is currently required for S3 preflight. RunPod creation remains
+forbidden until the feature-freeze packet, immutable bundles, local accelerated
+smokes, current inventory/pricing, lifecycle guards, and GLM plus Claude
+preflight verdicts are all GREEN on one hash.
 
 **Gate:** `CK_P0_RULES_GREEN`
 **Last valid state:** disposable sandbox created; no implementation or RunPod activity

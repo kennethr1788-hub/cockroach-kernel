@@ -1,0 +1,14 @@
+PACKET_SHA256: 9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb
+AGY_VERDICT: GREEN
+BLOCKERS:
+- NONE
+NON_BLOCKING_RISKS:
+- NONE
+EVIDENCE_GAPS:
+- NONE
+RECUSAL_CHECK: clear
+REQUIRED_RERUNS:
+- NONE
+
+[agy-judge] provider execution bound: authenticated inventory -> exact backend override (Gemini 3.1 Pro (High)) -> provider response
+[agy-judge] response-level served-model metadata remains unavailable in CLI 1.1.5

@@ -1,32 +1,21 @@
 # Resume State
 
-- `CURRENT_PHASE`: `P9_LIVE_INTEGRATION_HUMAN_GATE`
-- `LAST_GREEN_GATE`: `CK_P8_GOLDEN_GREEN`
-- `NEXT_ALLOWED_ACTION`: Kenneth approves the visible macOS Keychain access dialog for /usr/bin/security to read only the existing cockroach-kernel-sql-runtime item without sharing the password; then rerun the canonical P9 completion plus S3 prompt and revalidate before live trials
-- `FORBIDDEN_ACTIONS`: S3 before P9 GREEN; RunPod before S3 preflight GREEN; P10 or later; public actions; release; submission; HOME/live-memory mutation; credential exposure
-- `CURRENT_COMMIT`: `ebcd07b06008c5b571bca89c1246eafe7cb821c9`
-- `LATEST_CHECKPOINT_TAG`: `ck-p9-keychain-human-gate-r1`
-- `PENDING_BLOCKERS`: COCKROACH_RUNTIME_KEYCHAIN_HUMAN_GATE; two distinct complete P9 live vertical-slice trials and non-empty receipt linkage are missing; final P9 packet and GLM plus AGY reviews are not ready; S3 has not started
-- `REQUIRED_JUDGE_STATE`: P9 final requires GLM plus AGY on one frozen hash; S3 preflight requires GLM plus Claude; S3 final requires GLM plus Claude plus AGY
-- `REPLACEMENT_AUTHORIZATION_SHA256`: `7661fd8de8284cfd69dfcf584f05e6b0584bb736047e626d594a4595047e486e`
-- `FINAL_PACKET_SHA256`: `c7de73f394151f5cc850cf085a32140e74887bf2873a37448a056966cc8f2378`
-- `P8_STATUS`: `CK_P8_GOLDEN_GREEN`
-- `BAND_B_STATUS`: `CK_BAND_B_GREEN`
-- `P9_STATUS`: `MCP read-only boundary GREEN and revoked; CK_P9_INTEGRATION_GREEN blocked on missing live vertical-slice evidence`
-- `P9_COMPLETION_CONTRACT`: `P9_COMPLETION_CONTRACT_R1.md`
-- `P9_COMPLETION_CONTRACT_SHA256`: `a36ad159c6b353afd1e13a2705882e7e8541bd05f2ed37da1f5d4f5bbeee4be4`
-- `P9_OFFLINE_PACKET_SHA256`: `725f8edf8487a9a34572b2315eab795318a74a7ee0ebf0849e5f982be4468e7d`
-- `P9_OFFLINE_JUDGE_STATE`: `P9_OFFLINE_ARCHITECTURE_GREEN`
-- `P9_PREMUTATION_PACKET_SHA256`: `8b36c7a3f0e10d7ce7654656a8288a4a5763d1dae330fe5eeeff4658079c3b62`
-- `P9_PREMUTATION_JUDGE_STATE`: `GLM_5_2_GREEN`
-- `P9_AWS_RETRY_PACKET_SHA256`: `17077cf3913e88bab2b02440cd256814253f4544555310b46a2b39928fab4de2`
-- `P9_AWS_RETRY_JUDGE_STATE`: `GLM_5_2_GREEN`
-- `P9_AWS_RETRY_PACKET_R2_SHA256`: `698ec0439e91eacb6b9b540a13db2f0823402fca6a0ec0d577a8efa685afe49b`
-- `P9_AWS_RETRY_R2_JUDGE_STATE`: `GLM_5_2_GREEN`
-- `P9_AWS_LIVE_STATE`: `GREEN_THROUGH_MCP_HUMAN_GATE`
-- `P9_AWS_EVIDENCE_ARCHIVE_SHA256`: `68d7288acca74494f63d37db27d14a5073dd9ebebfef51cd708c874f082fcf6c`
-- `P9_MCP_FINAL_EVENTS_SHA256`: `3baf276f0c18dd53c4ef0ea695dc59176a0bdccb858da09adade23524bdc72a5`
-- `P9_MCP_AUTH_STATE`: `LOGGED_OUT_AND_TEMP_CONFIG_REMOVED`
-- `LATEST_CHECKPOINT`: `P9_COMPLETION_LOCAL_CHECKPOINT_R1.md`
-- `P9_S3_AUTHORIZATION_PROMPT`: `COCKROACH_KERNEL_P9_S3_EXECUTION_PROMPT_20260726_R2.md`
-- `P9_S3_AUTHORIZATION_SHA256`: `cb46e382f98d9a4d52a882a3d35f1b0ae4db9047e07f713d2212196dc3204214`
+- `CURRENT_PHASE`: `S3_PREFLIGHT`
+- `LAST_GREEN_GATE`: `CK_P9_INTEGRATION_GREEN`
+- `NEXT_ALLOWED_ACTION`: Freeze and mechanically verify the feature-complete S3 preflight packet at the P9 GREEN checkpoint; obtain required GLM plus Claude GREEN before any RunPod creation
+- `FORBIDDEN_ACTIONS`: RunPod creation before S3 preflight GREEN; feature additions after P9; P10 or later; public actions; release; submission; HOME/live-memory mutation; credential exposure; more than one worker; any worker credential transfer
+- `CURRENT_COMMIT_AT_P9_PACKET_FREEZE`: `61d77d1704a3f074427f9f82b300abaaa201f79c`
+- `P9_IMPLEMENTATION_COMMIT`: `cbd58b3af9e1ce5c4ddf8885866b88e7e7c1ca0f`
+- `PENDING_BLOCKERS`: S3 preflight packet, GLM plus Claude preflight review, RunPod campaign-ready proof, 43,200-second production soak, teardown, and final GLM plus Claude plus AGY review remain incomplete
+- `REQUIRED_JUDGE_STATE`: S3 preflight requires GLM plus Claude on one hash; S3 final requires GLM plus Claude plus AGY on one hash
+- `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
+- `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
+- `P9_FINAL_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; RECUSAL_CLEAR`
+- `P9_LIVE_EVIDENCE`: `evidence/p9-completion-live-r1/`
+- `P9_MCP_EVIDENCE`: `evidence/p9-mcp-linked-r2/`
+- `P9_JUDGE_EVIDENCE`: `evidence/p9-final-judges-r1/`
+- `RUNPOD_ATTEMPTS`: `0`
+- `RUNPOD_EXPOSURE`: `$0.00`
+- `LATEST_CHECKPOINT`: `P9_FINAL_CHECKPOINT_R1.md`
+- `AUTHORIZATION_PROMPT`: `COCKROACH_KERNEL_P9_COMPLETION_S3_RETRY_EXECUTION_PROMPT_20260726_R1.md`
+- `AUTHORIZATION_PROMPT_SHA256`: `51cdae6c688dafa0715a3120b74fb6ec162a34b5d25c4680268e4450f463394b`
