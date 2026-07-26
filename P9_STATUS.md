@@ -1,8 +1,8 @@
 # P9 Status
 
-- `STATUS`: `P9_LIVE_IN_PROGRESS`
+- `STATUS`: `P9_LOCAL_IMPLEMENTATION_COMPLETE_LIVE_BLOCKED`
 - `LIVE_STATUS`: `CK_P9_BLOCKED`
-- `BLOCKER`: `P9_LIVE_VERTICAL_SLICE_EVIDENCE_MISSING`
+- `BLOCKER`: `COCKROACH_RUNTIME_KEYCHAIN_HUMAN_GATE`
 - `AUTH_GATE`: `GREEN`
 - `OFFLINE_ARCHITECTURE_GATE`: `GREEN`
 - `AWS_ACCOUNT_SETUP_GATE`: `GREEN`
@@ -30,6 +30,8 @@
 - `RUNPOD_ATTEMPTS`: `0`
 - `AWS_INCREMENTAL_COST`: `$0.00`
 - `RUNPOD_EXPOSURE`: `$0.00`
+- `P9_COMPLETION_LOCAL_CHECKPOINT`: `P9_COMPLETION_LOCAL_CHECKPOINT_R1.md`
+- `P9_COMPLETION_BUILDER_RECEIPT`: `P9_COMPLETION_BUILDER_CONTRIBUTIONS_R1.md`
 
 Kenneth personally completed the AWS Console and CockroachDB Cloud sign-ins.
 Read-only Chrome verification showed the AWS Lambda surface in `us-west-2` and
@@ -79,11 +81,15 @@ exact UPDATE probe was refused by the SELECT-only tool surface, the grant was
 revoked, and the temporary project configuration was removed. The final read
 returned zero rows, so it did not prove receipt linkage.
 
-Next allowed action: checkpoint the frozen completion contract and implement
-only the missing live P9 evidence coordinator/harness, then run two distinct
-complete synthetic vertical-slice
-trials with authoritative CockroachDB rows, vector linkage, distinct Lambda
-requests, changefeed evidence, local deterministic authority, and cleanup.
-After non-empty receipt linkage exists, obtain a fresh one-time Kenneth OAuth
-authorization for the final linked read, revoke it, freeze the final packet,
-and obtain GLM plus AGY GREEN. Do not start S3.
+The missing local coordinator/harness is implemented and its source hashes are
+recorded in `P9_COMPLETION_LOCAL_CHECKPOINT_R1.md`. The live connection stopped
+fail-closed when macOS required visible human approval for the existing
+project-specific Keychain item. Credential bytes were never exposed. The
+temporary client root was torn down, and no live row, Lambda invocation, MCP
+grant, RunPod worker, or S3 resource was created by this completion attempt.
+
+Next allowed action: Kenneth approves the visible macOS Keychain access prompt
+for `/usr/bin/security` to read only the existing
+`cockroach-kernel-sql-runtime` item, without sharing the password. Then resume
+the same canonical execution prompt, revalidate Git and hashes, and run the two
+distinct complete synthetic vertical-slice trials. Do not start S3.

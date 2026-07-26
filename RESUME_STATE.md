@@ -1,11 +1,11 @@
 # Resume State
 
-- `CURRENT_PHASE`: `P9_LIVE_INTEGRATION_AUTHORIZED`
+- `CURRENT_PHASE`: `P9_LIVE_INTEGRATION_HUMAN_GATE`
 - `LAST_GREEN_GATE`: `CK_P8_GOLDEN_GREEN`
-- `NEXT_ALLOWED_ACTION`: checkpoint P9_COMPLETION_CONTRACT_R1.md, then implement only the missing P9 live evidence coordinator/harness; run two distinct complete synthetic vertical-slice trials before the fresh linked MCP proof
+- `NEXT_ALLOWED_ACTION`: Kenneth approves the visible macOS Keychain access dialog for /usr/bin/security to read only the existing cockroach-kernel-sql-runtime item without sharing the password; then rerun the canonical P9 completion plus S3 prompt and revalidate before live trials
 - `FORBIDDEN_ACTIONS`: S3 before P9 GREEN; RunPod before S3 preflight GREEN; P10 or later; public actions; release; submission; HOME/live-memory mutation; credential exposure
 - `CURRENT_COMMIT`: `10b1a40a48b8d0e2543a532e8e2d9d9de3036c30`
-- `PENDING_BLOCKERS`: live Managed MCP read returned zero rows; canonical two distinct complete P9 live vertical-slice trials and non-empty receipt linkage are missing; final P9 packet and GLM plus AGY reviews are not ready
+- `PENDING_BLOCKERS`: COCKROACH_RUNTIME_KEYCHAIN_HUMAN_GATE; two distinct complete P9 live vertical-slice trials and non-empty receipt linkage are missing; final P9 packet and GLM plus AGY reviews are not ready; S3 has not started
 - `REQUIRED_JUDGE_STATE`: P9 final requires GLM plus AGY on one frozen hash; S3 preflight requires GLM plus Claude; S3 final requires GLM plus Claude plus AGY
 - `REPLACEMENT_AUTHORIZATION_SHA256`: `7661fd8de8284cfd69dfcf584f05e6b0584bb736047e626d594a4595047e486e`
 - `FINAL_PACKET_SHA256`: `c7de73f394151f5cc850cf085a32140e74887bf2873a37448a056966cc8f2378`
@@ -26,6 +26,6 @@
 - `P9_AWS_EVIDENCE_ARCHIVE_SHA256`: `68d7288acca74494f63d37db27d14a5073dd9ebebfef51cd708c874f082fcf6c`
 - `P9_MCP_FINAL_EVENTS_SHA256`: `3baf276f0c18dd53c4ef0ea695dc59176a0bdccb858da09adade23524bdc72a5`
 - `P9_MCP_AUTH_STATE`: `LOGGED_OUT_AND_TEMP_CONFIG_REMOVED`
-- `LATEST_CHECKPOINT`: `P9_MCP_LIVE_PROOF_RECEIPT_R1.md`
+- `LATEST_CHECKPOINT`: `P9_COMPLETION_LOCAL_CHECKPOINT_R1.md`
 - `P9_S3_AUTHORIZATION_PROMPT`: `COCKROACH_KERNEL_P9_S3_EXECUTION_PROMPT_20260726_R2.md`
 - `P9_S3_AUTHORIZATION_SHA256`: `cb46e382f98d9a4d52a882a3d35f1b0ae4db9047e07f713d2212196dc3204214`
