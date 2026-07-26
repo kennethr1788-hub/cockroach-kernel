@@ -1,0 +1,12 @@
+PACKET_SHA256: c7de73f394151f5cc850cf085a32140e74887bf2873a37448a056966cc8f2378
+AGY_VERDICT: GREEN
+BLOCKERS:
+- NONE
+NON_BLOCKING_RISKS:
+- Semantic SHA-256 validation relies on the application layer and test harness rather than database-level digest constraints.
+- Evidence is derived from local synthetic data and a local CockroachDB instance rather than a live AWS/CockroachDB production environment.
+EVIDENCE_GAPS:
+- NONE
+RECUSAL_CHECK: clear
+REQUIRED_RERUNS:
+- NONE
