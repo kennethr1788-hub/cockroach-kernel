@@ -123,7 +123,8 @@ def validate_request(value: Any) -> dict[str, Any]:
     if operation is not expected:
         raise ProtocolError("OPERATION_SEQUENCE_INVALID")
     payload = _exact(value["payload"], PAYLOAD_FIELDS, "PAYLOAD_FIELDS_INVALID")
-    if payload["hour"] != sequence:
+    hour = _uint(payload["hour"], 1, MAX_SEQUENCE, "PAYLOAD_HOUR_INVALID")
+    if hour != sequence:
         raise ProtocolError("PAYLOAD_HOUR_INVALID")
     _identifier(payload["scenario"], "SCENARIO_INVALID")
     _hash(payload["synthetic_hash"], "SYNTHETIC_HASH_INVALID")

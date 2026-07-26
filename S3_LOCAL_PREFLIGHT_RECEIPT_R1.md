@@ -3,7 +3,7 @@
 - `STATUS`: `LOCAL_PREFLIGHT_GREEN_PENDING_INDEPENDENT_JUDGES`
 - `UTC_RECORDED`: `2026-07-26T23:12:11Z`
 - `P9_REGRESSION_TESTS`: `113_OF_113_GREEN`
-- `S3_UNIT_TESTS`: `7_OF_7_GREEN`
+- `S3_UNIT_TESTS`: `9_OF_9_GREEN`
 - `GIT_DIFF_CHECK`: `GREEN`
 - `RUNPOD_S3_SCOPED_INVENTORY`: `[]`
 
@@ -39,18 +39,19 @@ No related local coordinator, worker, or database process remained.
 
 ## Bundle proof
 
-- worker archive: 144,500,645 bytes, SHA-256
-  `51df007f8ffc79b164e5b3b6e0e95115e2fc57b8f2efff4de19992eb6c117cd0`;
-- host archive: 52,718 bytes, SHA-256
-  `c37fd8eb605b469b09950b10959c4edc29bbc998b9fc7925a344fb2964445e4d`;
+- worker archive: 144,500,700 bytes, SHA-256
+  `5c33c443e8e4d0e0b8c6c539ddd94c4c291625a73e4c257daec5fc69ae38140f`;
+- worker tree manifest SHA-256:
+  `c3d7613ce0d06031e2e3a11e692e7c707431328b740a8b92fabc51b96b479793`;
+- host archive: 54,288 bytes, SHA-256
+  `b1f49a1df501c56a46eec7b35772ef190a1807b3cf40d84b3ece411bccfc3ff5`;
 - host tree manifest SHA-256:
-  `401979ae5d02ba9f5ecdaeec5fc936458e75dd356fc2c7af271acbb7dccc9635`;
+  `98b31d0bb095d74e328161688466a63ab9552d52e75b32ee4ea75d4c511fe083`;
 - host `gitleaks`: zero;
 - host `detect-secrets`: zero;
 - host private-path/key scan: zero;
 - worker `gitleaks`: zero;
-- worker `detect-secrets`: 36 classified findings in 27 inherited synthetic
-  fixture files, all fixed SHA-256 test values; no credential or auth artifact;
+- worker `detect-secrets`: zero;
 - worker private-path/key scan: zero.
 
 The Linux CockroachDB archive SHA-256 is

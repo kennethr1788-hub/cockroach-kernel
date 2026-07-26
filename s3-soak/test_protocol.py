@@ -66,6 +66,38 @@ class ProtocolTests(unittest.TestCase):
         with self.assertRaisesRegex(protocol.ProtocolError, "RESULT_LINKAGE_INVALID"):
             protocol.validate_result(result, other)
 
+    def test_bool_hour_rejected(self):
+        request = self.request()
+        request["payload"]["hour"] = True
+        request["request_hash"] = protocol.sha256(protocol.request_body(request))
+        with self.assertRaisesRegex(protocol.ProtocolError, "PAYLOAD_HOUR_INVALID"):
+            protocol.validate_request(request)
+
+    def test_out_of_order_request_file_blocks_coordinator(self):
+        with tempfile.TemporaryDirectory(prefix="s3-out-of-order-") as temporary:
+            root = Path(temporary)
+            bridge = root / "bridge"
+            (bridge / "requests").mkdir(parents=True)
+            (bridge / "results").mkdir()
+            evidence = root / "evidence"
+            request = self.request(2)
+            (bridge / "requests/request-0002.json").write_bytes(
+                protocol.canonical(request))
+            command = [
+                sys.executable, str(Path(__file__).parent / "host_coordinator.py"),
+                "--bridge-root", str(bridge), "--evidence-root", str(evidence),
+                "--campaign-id", request["campaign_id"], "--expected-requests", "2",
+                "--lambda-call-ceiling", "2", "--cockroach-operation-ceiling", "18",
+                "--deadline-epoch", str(int(time.time()) + 20),
+                "--mode", "fixture", "--heartbeat-seconds", "1",
+            ]
+            result = subprocess.run(command, stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT, timeout=10, check=False)
+            self.assertEqual(result.returncode, 1, result.stdout.decode(errors="replace"))
+            records = [json.loads(line) for line in
+                       (evidence / "coordinator.ndjson").read_bytes().splitlines()]
+            self.assertEqual(records[-1]["event"], "COORDINATOR_BLOCKED")
+
     def test_coordinator_waits_for_completion_marker(self):
         with tempfile.TemporaryDirectory(prefix="s3-completion-marker-") as temporary:
             root = Path(temporary)

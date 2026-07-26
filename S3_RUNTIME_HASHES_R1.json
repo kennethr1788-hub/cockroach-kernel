@@ -6,14 +6,26 @@
     "s2-soak/lifecycle_guard.py": "4644aa756f47c3d53b82c239657ce22605d4a9caab3e6a8651c4f459d95c6f0c",
     "s3-soak/cloud_adapter.py": "9e646b1a6a1d5f43144e37dd5253e1bd127a8ace2f7e7c3064a482980bbc8e5b",
     "s3-soak/coordinator_guard.py": "573f118bcf23c710444e9310941eba7bc8597a357c5c070d88740fb647535805",
-    "s3-soak/host_coordinator.py": "e9b703c0cfea808d53c7843f646cedb8ce610f86851227281dc52925c0b014a4",
-    "s3-soak/protocol.py": "0943716dbaaf6e2307ce400719fe6078235cb309a731250432f01560329ea5cd",
+    "p4-verifier/verifier.py": "a7ee1fc513da7d4f0633bfabdd4e5f3ee4947b829b292416d6aad7d87d767c40",
+    "p9-cloud/context_vector.py": "3fc5107c1f45b84e625b9270e34cfeb8ba14925d97a9b26de2a6e98d644f0465",
+    "p9-cloud/coordinator.py": "aea9a00da905b9212b64abc59f39a0d9256c3b340c119b13decd740ffa06a142",
+    "p9-cloud/faults.py": "1db96006f3c97f98098008091a03e68844c5c012299256818a768beb856a6994",
+    "p9-cloud/lambda_handler.py": "8d6d02e8225d17fb7999f042e85413d72f918784b9c51d3516f8308395758833",
+    "p9-cloud/live_completion.py": "29d31dd0ca23755233e0bf1c00413e43708ada02efe3ace9da10afb04348b09b",
+    "p9-cloud/mock_transports.py": "a0fe515e800bdd1554f41b2a2f0c80363a829749f7ed24fe2b9b3dd7ab40c343",
+    "p9-cloud/records.py": "d8eeb6d9836fcf1d0462cc1edc530dbfd8d3e9dc6d74cb56d8c37df0f68bc3aa",
+    "p9-cloud/retry.py": "713087f5f04896c0fcacc823eb96ae1465e46bf52cedcb7ac47138f3c7ce15f5",
+    "p9-cloud/run_offline.py": "b297cb126c502afa9ba685fbd9f8c9701ae1c6f3c5daa8305ff671ee7105aa3e",
+    "s2-soak/run_soak.py": "b4b788b59f7ab95358251623ef89088c4c31c218a431f6d240b7980f9f81d01c",
+    "s3-soak/host_coordinator.py": "8fe2f7cf88c10680d2eed9309b0c8e0c4ae8976e3e035fffc2de0bd04c2574a0",
+    "s3-soak/protocol.py": "20bfeac7bf3923394fa193343c904b67bde3efee62561b530fad6ff96d41178c",
     "s3-soak/prove_coordinator_guard.py": "5e77993b765e28437f8db6dca62d2595d5fd39ae81de83017fc80b8c94ae3201",
     "s3-soak/remote_bridge.py": "d55a16fd73d750b2db847d4cc6aae309c8dedba1f247bdcdb4f66ff17c1a9fba",
-    "s3-soak/test_protocol.py": "9824b92fd41d306fa4c9873c08f1bd590e96b185e89da09d55bcf288115ce6a8",
+    "s3-soak/test_protocol.py": "358d29a9d8552ccd3132ad600fa23c14ad71466302f85713ad2288bf2ee4ff16",
     "s3-soak/worker.py": "0d533e83ae7df392e3150f592998f8b56590c34c5d788c5889e50d1746449a31"
   },
-  "host_bundle_sha256": "c37fd8eb605b469b09950b10959c4edc29bbc998b9fc7925a344fb2964445e4d",
+  "host_bundle_sha256": "b1f49a1df501c56a46eec7b35772ef190a1807b3cf40d84b3ece411bccfc3ff5",
+  "host_tree_manifest_sha256": "98b31d0bb095d74e328161688466a63ab9552d52e75b32ee4ea75d4c511fe083",
   "p9_commit": "fc296743dd97699a78a4777c8affcd47930f92e6",
   "p9_packet_sha256": "9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb",
   "runpodctl": {
@@ -22,5 +34,6 @@
     "version": "2.7.2-309512b"
   },
   "schema_version": "s3-runtime-hashes-v1",
-  "worker_bundle_sha256": "51df007f8ffc79b164e5b3b6e0e95115e2fc57b8f2efff4de19992eb6c117cd0"
+  "worker_bundle_sha256": "5c33c443e8e4d0e0b8c6c539ddd94c4c291625a73e4c257daec5fc69ae38140f",
+  "worker_tree_manifest_sha256": "c3d7613ce0d06031e2e3a11e692e7c707431328b740a8b92fabc51b96b479793"
 }

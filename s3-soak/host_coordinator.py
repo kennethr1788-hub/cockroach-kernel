@@ -9,6 +9,7 @@ from pathlib import Path
 import signal
 import time
 from typing import Any
+import re
 
 import cloud_adapter
 import protocol
@@ -16,6 +17,29 @@ import protocol
 
 class CoordinatorFailure(RuntimeError):
     pass
+
+
+REQUEST_NAME_RE = re.compile(r"^request-([0-9]{4})\.json$")
+
+
+def verify_request_directory(requests: Path, expected_sequence: int,
+                             processed: set[str]) -> None:
+    expected_temporary = f"request-{expected_sequence:04d}.json.tmp"
+    for entry in requests.iterdir():
+        if entry.is_symlink() or not entry.is_file():
+            raise CoordinatorFailure("REQUEST_ENTRY_UNSAFE")
+        match = REQUEST_NAME_RE.fullmatch(entry.name)
+        if match is None:
+            if entry.name == expected_temporary:
+                continue
+            raise CoordinatorFailure("REQUEST_FILE_UNKNOWN")
+        sequence = int(match.group(1))
+        if sequence > expected_sequence:
+            raise CoordinatorFailure("OUT_OF_ORDER_REQUEST")
+        if sequence < expected_sequence:
+            prior = protocol.decode_request(entry.read_bytes())
+            if prior["sequence"] != sequence or prior["request_hash"] not in processed:
+                raise CoordinatorFailure("STALE_REQUEST_MISMATCH")
 
 
 def write_atomic(path: Path, value: dict[str, Any]) -> None:
@@ -134,6 +158,7 @@ def main() -> int:
                     "cockroach_operations": cockroach_operations,
                 })
                 last_heartbeat = now
+            verify_request_directory(requests, expected_sequence, processed)
             request_path = requests / f"request-{expected_sequence:04d}.json"
             if not request_path.exists():
                 time.sleep(0.1)

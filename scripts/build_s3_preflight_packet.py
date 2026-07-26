@@ -11,7 +11,7 @@ PROMPT = Path(
     "read-and-execute-the-prompt-afterlife/"
     "COCKROACH_KERNEL_P9_COMPLETION_S3_RETRY_EXECUTION_PROMPT_20260726_R1.md"
 )
-OUTPUT = ROOT / "S3_PREFLIGHT_PACKET_R1.md"
+OUTPUT = ROOT / "S3_PREFLIGHT_PACKET_R2.md"
 
 FILES = [
     ROOT / "S3_FEATURE_FREEZE_RECEIPT_R1.md",
@@ -19,6 +19,8 @@ FILES = [
     ROOT / "S3_CONTRACT_R1.md",
     ROOT / "S3_PREFLIGHT_HISTORY_R1.md",
     ROOT / "S3_LOCAL_PREFLIGHT_RECEIPT_R1.md",
+    ROOT / "S3_EXECUTION_WIRING_R1.md",
+    ROOT / "S3_PREFLIGHT_REPAIR_RECEIPT_R2.md",
     ROOT / "S3_RESOURCE_ALLOWLIST_R1.json",
     ROOT / "S3_THRESHOLDS_R1.json",
     ROOT / "S3_RUNTIME_HASHES_R1.json",
@@ -29,6 +31,10 @@ FILES = [
     ROOT / "P9_COMPLETION_PERSONA_SOURCE_RECEIPT_R1.md",
     ROOT / "P9_COMPLETION_BUILDER_CONTRIBUTIONS_R1.md",
     ROOT / "s2-soak/lifecycle_guard.py",
+    ROOT / "s2-soak/run_soak.py",
+    ROOT / "p4-verifier/verifier.py",
+    ROOT / "p9-cloud/live_completion.py",
+    ROOT / "p9-cloud/records.py",
     ROOT / "s3-soak/protocol.py",
     ROOT / "s3-soak/worker.py",
     ROOT / "s3-soak/host_coordinator.py",
@@ -49,7 +55,7 @@ def label(path: Path) -> str:
 
 def main() -> int:
     chunks = [
-        b"# S3 Preflight Packet R1\n\n",
+        b"# S3 Preflight Packet R2\n\n",
         b"Decision requested: return GREEN only if the frozen S3 design can "
         b"safely create one bounded credential-free RunPod worker and begin "
         b"the one authorized release soak. Otherwise return NOT_GREEN with "
