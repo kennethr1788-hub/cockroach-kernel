@@ -51,12 +51,16 @@ class TestIamTemplate(unittest.TestCase):
 class TestDeploymentManifest(unittest.TestCase):
     def test_fixed_resource_and_cost_bounds(self):
         manifest = load_json("deployment_manifest.json")
-        self.assertEqual(manifest["status"], "OFFLINE_TEMPLATE_ONLY")
+        self.assertEqual(manifest["status"], "PREMUTATION_APPROVED")
         self.assertEqual(manifest["region"], "us-west-2")
         self.assertEqual(manifest["function"]["name"], "ck-p9-evaluator")
         self.assertEqual(manifest["function"]["memory_mib"], 128)
         self.assertEqual(manifest["function"]["timeout_seconds"], 3)
-        self.assertEqual(manifest["function"]["reserved_concurrency"], 1)
+        self.assertIsNone(manifest["function"]["reserved_concurrency"])
+        self.assertEqual(
+            manifest["function"]["effective_account_concurrency_ceiling"], 10
+        )
+        self.assertEqual(manifest["function"]["max_coordinator_in_flight"], 1)
         self.assertEqual(manifest["function"]["provisioned_concurrency"], 0)
         self.assertFalse(manifest["function"]["function_url"])
         self.assertFalse(manifest["function"]["network_calls"])

@@ -1,13 +1,15 @@
 {
   "version": "p9-deployment-v1",
-  "status": "OFFLINE_TEMPLATE_ONLY",
+  "status": "PREMUTATION_APPROVED",
   "region": "us-west-2",
   "function": {
     "name": "ck-p9-evaluator",
     "role_name": "ck-p9-lambda-exec",
     "memory_mib": 128,
     "timeout_seconds": 3,
-    "reserved_concurrency": 1,
+    "reserved_concurrency": null,
+    "effective_account_concurrency_ceiling": 10,
+    "max_coordinator_in_flight": 1,
     "provisioned_concurrency": 0,
     "function_url": false,
     "network_calls": false
@@ -38,7 +40,6 @@
     "max_rows": 64
   },
   "live_blockers": [
-    "AWS_ACCOUNT_SETUP_HUMAN_GATE",
     "LIVE_ACCOUNT_ID_SUBSTITUTION",
     "LIVE_IAM_SIMULATION",
     "LIVE_MCP_OAUTH_SCOPE_PROOF"
