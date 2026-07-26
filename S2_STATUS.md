@@ -1,7 +1,7 @@
 # S2 Status
 
-- `STATUS`: `S2_LOCAL_GREEN_PREFLIGHT_PACKET_PENDING`
-- `BLOCKER`: `S2_PREFLIGHT_JUDGES_AND_REMOTE_LIFECYCLE_OPEN`
+- `STATUS`: `S2_PREFLIGHT_PACKET_READY_JUDGES_PENDING`
+- `BLOCKER`: `S2_PREFLIGHT_JUDGES_PENDING`
 - `LAST_GREEN_GATE`: `CK_P7_RECOVERY_GREEN`
 - `TARGET_GATE`: `CK_S2_RECOVERY_SOAK_GREEN`
 - `LOCAL_SMOKE`: `R3_GREEN`
@@ -10,6 +10,7 @@
 - `P8_STATUS`: `NOT_STARTED`
 - `BAND_B_STATUS`: `OPEN`
 
-No paid S2 resource may be created until the exact transfer bundle, current
-price/inventory, worker/deadline/spend contract, and lifecycle proof are frozen
-and both required preflight judges return GREEN on the same packet hash.
+The exact transfer bundle, current inventory, returned-shape acceptance
+envelope, deadlines, spend contract, and lifecycle proof are frozen. No paid
+S2 resource may be created until GLM and Claude return GREEN on the same exact
+preflight packet hash.
