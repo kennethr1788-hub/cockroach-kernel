@@ -85,3 +85,35 @@ Resume command:
 ```text
 Resume P5 from P5_STATUS.md and P5_KIMI_OAUTH_RECEIPT.md. Revalidate Git, routes, hashes, and worktrees; rerun the bounded Kimi assignment and a smaller Vibe assignment; do not advance to P6 until P5 mechanical tests and GLM+AGY judges are GREEN on one packet hash.
 ```
+
+# Active P9 Managed MCP OAuth Gate
+
+- `BLOCKER`: `MCP_OAUTH_HUMAN_GATE`
+- `LAST_GREEN_EXECUTION_GATE`: `CK_P8_GOLDEN_GREEN`
+- `P9_AWS_STATE`: `GREEN_THROUGH_MCP_HUMAN_GATE`
+- `P9_AWS_EVIDENCE_ARCHIVE_SHA256`: `68d7288acca74494f63d37db27d14a5073dd9ebebfef51cd708c874f082fcf6c`
+- `CURRENT_CHECKPOINT`: `a2fac49a5b666df548ec67069d16dff416722b93`
+- `UTC_RECORDED`: `2026-07-26T19:54:00Z`
+
+The CockroachDB Cloud Connect dialog is open on the Codex Managed MCP OAuth
+instructions. Kenneth must personally authorize **read-only** access restricted
+to only the existing `cockroach-kernel` cluster. Do not select write access,
+authorize another cluster, paste a password/token/API key, or bypass the OAuth
+flow.
+
+After Kenneth gives explicit approval in this conversation, Icarus may launch
+the normal `codex mcp login` flow using only a temporary project-scoped MCP
+configuration. Do not edit `~/.codex/config.toml`. Codex may place the OAuth
+grant in its normal secure credential store; no credential bytes may be read,
+printed, logged, committed, or transferred. After the bounded read-only MCP
+proof, logout and remove the temporary project configuration.
+
+Exact confirmation required:
+
+```text
+I authorize CockroachDB Managed MCP OAuth for read-only access to only the cockroach-kernel cluster. I understand Codex may securely store the temporary OAuth grant, and I authorize logout and cleanup after the bounded P9 proof.
+```
+
+After confirmation, continue only with the bounded read-only MCP query and
+audit trace, then freeze the final P9 packet and obtain GLM plus AGY GREEN. Do
+not start S3 until `CK_P9_INTEGRATION_GREEN` is real.
