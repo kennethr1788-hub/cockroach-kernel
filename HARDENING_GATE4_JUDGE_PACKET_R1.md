@@ -16,12 +16,13 @@
 Return exactly one JSON object and no Markdown with these keys:
 
 ```text
-verdict
+role
 packet_sha256
-model
-review_scope
-material_findings
-evidence_assessment
+verdict
+blockers
+non_blocking_risks
+evidence_gaps
+recusal_check
 ```
 
 `verdict` must be `GREEN`, `NOT_GREEN`, or `BLOCKED`. `packet_sha256` must
