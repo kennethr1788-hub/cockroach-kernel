@@ -9,6 +9,7 @@
 - `S3_PREFLIGHT_IMPLEMENTATION_COMMIT`: `9f9e1675b9d12e70e5531a196e33e28c76b9b68a`
 - `S3_PREFLIGHT_REPAIR_COMMIT`: `8ebca75b4e8bf3a0a1069b345148e60e6825cbf0`
 - `S3_PREFLIGHT_R3_REPAIR_COMMIT`: `8147f593dc200c454ce020087d2319868b74ba74`
+- `S3_PREFLIGHT_R4_REPAIR_COMMIT`: `06b54e8f61bf0fa227af3de2377a462e369d7d74`
 - `PENDING_BLOCKERS`: R4 GLM plus Claude preflight review, RunPod campaign-ready proof, 43,200-second production soak, teardown, and final GLM plus Claude plus AGY review remain incomplete
 - `REQUIRED_JUDGE_STATE`: S3 preflight requires GLM plus Claude on one hash; S3 final requires GLM plus Claude plus AGY on one hash
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
@@ -19,7 +20,7 @@
 - `P9_JUDGE_EVIDENCE`: `evidence/p9-final-judges-r1/`
 - `RUNPOD_ATTEMPTS`: `0`
 - `RUNPOD_EXPOSURE`: `$0.00`
-- `LATEST_CHECKPOINT`: `S3_PREFLIGHT_JUDGE_RECEIPT_R3.md`
+- `LATEST_CHECKPOINT`: `S3_PREFLIGHT_CHECKPOINT_R4.md`
 - `S3_LOCAL_PREFLIGHT`: `R3_GREEN_INVALIDATED_BY_R4_PACKET_CHANGE`
 - `S3_PREFLIGHT_PACKET_SHA256`: `098cf186e1e8da56f1e6731f21e09e2833c3b7eea4c3df0cd88e4d18fb2cb2c9`
 - `S3_CONTRACT`: `S3_CONTRACT_R1.md`
