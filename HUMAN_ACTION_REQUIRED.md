@@ -2,7 +2,7 @@
 
 ## Current S3 AWS authentication gate
 
-- `BLOCKER`: `AUTH_BLOCKED_AWS_SESSION_EXPIRED`
+- `BLOCKER`: `RESOLVED`
 - `LAST_GREEN_GATE`: `CK_P9_INTEGRATION_GREEN`
 - `S3_PREFLIGHT`: `R10_GLM_5_2_AND_CLAUDE_OPUS_4_8_GREEN`
 - `RUNPOD_ATTEMPTS`: `3`
@@ -12,9 +12,10 @@
 - `UTC_RECORDED`: `2026-07-27T02:04:10Z`
 
 The project-local AWS login session expired before the S3 host coordinator was
-started. No model may refresh or replace Kenneth's authenticated AWS session.
-Kenneth must run the following command from the project directory and complete
-the visible AWS browser flow personally:
+started. Kenneth subsequently completed the visible project-local AWS login
+flow, and bounded identity probes validated the refreshed session without
+recording account identifiers or credential bytes. No S3 AWS authentication
+human action is currently open. The historical recovery command was:
 
 ```bash
 cd /Users/kennethruedas/sandbox/cockroach-kernel-build-20260725
