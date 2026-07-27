@@ -1,8 +1,8 @@
 # Resume State
 
-- `CURRENT_PHASE`: `HARDENING_RUN_GATE_2_AWS_DEMO`
+- `CURRENT_PHASE`: `HARDENING_RUN_GATE_2_AWS_DEMO_BLOCKED`
 - `LAST_GREEN_GATE`: `HARDENING_1_CLI_GREEN`
-- `NEXT_ALLOWED_ACTION`: Freeze the bounded AWS judge-surface architecture, current price, maximum spend, access duration, abuse controls, kill switch, and teardown plan before requesting the separate public-deployment human gate
+- `NEXT_ALLOWED_ACTION`: Kenneth reviews and explicitly approves `HARDENING_GATE2_PUBLIC_DEMO_AUTHORIZATION_PACKET_R1.md`, confirms CockroachDB access continuity through judging, and completes the visible project-local AWS login
 - `FORBIDDEN_ACTIONS`: Claim S3 GREEN; claim result 12; claim a complete twelve-hour run; replacement S3 worker without a newly frozen authorization; public actions; release; submission; HOME/live-memory mutation; credential exposure; any worker credential transfer
 - `CURRENT_COMMIT_AT_P9_PACKET_FREEZE`: `61d77d1704a3f074427f9f82b300abaaa201f79c`
 - `P9_IMPLEMENTATION_COMMIT`: `cbd58b3af9e1ce5c4ddf8885866b88e7e7c1ca0f`
@@ -12,7 +12,7 @@
 - `S3_PREFLIGHT_R4_REPAIR_COMMIT`: `06b54e8f61bf0fa227af3de2377a462e369d7d74`
 - `S3_PREFLIGHT_R6_REPAIR_COMMIT`: `8b1d5bd1038588527bd994eb8fcb5467cac47eac`
 - `S3_PREFLIGHT_R8_REPAIR_COMMIT`: `95408fb9386ced25b468c0957e86e8f73cb123e9`
-- `PENDING_BLOCKERS`: Hardening Gates 2 through 10, the explicit public AWS demo gate, hardened candidate freeze, and a separately frozen S3-R2 rerun remain incomplete
+- `PENDING_BLOCKERS`: `PUBLIC_AWS_DEMO_HUMAN_AUTHORIZATION_AND_CLUSTER_ACCESS_CONTINUITY`; Hardening Gates 2 through 10, hardened candidate freeze, and a separately frozen S3-R2 rerun remain incomplete
 - `REQUIRED_JUDGE_STATE`: Hardening gates use the judge workflow declared by the Hardening Plan; S3-R2 requires a fresh preflight packet and its declared independent judges
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
@@ -29,6 +29,11 @@
 - `HARDENING_GATE1_IMPLEMENTATION_COMMIT`: `ae3fe17922d9d6dfcb81d69e2080455f597f4cba`
 - `HARDENING_GATE1_PACKET_SHA256`: `0d062768d304b7ea5e4ba64e53c5946717b55302ad2646620e3c522b7905e97c`
 - `HARDENING_GATE1_JUDGE_STATE`: `GLM_4_7_GREEN`
+- `HARDENING_GATE2_LOCAL_ADAPTER_COMMIT`: `ea4d3764dc6fd778af98f23788ba9871729cd99e`
+- `HARDENING_GATE2_AUTHORIZATION_PACKET`: `HARDENING_GATE2_PUBLIC_DEMO_AUTHORIZATION_PACKET_R1.md`
+- `HARDENING_GATE2_AUTHORIZATION_PACKET_SHA256`: `4189d411ae296bcac93e1ef55bf1fe774dbb9d2c1c0debca1a198c3374d87ea7`
+- `HARDENING_GATE2_PREFLIGHT_JUDGE`: `GLM_4_7_GREEN`
+- `HARDENING_GATE2_STATUS`: `BLOCKED_ON_EXPLICIT_HUMAN_AUTHORIZATION_AND_CLUSTER_ACCESS_CONTINUITY`
 - `S3_LOCAL_PREFLIGHT`: `R11_GLM_4_7_AND_CLAUDE_OPUS_4_8_GREEN`
 - `R11_PREFLIGHT_PACKET_SHA256`: `5904d8fb6cee6f8cfc57c051bb8bdc986671dd885cb339c5ed385f9ac86d44d4`
 - `R10_PREFLIGHT_PACKET_SHA256`: `ea6470d16c301a79254565ad110a4114ef25ce54d6577eba9669d6baafee5317`
