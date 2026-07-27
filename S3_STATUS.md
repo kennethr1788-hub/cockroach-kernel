@@ -1,6 +1,7 @@
 # S3 Status
 
-- `STATUS`: `S3_PRODUCTION_RUNNING`
+- `STATUS`: `CK_S3_BLOCKED`
+- `BLOCKER`: `AWS_AUTH_SESSION_EXPIRED_DURING_EXCHANGE_12`
 - `LAST_GREEN_GATE`: `CK_P9_INTEGRATION_GREEN`
 - `P9_COMMIT`: `fc296743dd97699a78a4777c8affcd47930f92e6`
 - `S3_PREFLIGHT_IMPLEMENTATION_COMMIT`: `9f9e1675b9d12e70e5531a196e33e28c76b9b68a`
@@ -27,13 +28,19 @@
 - `AUTHORIZATION_PROMPT_SHA256`: `51cdae6c688dafa0715a3120b74fb6ec162a34b5d25c4680268e4450f463394b`
 - `RUNPOD_ATTEMPTS`: `4`
 - `RUNPOD_EXPOSURE`: `PROJECTED_AGGREGATE_MAXIMUM_$1.189989`
-- `NEXT_ALLOWED_ACTION`: `SUPERVISE_RUNNING_ATTEMPT_THEN_RETRIEVE_VERIFY_TEARDOWN_AND_FINAL_JUDGES`
-- `FORBIDDEN_ACTION`: `SECOND_PRODUCTION_ATTEMPT; REPLACEMENT_WORKER; P10_OR_LATER`
+- `NEXT_ALLOWED_ACTION`: `USE_11_PROVEN_RESULTS_AS_QUALIFIED_POST_S3_HARDENING_INPUT`
+- `FORBIDDEN_ACTION`: `CLAIM_S3_GREEN; CLAIM_12_HOURS; CLAIM_RESULT_12; REPLACEMENT_S3_WORKER_WITHOUT_NEW_FROZEN_AUTHORIZATION`
 - `UTC_RECORDED`: `2026-07-27T03:40:35Z`
 
 The exact 43,200-second production attempt began on A04 at
-`2026-07-27T03:40:35Z`. The first cloud exchange passed and the host
-coordinator, remote bridge, coordinator guard, and RunPod lifecycle guard were
-alive and advancing at the production-start checkpoint. The one authorized
-production attempt is consumed permanently. Supervision, evidence retrieval,
-verified teardown, and the final three-judge packet remain open.
+`2026-07-27T03:40:35Z`. Eleven live exchanges passed. Exchange 12 failed at the
+external-command boundary after the project-local AWS login session reached its
+maximum lifetime. The coordinator guard stopped and deleted the worker and the
+lifecycle guard recorded `TEARDOWN_GREEN`; active inventory is empty. The
+orphaned local bridge was stopped and four exact synthetic residue rows were
+removed and rechecked as zero. The one authorized production attempt remains
+consumed permanently.
+
+The eleven completed exchanges are frozen in
+`S3_PARTIAL_EVIDENCE_MANIFEST_R1.md` as qualified post-S3 hardening input. This
+classification does not convert the failed S3 result to GREEN.
