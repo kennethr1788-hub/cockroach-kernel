@@ -23,10 +23,10 @@
   "maximum_production_attempts": 1,
   "maximum_successful_worker_paid_hours": 14,
   "maximum_simultaneous_workers": 1,
-  "provider_stop_epoch": 1785165300,
-  "provider_stop_utc": "2026-07-27T15:15:00Z",
-  "provider_terminate_epoch": 1785165900,
-  "provider_terminate_utc": "2026-07-27T15:25:00Z",
+  "provider_stop_epoch": 1785170100,
+  "provider_stop_utc": "2026-07-27T16:35:00Z",
+  "provider_terminate_epoch": 1785170700,
+  "provider_terminate_utc": "2026-07-27T16:45:00Z",
   "schema_version": "s3-execution-schedule-v1",
   "accepted_compute_rate_usd_per_hour_by_memory_gib": {
     "4": "0.06",
@@ -36,5 +36,5 @@
     4,
     8
   ],
-  "delete_epoch": 1785165900
+  "delete_epoch": 1785170700
 }

@@ -1,6 +1,6 @@
 # S3 Status
 
-- `STATUS`: `CK_S3_BLOCKED_AUTH_EXPIRED`
+- `STATUS`: `CK_S3_PREFLIGHT_R11_JUDGES_PENDING`
 - `LAST_GREEN_GATE`: `CK_P9_INTEGRATION_GREEN`
 - `P9_COMMIT`: `fc296743dd97699a78a4777c8affcd47930f92e6`
 - `S3_PREFLIGHT_IMPLEMENTATION_COMMIT`: `9f9e1675b9d12e70e5531a196e33e28c76b9b68a`
@@ -20,19 +20,20 @@
 - `R10_SCHEDULE_SHA256`: `a24cc795f57a9a8b098b85f01080be840d55377cb3ba627de0bd10ae33bb0321`
 - `R10_PREFLIGHT_PACKET_SHA256`: `ea6470d16c301a79254565ad110a4114ef25ce54d6577eba9669d6baafee5317`
 - `R10_PREFLIGHT_JUDGES`: `GLM_5_2_GREEN; CLAUDE_OPUS_4_8_GREEN; RECUSAL_CLEAR`
+- `R11_SCHEDULE_SHA256`: `4d8cebd3a6b31c08e400eb6b35a2dca59a96762ae8f6b8a7c66419fc5512fcf3`
+- `R11_PREFLIGHT_JUDGES`: `PENDING`
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `AUTHORIZATION_PROMPT_SHA256`: `51cdae6c688dafa0715a3120b74fb6ec162a34b5d25c4680268e4450f463394b`
 - `RUNPOD_ATTEMPTS`: `3`
 - `RUNPOD_EXPOSURE`: `CALCULATED_MAXIMUM_$0.013989`
-- `NEXT_ALLOWED_ACTION`: `HUMAN_AWS_LOGIN_THEN_REVALIDATE_BEFORE_ATTEMPT_A04`
+- `NEXT_ALLOWED_ACTION`: `REVALIDATE_R11_AND_OBTAIN_FRESH_GLM_PLUS_CLAUDE_GREEN_BEFORE_ATTEMPT_A04`
 - `FORBIDDEN_ACTION`: `UPLOAD_BEFORE_RETURNED_WORKER_VERIFICATION; SECOND_PRODUCTION_ATTEMPT; P10_OR_LATER`
 - `UTC_RECORDED`: `2026-07-27T02:04:10Z`
 
-S3 is blocked at an external authentication gate. Attempts A01 through A03 are
-all deleted, scoped inventory is empty, and no production attempt was consumed.
-A03 reached verified credential-free transfer, then the project-local AWS
-session reported `SESSION_EXPIRED` before coordinator start. Kenneth must
-complete the visible project-local `aws login` flow. After authentication,
-revalidate the provider safety fuses and freeze a revised packet only if those
-fuses require new timestamps. Campaign-ready proof, the 43,200-second run,
-teardown, and the final three-judge packet remain open.
+The external authentication gate is resolved. Attempts A01 through A03 are all
+deleted, scoped inventory is empty, and no production attempt was consumed.
+Only the provider-native paid-resource safety fuses changed for R11; this does
+not add a project completion deadline. Local revalidation plus fresh GLM and
+Claude GREEN verdicts over the exact R11 packet are required before A04.
+Campaign-ready proof, the 43,200-second run, teardown, and the final three-judge
+packet remain open.
