@@ -536,6 +536,70 @@ def continue_fresh(custody: Path, source: Path, successor: Path) -> None:
                      "receipt_hash": sha256((custody / "continuation-receipt.json").read_bytes())}).decode())
 
 
+def cleanup(custody: Path, successor: Path) -> None:
+    custody, successor = custody.resolve(), successor.resolve()
+    expected_successor = (
+        REPO / ".hardening-runtime" / "gate3-real-workflow" / "successor-r1"
+    ).resolve()
+    original = (
+        REPO / ".hardening-runtime" / "gate3-real-workflow" / "workspace"
+    ).resolve()
+    if successor != expected_successor or successor.is_symlink():
+        raise TraceError("CLEANUP_TARGET_INVALID")
+    manifest = read_json(custody / "manifest.json")
+    if successor.is_dir():
+        for item in manifest["files"]:
+            target = safe_target(successor, item["path"])
+            if target.is_symlink() or sha256(target.read_bytes()) != item["content_hash"]:
+                raise TraceError("PRECLEAN_SUCCESSOR_DRIFT")
+        before = {
+            "head": git(successor, "rev-parse", "HEAD"),
+            "status": git(successor, "status", "--porcelain=v1", "-uall").splitlines(),
+        }
+        shutil.rmtree(successor)
+    else:
+        continuation = read_json(custody / "continuation-receipt.json")
+        before = {"head": BASE_COMMIT, "status": continuation["successor_status"]}
+    temporary_home = Path("/tmp/ck-g3-empty-home-20260727")
+    if temporary_home.exists():
+        if temporary_home.is_symlink():
+            raise TraceError("TEMP_HOME_TARGET_INVALID")
+        shutil.rmtree(temporary_home)
+    residue = {
+        "version": "gate3-residue-v1", "task_id": TASK_ID,
+        "original_workspace_absent": not original.exists(),
+        "successor_absent": not successor.exists(),
+        "replay_successor_absent": not (
+            REPO / ".hardening-runtime" / "gate3-real-workflow" / "successor-replay-r1"
+        ).exists(),
+        "temporary_home_absent": not temporary_home.exists(),
+        "custody_preserved": custody.is_dir(),
+        "live_rows_retained_as_declared_immutable_evidence": True,
+        "successor_before_cleanup": before,
+    }
+    if not all(residue[key] for key in (
+        "original_workspace_absent", "successor_absent", "replay_successor_absent",
+        "temporary_home_absent", "custody_preserved")):
+        raise TraceError("CLEANUP_RESIDUE")
+    write_json(custody / "residue-receipt.json", residue)
+    entries = []
+    for path in sorted(custody.rglob("*"), key=lambda item: item.as_posix()):
+        if (not path.is_file() or path.name in {"evidence-manifest.json", "warrant.lock"}
+                or path.is_symlink()):
+            continue
+        entries.append({"path": path.relative_to(custody).as_posix(),
+                        "bytes": path.stat().st_size,
+                        "sha256": sha256(path.read_bytes())})
+    evidence_manifest = {"version": "gate3-evidence-manifest-v1",
+                         "task_id": TASK_ID, "entries": entries}
+    evidence_manifest["manifest_hash"] = sha256(canonical(evidence_manifest))
+    write_json(custody / "evidence-manifest.json", evidence_manifest)
+    print(canonical({"status": "GATE3_CLEANUP_GREEN",
+                     "residue_receipt_hash": sha256(
+                         (custody / "residue-receipt.json").read_bytes()),
+                     "evidence_manifest_hash": evidence_manifest["manifest_hash"]}).decode())
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="command", required=True)
@@ -549,13 +613,18 @@ def main() -> int:
     continue_parser.add_argument("--custody", type=Path, required=True)
     continue_parser.add_argument("--source", type=Path, required=True)
     continue_parser.add_argument("--successor", type=Path, required=True)
+    cleanup_parser = sub.add_parser("cleanup")
+    cleanup_parser.add_argument("--custody", type=Path, required=True)
+    cleanup_parser.add_argument("--successor", type=Path, required=True)
     args = parser.parse_args()
     if args.command == "prepare":
         prepare(args.workspace, args.custody)
     elif args.command == "destroy":
         destroy(args.workspace, args.custody)
-    else:
+    elif args.command == "continue":
         continue_fresh(args.custody, args.source, args.successor)
+    else:
+        cleanup(args.custody, args.successor)
     return 0
 
 
