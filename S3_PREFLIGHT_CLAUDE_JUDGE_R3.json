@@ -1,0 +1,20 @@
+{
+  "role": "ICARUS non-authoring evidence judge — Claude Opus 4.8 S3 preflight lane",
+  "packet_sha256": "098cf186e1e8da56f1e6731f21e09e2833c3b7eea4c3df0cd88e4d18fb2cb2c9",
+  "verdict": "GREEN",
+  "blockers": [],
+  "non_blocking_risks": [
+    "Evidence-provenance/timestamp inconsistency: S3_LOCAL_PREFLIGHT_RECEIPT_R1.md is timestamped 2026-07-26T23:12:11Z yet reports S3_UNIT_TESTS 10/10 and the bridge-terminal-tail proof (a94d19dcc...), while the later S3_PREFLIGHT_REPAIR_RECEIPT_R2 (23:25:00Z) reports only 9 tests and R3 (23:46:46Z) states the terminal-tail case was ADDED in R3. The R1-labeled baseline docs appear regenerated to current (R3) content without version/timestamp bumps. The correction history is disclosed honestly in the R2/R3 receipts and current-state artifacts (code, thresholds, allowlist, proof hashes) are internally consistent, so this is imperfect freeze/version hygiene rather than a hidden rewrite; it should be reconciled before final soak sign-off.",
+    "Teardown relies partly on provider-native --stop-after/--terminate-after whose enforcement cannot be read back on this CPU Pod surface; mitigated by two independent detached host guards (lifecycle_guard + coordinator_guard) and multiply-bounded cost, but a compound guard+provider failure would accrue small unmonitored spend (still bounded well under the $3.00 aggregate).",
+    "Full-scale 43,200s timing and resource behavior is extrapolated from accelerated smokes (r3/r4 at 6/4/2 cadence). In particular the worker-loop vs. foundation-soak (s2-soak/run_soak.py) synchronization with only a 300s communicate() slack, and the 16 MiB evidence-growth cap on the foundation, are not directly proven at production scale.",
+    "worker.py does not self-enforce its own RSS/open-files/evidence-growth ceilings; it passes them to the foundation subprocess and otherwise relies on the disposable 8 GiB / 20 GiB container, so some 'process' thresholds are only partially enforced against the worker proper (fails safe given container isolation).",
+    "Image integrity rests on name/creation-request echo plus post-start runtime evidence (uname, os-release, binary sha256sums) because RunPod exposes no cryptographic image-digest readback here; a substituted image cannot exfiltrate credentials (worker is credential-free) but digest-level image pinning is unachievable and is honestly disclosed as a limitation."
+  ],
+  "evidence_gaps": [
+    "As a no-tools judge I cannot recompute any hash (worker bundle 5c33c443..., host bundle 073f4153..., terminal-tail proof a94d19..., per-file runtime hashes) or execute the claimed 10/10 S3 tests, 113/113 P9 regression, or guard normal/fail-stop/terminal-tail proofs; all GREEN/pass claims and hashes are asserted, not independently verified.",
+    "GLM's independent verdict on the exact byte-identical R3 packet hash is not present in the packet; the contract requires GLM + Claude GREEN on one identical hash before any worker creation, so the second required lane remains outstanding at the orchestration level.",
+    "The exact production-evidence retrieval and hash-verification commands (pull and verify of the 43,200s worker evidence tree prior to completion-marker creation) are described narratively in S3_EXECUTION_WIRING_R1.md but not frozen as explicit command wiring.",
+    "Attempt-scoped runtime values (POD_ID, SSH host/port/identity/known-hosts, stop/delete epochs, campaign IDs) are placeholders resolved at execution; their concrete correctness (e.g., delete-epoch within the 14h lifetime) is enforced only by in-code guard checks, not shown as frozen concrete values in the packet."
+  ],
+  "recusal_check": "clear"
+}
