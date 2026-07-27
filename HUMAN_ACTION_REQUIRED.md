@@ -9,7 +9,7 @@
 - `AWS_SESSION`: `ACTIVE_VERIFIED`
 - `PUBLIC_ENDPOINT_EXISTS`: `no`
 - `IDENTITY_AND_GRANTS`: `COMPLETE`
-- `AWS_SECRET_HANDOFF`: `IN_PROGRESS`
+- `AWS_SECRET_HANDOFF`: `COMPLETE`
 - `UTC_RECORDED`: `2026-07-27T17:39:41Z`
 
 The public AWS architecture and cost are authorized, cluster continuity is
@@ -17,9 +17,9 @@ confirmed, AWS login is active, and the deterministic bundle is green. Kenneth
 explicitly authorized Chrome and CUA execution of the identity action. The
 dedicated `ck_hardening_demo` identity now exists and CockroachDB Cloud reported
 success for exactly USAGE plus four SELECT grants. The generated credential was
-copied without being read or recorded and is being transferred only through the
-hidden local secret handoff. No additional human action is currently required.
-No AWS public endpoint has been created.
+copied without being read or recorded, the authorized AWS secret exists, and
+the clipboard is empty. No additional human action is currently required. No
+AWS public endpoint has been created.
 
 ## Current S3 AWS authentication gate
 
