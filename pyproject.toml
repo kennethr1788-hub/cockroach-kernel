@@ -9,6 +9,9 @@ description = "Deterministic trajectory recovery evidence CLI"
 requires-python = ">=3.12"
 dependencies = []
 
+[project.optional-dependencies]
+aws-demo = ["pg8000==1.31.5"]
+
 [project.scripts]
 cockroach-kernel = "cockroach_kernel.cli:main"
 
