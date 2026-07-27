@@ -1,8 +1,8 @@
 # Resume State
 
-- `CURRENT_PHASE`: `S3_ATTEMPT_A04_AUTHORIZED`
+- `CURRENT_PHASE`: `S3_CAMPAIGN_READY`
 - `LAST_GREEN_GATE`: `CK_P9_INTEGRATION_GREEN`
-- `NEXT_ALLOWED_ACTION`: Create and verify A04, then begin the one production attempt only after campaign-ready proof
+- `NEXT_ALLOWED_ACTION`: Start the one exact 43,200-second production attempt; retry authority ends at production start
 - `FORBIDDEN_ACTIONS`: Upload before returned worker verification; feature additions after P9; second production attempt; P10 or later; public actions; release; submission; HOME/live-memory mutation; credential exposure; more than one worker; any worker credential transfer
 - `CURRENT_COMMIT_AT_P9_PACKET_FREEZE`: `61d77d1704a3f074427f9f82b300abaaa201f79c`
 - `P9_IMPLEMENTATION_COMMIT`: `cbd58b3af9e1ce5c4ddf8885866b88e7e7c1ca0f`
@@ -20,9 +20,9 @@
 - `P9_LIVE_EVIDENCE`: `evidence/p9-completion-live-r1/`
 - `P9_MCP_EVIDENCE`: `evidence/p9-mcp-linked-r2/`
 - `P9_JUDGE_EVIDENCE`: `evidence/p9-final-judges-r1/`
-- `RUNPOD_ATTEMPTS`: `3`
-- `RUNPOD_EXPOSURE`: `CALCULATED_MAXIMUM_$0.013989`
-- `LATEST_CHECKPOINT`: `S3_PREFLIGHT_CHECKPOINT_R11.md`
+- `RUNPOD_ATTEMPTS`: `4`
+- `RUNPOD_EXPOSURE`: `PROJECTED_AGGREGATE_MAXIMUM_$1.189989`
+- `LATEST_CHECKPOINT`: `S3_CAMPAIGN_READY_RECEIPT_R1.md`
 - `S3_LOCAL_PREFLIGHT`: `R11_GLM_4_7_AND_CLAUDE_OPUS_4_8_GREEN`
 - `R11_PREFLIGHT_PACKET_SHA256`: `5904d8fb6cee6f8cfc57c051bb8bdc986671dd885cb339c5ed385f9ac86d44d4`
 - `R10_PREFLIGHT_PACKET_SHA256`: `ea6470d16c301a79254565ad110a4114ef25ce54d6577eba9669d6baafee5317`
