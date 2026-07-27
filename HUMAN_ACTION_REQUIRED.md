@@ -1,30 +1,22 @@
 # HUMAN_ACTION_REQUIRED
 
-## Current Hardening Gate 2 public demo gate
+## Current Hardening Gate 2 CockroachDB identity gate
 
-- `BLOCKER`: `PUBLIC_AWS_DEMO_HUMAN_AUTHORIZATION_AND_CLUSTER_ACCESS_CONTINUITY`
+- `BLOCKER`: `COCKROACH_DEDICATED_READ_ONLY_IDENTITY_REQUIRED`
 - `LAST_GREEN_GATE`: `HARDENING_1_CLI_GREEN`
 - `BLOCKED_PHASE`: `HARDENING_2_AWS_DEMO_GREEN`
-- `AUTHORIZATION_PACKET`: `HARDENING_GATE2_PUBLIC_DEMO_AUTHORIZATION_PACKET_R1.md`
-- `MAXIMUM_PERMITTED_INCREMENTAL_AWS_SPEND`: `$12.00`
-- `AWS_SESSION`: `EXPIRED`
+- `ACTION_PACKET`: `HARDENING_GATE2_COCKROACH_IDENTITY_ACTION_R1.md`
+- `AWS_SESSION`: `ACTIVE_VERIFIED`
 - `PUBLIC_ENDPOINT_EXISTS`: `no`
-- `UTC_RECORDED`: `2026-07-27T16:49:36Z`
+- `UTC_RECORDED`: `2026-07-27T17:39:41Z`
 
-Kenneth must explicitly approve the exact public AWS demo architecture, cost
-ceiling, best-effort throttling residual risk, anonymous two-route access, one
-project-scoped secret, and preservation through the end of judging. He must
-also confirm that the CockroachDB Basic cluster is authorized and able to stay
-active through `2026-09-15T21:00:00Z`; its last verified free-trial expiry was
-`2026-08-25`.
-
-Use the exact confirmation text at the end of the authorization packet. After
-that confirmation, Kenneth must complete the project-local visible AWS login.
-Do not paste, expose, or record any password, token, cookie, MFA value, SQL
-credential, or authorization code.
-
-No public deployment, billing-setting change, CockroachDB credential creation,
-or Gate 3 work is authorized while this blocker is open.
+The public AWS architecture and cost are authorized, cluster continuity is
+confirmed, AWS login is active, and the deterministic bundle is green. The
+stored `ck_runtime` password no longer authenticates and that identity is too
+broad for the public endpoint. Kenneth must follow the exact action packet to
+create `ck_hardening_demo`, apply only USAGE plus four SELECT grants, and enter
+the generated password only through the hidden local secret handoff. Do not
+paste credential material into chat. No AWS public resource has been created.
 
 ## Current S3 AWS authentication gate
 

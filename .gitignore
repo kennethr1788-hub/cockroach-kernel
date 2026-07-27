@@ -10,5 +10,10 @@ s3-local-smoke-*/
 s3-local-offline-refusal-*/
 s3-*.stdout
 
+# Hardening campaign build roots and provider-response scratch stay local.
+.hardening-runtime/
+build/
+*.egg-info/
+
 # Python compilation residue is never release evidence.
 __pycache__/

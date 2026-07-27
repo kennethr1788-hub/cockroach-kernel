@@ -1,0 +1,40 @@
+{
+  "version": "ck-hardening-gate2-resources-v1",
+  "region": "us-west-2",
+  "api_name": "ck-hardening-demo",
+  "routes": [
+    "GET /demo/promote",
+    "GET /demo/refuse"
+  ],
+  "stage": "$default",
+  "stage_rate_limit_per_second": 0.05,
+  "stage_burst_limit": 2,
+  "function_name": "ck-hardening-demo",
+  "handler": "cockroach_kernel.http_api.lambda_handler",
+  "runtime": "python3.12",
+  "memory_mib": 256,
+  "timeout_seconds": 8,
+  "role_name": "ck-hardening-demo",
+  "inline_policy_name": "ck-hardening-demo-runtime",
+  "secret_name": "ck-hardening-demo-db",
+  "secret_schema": [
+    "database",
+    "host",
+    "password",
+    "port",
+    "user"
+  ],
+  "log_group": "/aws/lambda/ck-hardening-demo",
+  "log_retention_days": 1,
+  "alarms": [
+    "ck-hardening-demo-errors",
+    "ck-hardening-demo-invocations-5000"
+  ],
+  "public_request_body": false,
+  "public_query_parameters": false,
+  "provisioned_concurrency": 0,
+  "persistent_volume": false,
+  "custom_domain": false,
+  "maximum_incremental_aws_spend_usd": 12.0,
+  "preserve_through_utc": "2026-09-15T21:00:00Z"
+}
