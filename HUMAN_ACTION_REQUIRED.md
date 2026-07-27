@@ -1,5 +1,45 @@
 # HUMAN_ACTION_REQUIRED
 
+## Current S3 AWS authentication gate
+
+- `BLOCKER`: `AUTH_BLOCKED_AWS_SESSION_EXPIRED`
+- `LAST_GREEN_GATE`: `CK_P9_INTEGRATION_GREEN`
+- `S3_PREFLIGHT`: `R10_GLM_5_2_AND_CLAUDE_OPUS_4_8_GREEN`
+- `RUNPOD_ATTEMPTS`: `3`
+- `RUNPOD_ACTIVE_RESOURCES`: `NONE`
+- `PRODUCTION_ATTEMPTS_CONSUMED`: `0`
+- `EVIDENCE`: `S3_ATTEMPT_A03_RECEIPT.md`
+- `UTC_RECORDED`: `2026-07-27T02:04:10Z`
+
+The project-local AWS login session expired before the S3 host coordinator was
+started. No model may refresh or replace Kenneth's authenticated AWS session.
+Kenneth must run the following command from the project directory and complete
+the visible AWS browser flow personally:
+
+```bash
+cd /Users/kennethruedas/sandbox/cockroach-kernel-build-20260725
+AWS_CONFIG_FILE="$PWD/.s3-runtime/aws-auth/config" \
+AWS_LOGIN_CACHE_DIRECTORY="$PWD/.s3-runtime/aws-auth/login-cache" \
+AWS_SHARED_CREDENTIALS_FILE=/dev/null \
+  .s3-runtime/aws-expanded-r1/aws-cli.pkg/Payload/aws-cli/aws login \
+  --profile ck-s3 --region us-west-2
+```
+
+Do not paste passwords, tokens, cookies, MFA codes, authorization codes, or
+credential files into this conversation. After the browser reports success,
+reply only: `AWS project login complete`.
+
+Resume command:
+
+```text
+Resume S3 from S3_ATTEMPT_A03_RECEIPT.md and S3_STATUS.md. Verify the
+project-local AWS identity without printing identifiers, verify empty RunPod
+inventory, revalidate hashes and aggregate cost, and revise only the provider
+safety-fuse timestamps if the full 43,200-second run plus teardown margin no
+longer fits. Obtain fresh required preflight judgments only if packet bytes
+change. Continue from attempt A04; do not begin P10 or later phases.
+```
+
 ## Current gate
 
 - `BLOCKER`: `NONE_AT_P9_BOUNDARY`

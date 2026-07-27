@@ -1,6 +1,6 @@
 # S3 Status
 
-- `STATUS`: `S3_PREFLIGHT_R10_GREEN_CAMPAIGN_READY_PENDING`
+- `STATUS`: `CK_S3_BLOCKED_AUTH_EXPIRED`
 - `LAST_GREEN_GATE`: `CK_P9_INTEGRATION_GREEN`
 - `P9_COMMIT`: `fc296743dd97699a78a4777c8affcd47930f92e6`
 - `S3_PREFLIGHT_IMPLEMENTATION_COMMIT`: `9f9e1675b9d12e70e5531a196e33e28c76b9b68a`
@@ -22,13 +22,17 @@
 - `R10_PREFLIGHT_JUDGES`: `GLM_5_2_GREEN; CLAUDE_OPUS_4_8_GREEN; RECUSAL_CLEAR`
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `AUTHORIZATION_PROMPT_SHA256`: `51cdae6c688dafa0715a3120b74fb6ec162a34b5d25c4680268e4450f463394b`
-- `RUNPOD_ATTEMPTS`: `2`
-- `RUNPOD_EXPOSURE`: `CALCULATED_MAXIMUM_$0.003889`
-- `NEXT_ALLOWED_ACTION`: `CREATE_AND_VERIFY_ATTEMPT_A03_BEFORE_UPLOAD`
+- `RUNPOD_ATTEMPTS`: `3`
+- `RUNPOD_EXPOSURE`: `CALCULATED_MAXIMUM_$0.013989`
+- `NEXT_ALLOWED_ACTION`: `HUMAN_AWS_LOGIN_THEN_REVALIDATE_BEFORE_ATTEMPT_A04`
 - `FORBIDDEN_ACTION`: `UPLOAD_BEFORE_RETURNED_WORKER_VERIFICATION; SECOND_PRODUCTION_ATTEMPT; P10_OR_LATER`
-- `UTC_RECORDED`: `2026-07-27T01:53:00Z`
+- `UTC_RECORDED`: `2026-07-27T02:04:10Z`
 
-S3 is not GREEN. Attempts A01 and A02 were deleted before upload. R10 passed
-GLM 5.2 and exact Claude Opus 4.8 on one packet hash. A03 may now be created and
-verified inside the frozen envelope. Campaign-ready proof, the 43,200-second
-run, teardown, and the final three-judge packet remain open.
+S3 is blocked at an external authentication gate. Attempts A01 through A03 are
+all deleted, scoped inventory is empty, and no production attempt was consumed.
+A03 reached verified credential-free transfer, then the project-local AWS
+session reported `SESSION_EXPIRED` before coordinator start. Kenneth must
+complete the visible project-local `aws login` flow. After authentication,
+revalidate the provider safety fuses and freeze a revised packet only if those
+fuses require new timestamps. Campaign-ready proof, the 43,200-second run,
+teardown, and the final three-judge packet remain open.

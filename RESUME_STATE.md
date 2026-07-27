@@ -1,8 +1,8 @@
 # Resume State
 
-- `CURRENT_PHASE`: `S3_CAMPAIGN_READY`
+- `CURRENT_PHASE`: `S3_AUTH_BLOCKED`
 - `LAST_GREEN_GATE`: `CK_P9_INTEGRATION_GREEN`
-- `NEXT_ALLOWED_ACTION`: Create and verify attempt A03; only after exact worker verification start guards, transfer immutable bundles, and prove campaign-ready
+- `NEXT_ALLOWED_ACTION`: Kenneth completes the project-local AWS login; then revalidate identity, safety fuses, inventory, hashes, and cost before attempt A04
 - `FORBIDDEN_ACTIONS`: Upload before returned worker verification; feature additions after P9; second production attempt; P10 or later; public actions; release; submission; HOME/live-memory mutation; credential exposure; more than one worker; any worker credential transfer
 - `CURRENT_COMMIT_AT_P9_PACKET_FREEZE`: `61d77d1704a3f074427f9f82b300abaaa201f79c`
 - `P9_IMPLEMENTATION_COMMIT`: `cbd58b3af9e1ce5c4ddf8885866b88e7e7c1ca0f`
@@ -12,7 +12,7 @@
 - `S3_PREFLIGHT_R4_REPAIR_COMMIT`: `06b54e8f61bf0fa227af3de2377a462e369d7d74`
 - `S3_PREFLIGHT_R6_REPAIR_COMMIT`: `8b1d5bd1038588527bd994eb8fcb5467cac47eac`
 - `S3_PREFLIGHT_R8_REPAIR_COMMIT`: `95408fb9386ced25b468c0957e86e8f73cb123e9`
-- `PENDING_BLOCKERS`: RunPod campaign-ready proof, 43,200-second production soak, teardown, and final GLM plus Claude plus AGY review remain incomplete
+- `PENDING_BLOCKERS`: AWS project-local login is expired; RunPod campaign-ready proof, 43,200-second production soak, teardown, and final GLM plus Claude plus AGY review remain incomplete
 - `REQUIRED_JUDGE_STATE`: S3 preflight requires GLM plus Claude on one hash; S3 final requires GLM plus Claude plus AGY on one hash
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
@@ -20,9 +20,9 @@
 - `P9_LIVE_EVIDENCE`: `evidence/p9-completion-live-r1/`
 - `P9_MCP_EVIDENCE`: `evidence/p9-mcp-linked-r2/`
 - `P9_JUDGE_EVIDENCE`: `evidence/p9-final-judges-r1/`
-- `RUNPOD_ATTEMPTS`: `2`
-- `RUNPOD_EXPOSURE`: `CALCULATED_MAXIMUM_$0.003889`
-- `LATEST_CHECKPOINT`: `S3_PREFLIGHT_CHECKPOINT_R10.md`
+- `RUNPOD_ATTEMPTS`: `3`
+- `RUNPOD_EXPOSURE`: `CALCULATED_MAXIMUM_$0.013989`
+- `LATEST_CHECKPOINT`: `S3_AUTH_BLOCKED_CHECKPOINT_R1.md`
 - `S3_LOCAL_PREFLIGHT`: `R10_GLM_5_2_AND_CLAUDE_OPUS_4_8_GREEN`
 - `R10_PREFLIGHT_PACKET_SHA256`: `ea6470d16c301a79254565ad110a4114ef25ce54d6577eba9669d6baafee5317`
 - `R8_PREFLIGHT_PACKET_SHA256`: `318f5fcadf4d30df11261ede0beb2b816fe7ba0b688b3a6e550b621bb175246a`
