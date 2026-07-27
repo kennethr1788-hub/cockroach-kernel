@@ -1,6 +1,6 @@
 # S3 Partial Evidence Manifest R1
 
-- `CLASSIFICATION`: `QUALIFIED_PARTIAL_HARDENING_INPUT`
+- `CLASSIFICATION`: `QUALIFIED_HARDENING_INPUT`
 - `S3_RESULT`: `CK_S3_BLOCKED`
 - `BLOCKER`: `AWS_AUTH_SESSION_EXPIRED_DURING_EXCHANGE_12`
 - `LAST_GREEN_GATE`: `CK_P9_INTEGRATION_GREEN`
@@ -66,6 +66,6 @@ Aggregate hashes are SHA-256 over newline-terminated, lexicographically sorted
 This packet does not prove a twelve-hour S3 pass, result 12, 144 remote
 checkpoints, 48 remote safety replays, 12 hourly summaries, final remote
 resource measurements, or a retrieved final remote evidence manifest. Those
-claims remain forbidden. This packet may support post-S3 hardening, comparative
+claims remain forbidden. This packet may support the Hardening Run, comparative
 testing, and the public claim that eleven scheduled live exchanges passed
 before the system failed closed and deleted its disposable worker.

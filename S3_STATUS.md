@@ -28,7 +28,7 @@
 - `AUTHORIZATION_PROMPT_SHA256`: `51cdae6c688dafa0715a3120b74fb6ec162a34b5d25c4680268e4450f463394b`
 - `RUNPOD_ATTEMPTS`: `4`
 - `RUNPOD_EXPOSURE`: `PROJECTED_AGGREGATE_MAXIMUM_$1.189989`
-- `NEXT_ALLOWED_ACTION`: `USE_11_PROVEN_RESULTS_AS_QUALIFIED_POST_S3_HARDENING_INPUT`
+- `NEXT_ALLOWED_ACTION`: `USE_11_PROVEN_RESULTS_AS_QUALIFIED_HARDENING_RUN_INPUT`
 - `FORBIDDEN_ACTION`: `CLAIM_S3_GREEN; CLAIM_12_HOURS; CLAIM_RESULT_12; REPLACEMENT_S3_WORKER_WITHOUT_NEW_FROZEN_AUTHORIZATION`
 - `UTC_RECORDED`: `2026-07-27T03:40:35Z`
 
@@ -42,5 +42,5 @@ removed and rechecked as zero. The one authorized production attempt remains
 consumed permanently.
 
 The eleven completed exchanges are frozen in
-`S3_PARTIAL_EVIDENCE_MANIFEST_R1.md` as qualified post-S3 hardening input. This
+`S3_PARTIAL_EVIDENCE_MANIFEST_R1.md` as qualified Hardening Run input. This
 classification does not convert the failed S3 result to GREEN.

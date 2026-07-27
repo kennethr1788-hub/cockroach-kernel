@@ -35,5 +35,5 @@ transactional cleanup removed those four declared rows. A read-only post-cleanup
 query returned zero matching rows. No unrelated task or production record was
 deleted.
 
-This closeout makes the failed campaign safe and usable as hardening input. It
+This closeout makes the failed campaign safe and usable as Hardening Run input. It
 does not make S3 GREEN and does not authorize a replacement S3 worker.
