@@ -1,6 +1,6 @@
 # S3 Status
 
-- `STATUS`: `S3_PREFLIGHT_R8_REVIEW_PENDING`
+- `STATUS`: `S3_PREFLIGHT_R8_GREEN_CAMPAIGN_READY_PENDING`
 - `LAST_GREEN_GATE`: `CK_P9_INTEGRATION_GREEN`
 - `P9_COMMIT`: `fc296743dd97699a78a4777c8affcd47930f92e6`
 - `S3_PREFLIGHT_IMPLEMENTATION_COMMIT`: `9f9e1675b9d12e70e5531a196e33e28c76b9b68a`
@@ -12,17 +12,17 @@
 - `P9_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
 - `R3_PREFLIGHT_PACKET_SHA256_HISTORICAL`: `098cf186e1e8da56f1e6731f21e09e2833c3b7eea4c3df0cd88e4d18fb2cb2c9`
 - `R3_PREFLIGHT_JUDGES_HISTORICAL`: `GREEN_BOTH_INVALIDATED_BY_R4_PACKET_CHANGE`
+- `R8_PREFLIGHT_PACKET_SHA256`: `318f5fcadf4d30df11261ede0beb2b816fe7ba0b688b3a6e550b621bb175246a`
+- `R8_PREFLIGHT_JUDGES`: `GLM_5_2_GREEN; CLAUDE_OPUS_4_8_GREEN; RECUSAL_CLEAR`
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `AUTHORIZATION_PROMPT_SHA256`: `51cdae6c688dafa0715a3120b74fb6ec162a34b5d25c4680268e4450f463394b`
 - `RUNPOD_ATTEMPTS`: `1`
 - `RUNPOD_EXPOSURE`: `CALCULATED_MAXIMUM_$0.001667`
-- `NEXT_ALLOWED_ACTION`: `FREEZE_R8_PACKET_AND_OBTAIN_FRESH_GLM_PLUS_CLAUDE_GREEN`
+- `NEXT_ALLOWED_ACTION`: `CREATE_AND_VERIFY_ATTEMPT_A02_BEFORE_UPLOAD`
 - `FORBIDDEN_ACTION`: `UPLOAD_BEFORE_RETURNED_WORKER_VERIFICATION; SECOND_PRODUCTION_ATTEMPT; P10_OR_LATER`
-- `UTC_RECORDED`: `2026-07-27T01:06:58Z`
+- `UTC_RECORDED`: `2026-07-27T01:23:06Z`
 
-S3 is not GREEN. Attempt A01 returned the outer-authorization-compatible
-2-vCPU/4-GiB shape, but R7 had narrowed worker acceptance to 8 GiB. A01 was
-deleted before upload. The R7 verdicts are historical after the R8 shape
-revision; no A02 creation is allowed until fresh GLM and Claude verdicts are
-GREEN over one R8 packet hash. Campaign-ready proof, the 43,200-second run,
-teardown, and the final three-judge packet remain open.
+S3 is not GREEN. Attempt A01 was deleted before upload. R8 independently passed
+GLM 5.2 and exact Claude Opus 4.8 over one packet hash. Attempt A02 may now be
+created and verified inside the frozen envelope. Campaign-ready proof, the
+43,200-second run, teardown, and the final three-judge packet remain open.

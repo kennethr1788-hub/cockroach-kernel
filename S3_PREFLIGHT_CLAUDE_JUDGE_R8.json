@@ -1,0 +1,22 @@
+{
+  "role": "Independent non-authoring evidence judge (ICARUS Claude Opus 4.8), S3 preflight lane",
+  "packet_sha256": "318f5fcadf4d30df11261ede0beb2b816fe7ba0b688b3a6e550b621bb175246a",
+  "verdict": "GREEN",
+  "blockers": [],
+  "non_blocking_risks": [
+    "SSH host-key security uses first-use pinning via two back-to-back ssh-keyscans, not provider-signed attestation; a MITM present at first contact would not be caught by scan comparison. Impact is bounded: no credentials traverse SSH and all requests/results are hash-chained, sequence/parent-bound, and strict-schema validated. Disclosed in wiring and attempt receipt.",
+    "RunPod does not expose cryptographic image-digest readback on this CPU Pod surface; image identity relies on creation request + registry digest lookup + post-start runtime evidence (uname/os-release/binary sha256) rather than provider-attested digest. Disclosed.",
+    "4-GiB shape sufficiency is extrapolated from a 6-hour S2 run (peak RSS 836,284,416 B) to a 12-hour production run; fail-closed RSS enforcement (1,610,612,736 B) plus RAM headroom and provider terminate deadline bound the risk, but 12h behavior at 4 GiB is not directly measured.",
+    "cloud_adapter decodes the SQL password to an immutable Python str for PGPASSWORD; the bytearray is zeroed and PGPASSWORD popped, but the transient str cannot be scrubbed. Host-side only, low residual exposure.",
+    "Operational window is tight: at the packet's recorded time (~2026-07-27T01:07Z) the campaign-ready deadline (01:50Z) and retry-window end (02:00Z) leave little margin for A02 create/upload/smoke/start; mechanical deadline checks fail closed if missed.",
+    "Minor cosmetic items: dead code in live_completion.finalize_sql ('_read(Path(\"/dev/null\")) if False else None') and non-canonical key ordering in S3_EXECUTION_SCHEDULE_R1.json (memory-shape keys appended after schema_version); no functional impact shown."
+  ],
+  "evidence_gaps": [
+    "Packet is sanitized and the judge has no tools; stated SHA-256 values (bundles, source files, CockroachDB and runpodctl binaries) cannot be recomputed. Hash correctness rests on internal cross-reference consistency, not independent recomputation.",
+    "Full worker/host bundle file listings are not enumerated in-packet; credential-free and secret-scan results (gitleaks/detect-secrets/private-path = zero) are asserted in the local preflight receipt rather than shown as raw scanner output.",
+    "S3_LOCAL_PREFLIGHT_RECEIPT was amended after original freeze (LAST_AMENDED_UTC 2026-07-27T00:35:00Z; AMENDMENT_NOTE flags R3 fields added after original evidence time); the amendment is disclosed but raw evidence timestamps are not independently reconcilable from the packet.",
+    "Live 43,200-second behavior (actual cadence counts, real cloud latencies, production teardown, provider deadline enforcement) is necessarily unproven at preflight; only accelerated fresh-root smokes (r3/r4, 6/4/2 cadence), the forced-offline refusal, and unit/guard proofs are supplied. Expected for a preflight gate.",
+    "Provider stop/terminate deadline readback is unavailable on this surface, so auto-stop/terminate enforcement is evidenced only via the preserved creation request, not a provider-confirmed readback."
+  ],
+  "recusal_check": "clear"
+}
