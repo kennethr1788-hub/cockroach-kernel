@@ -1,8 +1,8 @@
 # Resume State
 
-- `CURRENT_PHASE`: `HARDENING_RUN_GATE_5_EVIDENCE_CANDIDATE`
-- `LAST_GREEN_GATE`: `HARDENING_4_BASELINE_PROTOCOL_GREEN`
-- `NEXT_ALLOWED_ACTION`: Implement and freeze the Gate 5 evidence candidate, including all eight mandatory hardening requirements and the exact Gate 4 comparative harness obligations
+- `CURRENT_PHASE`: `HARDENING_RUN_GATE_6_RUN1`
+- `LAST_GREEN_GATE`: `HARDENING_5_EVIDENCE_CANDIDATE_GREEN`
+- `NEXT_ALLOWED_ACTION`: Freeze the Gate 6 Run 1 preflight packet against candidate commit bd29bd23e831175aa54526b9e3c48bd04e8af3ed; obtain the required same-hash GLM and Claude preflight review before any measured execution or RunPod action
 - `FORBIDDEN_ACTIONS`: Claim S3 GREEN; claim result 12; claim a complete twelve-hour run; replacement S3 worker without a newly frozen authorization; public actions; release; submission; HOME/live-memory mutation; credential exposure; any worker credential transfer
 - `CURRENT_COMMIT_AT_P9_PACKET_FREEZE`: `61d77d1704a3f074427f9f82b300abaaa201f79c`
 - `P9_IMPLEMENTATION_COMMIT`: `cbd58b3af9e1ce5c4ddf8885866b88e7e7c1ca0f`
@@ -12,8 +12,8 @@
 - `S3_PREFLIGHT_R4_REPAIR_COMMIT`: `06b54e8f61bf0fa227af3de2377a462e369d7d74`
 - `S3_PREFLIGHT_R6_REPAIR_COMMIT`: `8b1d5bd1038588527bd994eb8fcb5467cac47eac`
 - `S3_PREFLIGHT_R8_REPAIR_COMMIT`: `95408fb9386ced25b468c0957e86e8f73cb123e9`
-- `PENDING_BLOCKERS`: Hardening Gates 5 through 10, hardened candidate freeze, and separately authorized S3-R2 remain incomplete
-- `REQUIRED_JUDGE_STATE`: Gate 5 must satisfy its mechanical freeze contract; Gate 6 requires same-hash GLM and Claude preflight/final review; S3-R2 requires a fresh preflight packet and its declared independent judges
+- `PENDING_BLOCKERS`: Hardening Gates 6 through 10 and separately authorized S3-R2 remain incomplete
+- `REQUIRED_JUDGE_STATE`: Gate 6 requires same-hash GLM and Claude preflight/final review; S3-R2 requires a fresh preflight packet and its declared independent judges
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
 - `P9_FINAL_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; RECUSAL_CLEAR`
@@ -73,6 +73,13 @@
 - `HARDENING_GATE4_GLM_RAW_SHA256`: `2df987e6a3769b85981851aa25c99eb4d8e4bd9ed4d6b465d63f6473bb46c8d2`
 - `HARDENING_GATE4_CLAUDE_RAW_SHA256`: `375aff0fdf679ee210b81124a4908609e4e4f23132d022ffcf4fe5ffb3b75247`
 - `HARDENING_GATE4_GREEN_COMMIT`: `b5910385cbfd9bc76835b33491559d79955296dd`
+- `HARDENING_GATE5_STATUS`: `HARDENING_5_EVIDENCE_CANDIDATE_GREEN`
+- `HARDENING_GATE5_CANDIDATE_COMMIT`: `bd29bd23e831175aa54526b9e3c48bd04e8af3ed`
+- `HARDENING_GATE5_REPORT_SHA256`: `d7978736195b1fe1bfa8efd14445ff3125ca53d55287975afff2c4f38b2c7ebd`
+- `HARDENING_GATE5_PACKET_SHA256`: `8d72c554e3b23b1fafac05b265dd410406e76990b733b48ed9496ff05efaff29`
+- `HARDENING_GATE5_LOCAL_SMOKE_SHA256`: `3050feda1e6d089c34b45cebd6f01247786ca16d7c72f0d30d22a3efd62254ea`
+- `HARDENING_GATE5_JUDGE_STATE`: `GLM_4_7_GREEN`
+- `HARDENING_GATE5_GLM_RAW_SHA256`: `14ca7c68c2d0625f5b4218b682c3eee8eb7ea6e5aa208f82ae887850f49628fc`
 - `S3_LOCAL_PREFLIGHT`: `R11_GLM_4_7_AND_CLAUDE_OPUS_4_8_GREEN`
 - `R11_PREFLIGHT_PACKET_SHA256`: `5904d8fb6cee6f8cfc57c051bb8bdc986671dd885cb339c5ed385f9ac86d44d4`
 - `R10_PREFLIGHT_PACKET_SHA256`: `ea6470d16c301a79254565ad110a4114ef25ce54d6577eba9669d6baafee5317`

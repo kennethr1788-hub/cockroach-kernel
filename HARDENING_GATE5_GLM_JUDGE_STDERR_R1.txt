@@ -1,0 +1,2 @@
+egress-gateway: blocked glm-zai:glm-4.7 egress: secret assignment
+glm-zai: egress gateway blocked prompt before provider execution
