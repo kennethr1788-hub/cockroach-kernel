@@ -18,6 +18,7 @@ import sys
 SECRET_NAME = "ck-hardening-demo-db"
 DEMO_USER = "ck_hardening_demo"
 DATABASE = "cockroach_kernel"
+MIN_PASSWORD_LENGTH = 20
 
 
 def main() -> int:
@@ -49,7 +50,10 @@ def main() -> int:
         return 3
 
     password = getpass("Paste the dedicated ck_hardening_demo password (hidden): ")
-    if len(password) < 24 or "\x00" in password:
+    # CockroachDB Cloud currently generates a 22-character high-entropy
+    # credential. Accept that provider-generated shape while still rejecting
+    # short or malformed manual input.
+    if len(password) < MIN_PASSWORD_LENGTH or "\x00" in password:
         print("PASSWORD_INPUT_INVALID", file=sys.stderr)
         return 4
     secret_value = {

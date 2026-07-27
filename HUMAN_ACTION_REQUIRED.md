@@ -2,21 +2,24 @@
 
 ## Current Hardening Gate 2 CockroachDB identity gate
 
-- `BLOCKER`: `COCKROACH_DEDICATED_READ_ONLY_IDENTITY_REQUIRED`
+- `BLOCKER`: `RESOLVED_BY_EXPLICIT_CHROME_AND_CUA_AUTHORIZATION`
 - `LAST_GREEN_GATE`: `HARDENING_1_CLI_GREEN`
 - `BLOCKED_PHASE`: `HARDENING_2_AWS_DEMO_GREEN`
 - `ACTION_PACKET`: `HARDENING_GATE2_COCKROACH_IDENTITY_ACTION_R1.md`
 - `AWS_SESSION`: `ACTIVE_VERIFIED`
 - `PUBLIC_ENDPOINT_EXISTS`: `no`
+- `IDENTITY_AND_GRANTS`: `COMPLETE`
+- `AWS_SECRET_HANDOFF`: `IN_PROGRESS`
 - `UTC_RECORDED`: `2026-07-27T17:39:41Z`
 
 The public AWS architecture and cost are authorized, cluster continuity is
-confirmed, AWS login is active, and the deterministic bundle is green. The
-stored `ck_runtime` password no longer authenticates and that identity is too
-broad for the public endpoint. Kenneth must follow the exact action packet to
-create `ck_hardening_demo`, apply only USAGE plus four SELECT grants, and enter
-the generated password only through the hidden local secret handoff. Do not
-paste credential material into chat. No AWS public resource has been created.
+confirmed, AWS login is active, and the deterministic bundle is green. Kenneth
+explicitly authorized Chrome and CUA execution of the identity action. The
+dedicated `ck_hardening_demo` identity now exists and CockroachDB Cloud reported
+success for exactly USAGE plus four SELECT grants. The generated credential was
+copied without being read or recorded and is being transferred only through the
+hidden local secret handoff. No additional human action is currently required.
+No AWS public endpoint has been created.
 
 ## Current S3 AWS authentication gate
 
