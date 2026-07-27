@@ -1,0 +1,19 @@
+# Hardening Gate 6 — Evidence Manifest R1
+
+- `STATUS`: `BLOCKED_PREFLIGHT`
+- `RAW_DIAGNOSTIC`: `evidence/hardening-gate6-preflight-blocked-r1/diagnostic.txt`
+- `RAW_DIAGNOSTIC_SHA256`: `aa79e4bbdecb908d6ab68bcac8e7b4007aad8402da37abfa54dea398a2abbb9b`
+- `LOCAL_VERIFICATION_RECEIPT`: `HARDENING_GATE6_LOCAL_VERIFICATION_RECEIPT_R1.md`
+- `LOCAL_VERIFICATION_RECEIPT_SHA256`: `39d5fa8d1beb7a7396b2cb18f7cbe4cd5742faee7aabfb2ee05463c1d346e3ed`
+- `PREFLIGHT_PACKET_SHA256`: `f648e8433928053649ffe4e515a2fae824b2cdeb34afd3403c2fdf4f56e0aed1`
+- `CANDIDATE_SOURCE`: `hardening-gate5/comparative.py`
+- `CANDIDATE_SOURCE_SHA256`: `bb107750414b6eadb102a894eec2f1d23f64533d20efaaa5751ada59215c2527`
+- `LINUX_RESTIC_ARCHIVE_SHA256`: `13176fe6d89d4357947a2cd107218ab2873a5f9d8e1ac2d4cd1c8e07e6839c21`
+- `LINUX_RESTIC_BINARY_SHA256`: `ae7fe58ab3511f830fd31d157158620b209522ff1332b119199d2e938d72338c`
+- `ACTIVE_RUNPOD_INVENTORY`: `[]`
+- `MEASURED_RECEIPTS`: `0`
+- `MISSING_EXPECTED_MEASURED_RECEIPTS`: `54`
+- `PUBLIC_COMPARATIVE_CLAIMS_AUTHORIZED`: `none`
+
+Only preflight diagnostic evidence exists. No file in this manifest may be
+represented as a measured Gate 6 benchmark receipt.

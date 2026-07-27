@@ -1,9 +1,9 @@
 # Resume State
 
-- `CURRENT_PHASE`: `HARDENING_RUN_GATE_6_RUN1`
+- `CURRENT_PHASE`: `HARDENING_RUN_GATE_6_BLOCKED_CANDIDATE_INVALIDATED`
 - `LAST_GREEN_GATE`: `HARDENING_5_EVIDENCE_CANDIDATE_GREEN`
-- `NEXT_ALLOWED_ACTION`: Freeze the Gate 6 Run 1 preflight packet against candidate commit bd29bd23e831175aa54526b9e3c48bd04e8af3ed; obtain the required same-hash GLM and Claude preflight review before any measured execution or RunPod action
-- `FORBIDDEN_ACTIONS`: Claim S3 GREEN; claim result 12; claim a complete twelve-hour run; replacement S3 worker without a newly frozen authorization; public actions; release; submission; HOME/live-memory mutation; credential exposure; any worker credential transfer
+- `NEXT_ALLOWED_ACTION`: Reopen the applicable Gate 4/Gate 5 contracts, correct platform-stable source and tool provenance plus campaign receipt labeling, rerun affected independent reviews, and freeze a new evidence candidate before a new Gate 6 packet
+- `FORBIDDEN_ACTIONS`: Launch Gate 6 RunPod worker; relabel Gate 5 smoke as Gate 6 evidence; patch or wrap measured receipts after freeze; claim Gate 6 or S3 GREEN; claim result 12; claim a complete twelve-hour run; replacement S3 worker without a newly frozen authorization; public actions; release; submission; HOME/live-memory mutation; credential exposure; any worker credential transfer
 - `CURRENT_COMMIT_AT_P9_PACKET_FREEZE`: `61d77d1704a3f074427f9f82b300abaaa201f79c`
 - `P9_IMPLEMENTATION_COMMIT`: `cbd58b3af9e1ce5c4ddf8885866b88e7e7c1ca0f`
 - `S3_PREFLIGHT_IMPLEMENTATION_COMMIT`: `9f9e1675b9d12e70e5531a196e33e28c76b9b68a`
@@ -12,8 +12,8 @@
 - `S3_PREFLIGHT_R4_REPAIR_COMMIT`: `06b54e8f61bf0fa227af3de2377a462e369d7d74`
 - `S3_PREFLIGHT_R6_REPAIR_COMMIT`: `8b1d5bd1038588527bd994eb8fcb5467cac47eac`
 - `S3_PREFLIGHT_R8_REPAIR_COMMIT`: `95408fb9386ced25b468c0957e86e8f73cb123e9`
-- `PENDING_BLOCKERS`: Hardening Gates 6 through 10 and separately authorized S3-R2 remain incomplete
-- `REQUIRED_JUDGE_STATE`: Gate 6 requires same-hash GLM and Claude preflight/final review; S3-R2 requires a fresh preflight packet and its declared independent judges
+- `PENDING_BLOCKERS`: Gate 6 evidence candidate is invalid for Linux RunPod because Restic/Git provenance and receipt/source contracts are Darwin/preflight bound; Hardening Gates 6 through 10 and separately authorized S3-R2 remain incomplete
+- `REQUIRED_JUDGE_STATE`: After freezing a corrected candidate, Gate 6 requires same-hash GLM and Claude preflight/final review; S3-R2 requires a fresh preflight packet and its declared independent judges
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
 - `P9_FINAL_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; RECUSAL_CLEAR`
@@ -22,7 +22,14 @@
 - `P9_JUDGE_EVIDENCE`: `evidence/p9-final-judges-r1/`
 - `RUNPOD_ATTEMPTS`: `4`
 - `RUNPOD_EXPOSURE`: `PROJECTED_AGGREGATE_MAXIMUM_$1.189989`
-- `LATEST_CHECKPOINT`: `HARDENING_GATE5_GREEN_CHECKPOINT_R1.md`
+- `LATEST_CHECKPOINT`: `HARDENING_GATE6_BLOCKED_CHECKPOINT_R1.md`
+- `HARDENING_GATE6_STATUS`: `HARDENING_6_RUN1_BLOCKED`
+- `HARDENING_GATE6_BLOCKER`: `EVIDENCE_CANDIDATE_INVALIDATED`
+- `HARDENING_GATE6_PREFLIGHT_PACKET_SHA256`: `f648e8433928053649ffe4e515a2fae824b2cdeb34afd3403c2fdf4f56e0aed1`
+- `HARDENING_GATE6_MEASURED_EXECUTIONS`: `0`
+- `HARDENING_GATE6_RUNPOD_ATTEMPTS`: `0`
+- `HARDENING_GATE6_RUNPOD_INVENTORY`: `[]`
+- `HARDENING_GATE6_COST_STATE`: `EXACT_$0.00`
 - `HARDENING_PLAN_SHA256`: `1ce953127138a35bd9588d686bbefefc0b012e8f2188a8fea736842030d57310`
 - `HARDENING_GATE0_PACKET_SHA256`: `cdc0e17c9ba6fa58c1304d6bf96e22ebdea1dcfb43084505a9aa706886425823`
 - `HARDENING_GATE0_JUDGE_STATE`: `GLM_4_7_GREEN`
