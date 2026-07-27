@@ -1,6 +1,6 @@
 # S3 Status
 
-- `STATUS`: `S3_PREFLIGHT_R3_GREEN_INVALIDATED_R4_PACKET_PENDING`
+- `STATUS`: `S3_PREFLIGHT_R4_EGRESS_BLOCKED_R5_PACKET_PENDING`
 - `LAST_GREEN_GATE`: `CK_P9_INTEGRATION_GREEN`
 - `P9_COMMIT`: `fc296743dd97699a78a4777c8affcd47930f92e6`
 - `S3_PREFLIGHT_IMPLEMENTATION_COMMIT`: `9f9e1675b9d12e70e5531a196e33e28c76b9b68a`
@@ -14,11 +14,10 @@
 - `AUTHORIZATION_PROMPT_SHA256`: `51cdae6c688dafa0715a3120b74fb6ec162a34b5d25c4680268e4450f463394b`
 - `RUNPOD_ATTEMPTS`: `0`
 - `RUNPOD_EXPOSURE`: `$0.00`
-- `NEXT_ALLOWED_ACTION`: `FREEZE_R4_PACKET_AND_RERUN_GLM_PLUS_CLAUDE`
-- `FORBIDDEN_ACTION`: `RUNPOD_CREATION_BEFORE_R4_GLM_AND_CLAUDE_GREEN; P10_OR_LATER`
-- `UTC_RECORDED`: `2026-07-27T00:13:02Z`
+- `NEXT_ALLOWED_ACTION`: `FREEZE_R5_PACKET_AND_RERUN_GLM_PLUS_CLAUDE`
+- `FORBIDDEN_ACTION`: `RUNPOD_CREATION_BEFORE_R5_GLM_AND_CLAUDE_GREEN; P10_OR_LATER`
+- `UTC_RECORDED`: `2026-07-27T00:20:00Z`
 
-S3 is not GREEN. R3 judge outputs remain valid historical evidence but cannot
-authorize creation after the schedule/retrieval packet change. Both required
-judges must return GREEN on the exact R4 packet before the bounded retry
-envelope may begin.
+S3 is not GREEN. R4 never reached GLM because the local egress gateway blocked
+a false-positive status token. Both required judges must return GREEN on the
+exact R5 packet before the bounded retry envelope may begin.
