@@ -1,0 +1,1 @@
+{"classes":["committed-only","committed-plus-uncommitted","complete-loss","partial-loss","conflicting-stale","clean-control"],"derivation":"SHA256(canonical({version:gate5-seed-v1,class:<class>,repetition:<1|2|3>}))","repetitions":[1,2,3],"version":"gate5-seeds-v1"}

@@ -12,6 +12,7 @@ from typing import Any
 import re
 
 import cloud_adapter
+import hardening
 import protocol
 
 
@@ -102,11 +103,23 @@ def main() -> int:
     parser.add_argument("--config", type=Path)
     parser.add_argument("--heartbeat-seconds", type=int, default=5)
     parser.add_argument("--completion-marker", type=Path)
+    parser.add_argument("--custody-root", type=Path)
+    parser.add_argument("--aws-session-expiry-epoch", type=int)
+    parser.add_argument("--final-cloud-exchange-epoch", type=int)
+    parser.add_argument("--session-margin-seconds", type=int, default=900)
     args = parser.parse_args()
     if not 1 <= args.expected_requests <= protocol.MAX_SEQUENCE:
         raise CoordinatorFailure("EXPECTED_REQUESTS_INVALID")
     if args.mode == "live" and args.config is None:
         raise CoordinatorFailure("LIVE_CONFIG_REQUIRED")
+    if args.mode == "live" and any(value is None for value in (
+            args.custody_root, args.aws_session_expiry_epoch,
+            args.final_cloud_exchange_epoch)):
+        raise CoordinatorFailure("LIVE_CUSTODY_OR_SESSION_GATE_REQUIRED")
+    if (args.mode == "live" and
+            (args.final_cloud_exchange_epoch < int(time.time()) or
+             args.final_cloud_exchange_epoch > args.deadline_epoch)):
+        raise CoordinatorFailure("FINAL_CLOUD_EXCHANGE_WINDOW_INVALID")
     if args.deadline_epoch <= int(time.time()):
         raise CoordinatorFailure("DEADLINE_INVALID")
     if args.lambda_call_ceiling < args.expected_requests:
@@ -121,6 +134,19 @@ def main() -> int:
         path.mkdir(parents=True, exist_ok=True)
     evidence = args.evidence_root.resolve()
     evidence.mkdir(parents=True, exist_ok=False)
+    custody = None
+    if args.custody_root is not None:
+        custody = hardening.CheckpointCustody(
+            args.custody_root, args.campaign_id)
+    if args.mode == "live":
+        assert args.aws_session_expiry_epoch is not None
+        assert args.final_cloud_exchange_epoch is not None
+        session_receipt = hardening.validate_session_window(
+            expires_epoch=args.aws_session_expiry_epoch,
+            final_exchange_epoch=args.final_cloud_exchange_epoch,
+            margin_seconds=args.session_margin_seconds,
+        )
+        hardening.write_atomic(evidence / "aws-session-window.json", session_receipt)
     log = ChainLog(evidence / "coordinator.ndjson", args.campaign_id)
     processed: set[str] = set()
     expected_sequence = 1
@@ -199,6 +225,12 @@ def main() -> int:
             result = protocol.make_result(request, metrics, hashes)
             result_path = results / f"result-{expected_sequence:04d}.json"
             write_atomic(result_path, result)
+            if custody is not None:
+                custody_receipt = custody.capture(request, result)
+                log.emit("CHECKPOINT_CUSTODY_COMMITTED", {
+                    "sequence": expected_sequence,
+                    "receipt_hash": custody_receipt["receipt_hash"],
+                })
             log.emit("RESULT_COMMITTED", {
                 "sequence": expected_sequence,
                 "request_hash": request["request_hash"],

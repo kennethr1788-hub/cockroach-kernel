@@ -12,7 +12,6 @@ import json
 import os
 from pathlib import Path
 import re
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -21,6 +20,7 @@ from typing import Any
 from urllib.parse import quote
 
 import protocol
+import hardening
 
 BASE = Path(__file__).resolve().parents[1]
 P9 = BASE / "p9-cloud"
@@ -45,14 +45,15 @@ def _load_live_completion():
     return module
 
 
-def _run(command: list[str], *, env: dict[str, str] | None = None,
+def _run(command: list[str], *, family: str,
+         env: dict[str, str] | None = None,
          timeout: int = 60) -> tuple[bytes, int]:
     started = time.monotonic_ns()
     result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                             env=env, timeout=timeout, check=False)
     elapsed_ms = int((time.monotonic_ns() - started) / 1_000_000)
     if result.returncode != 0:
-        raise CloudAdapterError("COMMAND_FAILED:" + protocol.sha256(result.stdout))
+        raise hardening.command_failure(family, result.returncode, result.stdout)
     return result.stdout, elapsed_ms
 
 
@@ -113,7 +114,7 @@ def _sql(config: dict[str, Any], env: dict[str, str], *, execute: str | None = N
         command.extend(["--execute", execute])
     else:
         command.extend(["--file", str(file.resolve())])
-    return _run(command, env=env, timeout=timeout)
+    return _run(command, family="cockroach", env=env, timeout=timeout)
 
 
 def _cleanup_sql(task_id: str) -> str:
@@ -143,7 +144,7 @@ def _aws_invoke(config: dict[str, Any], request_path: Path,
         "--profile", config["aws_profile"],
         "--region", config["aws_region"], "--output", "json", "--no-cli-pager",
         str(response_path.resolve()),
-    ], env=aws_env, timeout=30)
+    ], family="aws", env=aws_env, timeout=30)
     metadata = json.loads(raw)
     try:
         log_tail = base64.b64decode(metadata["LogResult"], validate=True).decode("utf-8")
@@ -171,35 +172,46 @@ def run_live(request: dict[str, Any], config_path: Path,
     trial_root = evidence_root / f"trial-{request['sequence']:04d}"
     if trial_root.exists():
         raise CloudAdapterError("TRIAL_ROOT_EXISTS")
-    secret = bytearray(_password(config))
+    secret = bytearray()
     sql_env: dict[str, str] | None = None
+    stage = "CREDENTIAL_ACQUISITION"
+    failure: BaseException | None = None
     try:
+        secret.extend(_password(config))
         sql_env = _sql_env(config, bytes(secret))
+        stage = "TRIAL_PREPARE"
         live.prepare(trial_root)
         prepared = json.loads((trial_root / f"{branch}-prepared.json").read_text())
         task_id = prepared["task_id"]
+        stage = "PRESEED_CLEANUP"
         _, cleanup_ms = _sql(config, sql_env, execute=_cleanup_sql(task_id))
+        stage = "COCKROACH_SEED"
         seed_raw, transaction_ms = _sql(
             config, sql_env, file=trial_root / f"{branch}-seed.sql")
+        stage = "COCKROACH_VECTOR_QUERY"
         vector_raw, vector_ms = _sql(
             config, sql_env, file=trial_root / f"{branch}-vector-query.sql")
         if prepared["vector_id"].encode() not in vector_raw:
             raise CloudAdapterError("VECTOR_LINKAGE_FAILED")
         lambda_request = trial_root / f"{branch}-request.json"
         lambda_response = trial_root / f"{branch}-lambda-response.json"
+        stage = "AWS_LAMBDA_INVOKE"
         meta, lambda_ms = _aws_invoke(config, lambda_request, lambda_response)
         response_value = json.loads(lambda_response.read_text(encoding="utf-8"))
         lambda_response.write_bytes(records.canonical_json(response_value) + b"\n")
         (trial_root / f"{branch}-lambda-meta.json").write_bytes(
             records.canonical_json(meta) + b"\n")
+        stage = "LOCAL_RECONCILIATION"
         reconciled, finalize_sql = live.reconcile_trial(trial_root, branch)
         finalize_path = trial_root / f"{branch}-finalize.sql"
         finalize_path.write_text(finalize_sql, encoding="utf-8")
+        stage = "COCKROACH_FINALIZE"
         _, finalize_ms = _sql(config, sql_env, file=finalize_path)
         feed_sql = (
             "EXPERIMENTAL CHANGEFEED FOR TABLE ck.worker_results "
             "WITH initial_scan='only', format='json'"
         )
+        stage = "COCKROACH_CHANGEFEED"
         feed_raw, changefeed_ms = _sql(
             config, sql_env, execute=feed_sql, timeout=30, fmt="ndjson")
         feed_path = trial_root / "changefeed.ndjson"
@@ -219,9 +231,11 @@ def run_live(request: dict[str, Any], config_path: Path,
             "SELECT task_id, receipt_hash, event_hash FROM ck.mcp_receipt_view "
             f"WHERE task_id='{task_id}' LIMIT 2"
         )
+        stage = "COCKROACH_AUDIT"
         audit_raw, audit_ms = _sql(config, sql_env, execute=audit_sql)
         if task_id.encode() not in audit_raw:
             raise CloudAdapterError("MCP_AUDIT_LINKAGE_FAILED")
+        stage = "POSTTRIAL_CLEANUP"
         _, cleanup2_ms = _sql(config, sql_env, execute=_cleanup_sql(task_id))
         verify_raw, verify_ms = _sql(
             config, sql_env,
@@ -265,12 +279,39 @@ def run_live(request: dict[str, Any], config_path: Path,
         summary["summary_hash"] = protocol.sha256(summary)
         (evidence_root / "summary.json").write_bytes(protocol.canonical(summary) + b"\n")
         return metrics, evidence_hashes
+    except BaseException as exc:
+        failure = exc
+        if isinstance(exc, hardening.ExternalCommandFailure):
+            classified = exc
+        else:
+            classified = hardening.ExternalCommandFailure(
+                command_family="internal",
+                return_code=-1,
+                output_hash=protocol.sha256(str(exc).encode("utf-8")),
+                failure_class=hardening.UNKNOWN_EXTERNAL_COMMAND,
+            )
+        receipt = hardening.failure_receipt(
+            campaign_id=request["campaign_id"],
+            sequence=request["sequence"],
+            stage=stage,
+            request_hash=request["request_hash"],
+            failure=classified,
+        )
+        # This fsynced receipt is outside the temporary trial and is committed
+        # before the finally block is allowed to remove trial-local evidence.
+        hardening.write_atomic(evidence_root / "failure.json", receipt)
+        raise CloudAdapterError(
+            f"STAGE_FAILED:{stage}:{classified.failure_class}"
+        ) from exc
     finally:
         if sql_env is not None:
             sql_env.pop("PGPASSWORD", None)
         for index in range(len(secret)):
             secret[index] = 0
-        shutil.rmtree(trial_root, ignore_errors=True)
+        cleanup = hardening.cleanup_trial_exact(trial_root, evidence_root)
+        hardening.write_atomic(evidence_root / "cleanup.json", cleanup)
+        if failure is not None and not (evidence_root / "failure.json").is_file():
+            raise CloudAdapterError("FAILURE_RECEIPT_MISSING")
 
 
 def run_fixture(request: dict[str, Any]) -> tuple[dict[str, int], dict[str, str]]:

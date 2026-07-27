@@ -7,12 +7,12 @@ import hashlib
 import json
 import os
 from pathlib import Path
-import signal
 import subprocess
 import time
 from typing import Any
 
 import protocol
+import hardening
 
 
 class GuardFailure(RuntimeError):
@@ -256,10 +256,19 @@ def main() -> int:
             time.sleep(args.heartbeat_seconds)
         raise GuardFailure("GUARD_DEADLINE")
     except Exception as exc:
+        shutdown_receipt: dict[str, Any] | None = None
         try:
-            os.kill(args.coordinator_pid, signal.SIGTERM)
-        except ProcessLookupError:
-            pass
+            shutdown_receipt = hardening.coordinated_local_shutdown([
+                ("bridge", args.bridge_pid),
+                ("coordinator", args.coordinator_pid),
+            ])
+        except Exception as shutdown_exc:
+            # Preserve the primary failure and still proceed to exact worker
+            # teardown. The shutdown failure is hash-bound, never hidden.
+            log.emit("LOCAL_SHUTDOWN_BLOCKED", {
+                "type": type(shutdown_exc).__name__,
+                "reason_hash": protocol.sha256(str(shutdown_exc).encode()),
+            })
         marker = args.stop_marker.resolve()
         marker.parent.mkdir(parents=True, exist_ok=True)
         marker.write_bytes(protocol.canonical({
@@ -270,6 +279,10 @@ def main() -> int:
             "type": type(exc).__name__,
             "reason_hash": protocol.sha256(str(exc).encode()),
             "stop_marker": True,
+            "local_shutdown_receipt_hash": (
+                shutdown_receipt["receipt_hash"] if shutdown_receipt else None
+            ),
+            "worker_shutdown": "EXACT_POD_STOP_DELETE",
         })
         teardown(cli, args.pod_id, log)
         return 1
