@@ -20,6 +20,10 @@ BASE = Path(__file__).resolve().parents[1]
 
 def _load_verifier():
     path = BASE / "p4-verifier" / "verifier.py"
+    if not path.is_file():
+        from verifier_runtime import verifier
+
+        return verifier
     spec = importlib.util.spec_from_file_location("p4_verifier_authority", path)
     if spec is None or spec.loader is None:
         raise RuntimeError("P4_VERIFIER_UNAVAILABLE")

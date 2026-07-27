@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools==75.6.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cockroach-kernel"
+version = "0.1.0"
+description = "Deterministic trajectory recovery evidence CLI"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.scripts]
+cockroach-kernel = "cockroach_kernel.cli:main"
+
+[tool.setuptools]
+packages = ["cockroach_kernel", "p9_runtime", "verifier_runtime"]
+
+[tool.setuptools.package-dir]
+cockroach_kernel = "cockroach_kernel"
+p9_runtime = "p9-cloud"
+verifier_runtime = "p4-verifier"
