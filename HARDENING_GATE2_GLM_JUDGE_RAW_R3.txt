@@ -1,0 +1,20 @@
+glm-zai: served by glm-5.2
+```json
+{
+  "verdict": "GREEN",
+  "packet_sha256": "5c7624937bdae41f64dbd5e2c66f34afc3326fdacfdb1484ef118c964e386b41",
+  "model": "glm-final-judge",
+  "findings": [
+    "Live keyless AWS judge URL is evidenced with exactly two fixed routes (GET /demo/promote, GET /demo/refuse), route authorization none, API key not required, matching the narrow target.",
+    "CockroachDB evidence is concrete: database cockroach_kernel in aws-us-west-2, four zones, regional-by-table locality, VECTOR(64) with context_vectors_vector_idx using vector_l2_ops, and required transactional receipt linkage plus vector-distance retrieval described without overclaiming scale.",
+    "Promotion and refusal are observable and deterministic: HTTP 200 PROMOTE/VERIFIED and HTTP 200 REFUSE/HASH_MISMATCH, both with authority P4_DETERMINISTIC_VERIFIER and cloud/model role ADVISORY, so the deterministic local verifier remains the sole authority.",
+    "Replay equivalence is evidenced: five identical direct promote hashes, five identical direct refusal hashes, public/direct method-body-query-route negatives passing, and live/keyless replay matching on (PROMOTE, VERIFIED) and (REFUSE, HASH_MISMATCH).",
+    "Topology, plans/indexes, transaction retry, MCP, request, IAM/SQL, throttle, alarms, kill line, access-duration, teardown, and cost are all represented: S1 produced 61/61 checkpoints with SQLSTATE 40001 handling, rollback, restart recovery and determinism; bounded linked read-only MCP returned GREEN with two exact linkages; runtime SQL identity is exactly schema USAGE plus SELECT on tasks/receipts/context_vectors/worker_results with no write grant; stage rate 0.05 rps burst 2; alarms error-sum and invocation-sum observed OK; 19/19 START/END/REPORT records; manual kill line is fully ordered with exact absence readback; access-duration is bounded by the projected access end before teardown.",
+    "Cost contract is bounded and honestly projected: $10.055554584967524 against a $12.00 ceiling with conservative assumptions; residual denial-of-wallet exposure is explicitly disclosed and accepted rather than misrepresented as provider-hard-capped.",
+    "No judge account is required: the packet states judges need no AWS, CockroachDB, or paid account.",
+    "No sensitive value leak detected in the packet content itself, and validation records two independent scanners plus local-path/account text scan at zero findings; the preserved first live attempt and rejected SQL-shell attempts remain intact without rewrite.",
+    "Disclosed limitations (scaled-dataset optimizer recommendations, projected not hard-capped ingress cost, deferred teardown for judge access, preserved failed attempts) are compatible with the narrow Gate 2 target and are not represented as broader production scale, automated budget enforcement, or completed future teardown."
+  ],
+  "evidence_assessment": "Evidence supports the target without a material contradiction. The packet demonstrates a live keyless two-route AWS judge URL, real CockroachDB persistence with receipt linkage and vector retrieval, observable deterministic promotion and refusal under P4_DETERMINISTIC_VERIFIER with advisory cloud/model role, replay equivalence across direct and public invocations, and complete coverage of the required evidence categories including topology, plans/indexes, transaction retry, MCP, request, IAM/SQL, throttle, alarms, kill line, access-duration, teardown contract, and cost. Authority is not inverted, nothing is falsely promoted, no access/cost contradiction exists, and the kill-line/access-end contract is recorded and coherent with deferred teardown. Limitations are disclosed honestly and bounded to the narrow Gate 2 scope; the target marker HARDENING_2_AWS_DEMO_GREEN is supported."
+}
+```

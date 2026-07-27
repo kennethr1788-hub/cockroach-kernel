@@ -1,7 +1,7 @@
 # Hardening Gate 2 Status
 
-- `STATUS`: `HARDENING_2_PENDING_FINAL_JUDGE`
-- `BLOCKER`: `FINAL_INDEPENDENT_GLM_REQUIRED`
+- `STATUS`: `HARDENING_2_AWS_DEMO_GREEN`
+- `BLOCKER`: `NONE`
 - `LAST_GREEN_GATE`: `HARDENING_1_CLI_GREEN`
 - `LOCAL_ADAPTER_COMMIT`: `ea4d3764dc6fd778af98f23788ba9871729cd99e`
 - `AWS_SESSION`: `ACTIVE_VERIFIED`
@@ -32,11 +32,16 @@
 - `LIVE_ATTEMPT_R2_RESULT_SHA256`: `41c8a8f0733aa9ca9885ad4e3bdb5ae185a859f912d6ab4bd4ebfbae6e69e948`
 - `CLOSEOUT_REPORT_R2`: `HARDENING_GATE2_CLOSEOUT_REPORT_R2.md`
 - `CLOSEOUT_MANIFEST_HASH`: `d930fdc1b7b86363bca7ef95f181240be4ee20bf78c7046331f8e91487f807dd`
+- `FINAL_PACKET_R3`: `HARDENING_GATE2_FINAL_GLM_PACKET_R3.md`
+- `FINAL_PACKET_R3_SHA256`: `5c7624937bdae41f64dbd5e2c66f34afc3326fdacfdb1484ef118c964e386b41`
+- `FINAL_JUDGE_R3`: `GLM_5_2_GREEN`
+- `FINAL_JUDGE_RECEIPT_R3`: `HARDENING_GATE2_GLM_JUDGE_RECEIPT_R3.md`
+- `GREEN_CHECKPOINT`: `HARDENING_GATE2_GREEN_CHECKPOINT_R1.md`
 - `UTC_RECORDED`: `2026-07-27T17:58:52Z`
 
 The exact AWS resources, database linkage, public promote/refuse behavior,
 negative cases, replay equivalence, topology, query plans, SQL/IAM boundaries,
-metrics, request logs, and cost projection are now directly evidenced. The
-credential was never read or recorded. Technical closeout is GREEN; final
-independent GLM review remains the sole open Gate 2 condition. No Gate 2 GREEN
-claim is made yet.
+metrics, request logs, and cost projection are directly evidenced. The
+credential was never read or recorded. Independent GLM 5.2 returned GREEN on
+the exact frozen R3 packet hash. Gate 2 is GREEN within the recorded narrow
+scope and limitations.
