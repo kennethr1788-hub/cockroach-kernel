@@ -1,0 +1,14 @@
+SERVED_MODEL: GLM-4
+PACKET_SHA256: 7ce89c16bed4c6fef8a442df401e564c140bc0eb5ad03b0d8bb87c780f7f4614
+VERDICT: GREEN
+BLOCKERS: none
+NON_BLOCKING_RISKS:
+1. Platform-specific path resolution: The trace notes a cleanup failure on macOS due to `/tmp` resolving to `/private/tmp`, requiring an idempotent fix. While resolved, this highlights environment-specific fragility in the cleanup harness.
+2. Reconstruction fidelity: The trace honestly admits that while file content was preserved, the Git branch name and commit object history were not reconstructed, limiting the repository state to "content-only" rather than a full Git history restoration.
+EVIDENCE_BASIS:
+- Task Contract and Human Edit Receipt: Define the scope (overwrite refusal) and verify the human prerequisite (`HARDENING_GATE3_TASK_CONTRACT_R1.md`, `Hardening Gate 3 Human Edit Receipt R1`).
+- `continuation-receipt.json`: Provides the primary proof of the executable acceptance contract, documenting exit code 2 on the second run, `OUTPUT_ALREADY_EXISTS` reason, hash preservation of receipts (`original_hashes` vs `post_refusal_hashes`), and an empty `temporary_residue` list.
+- `cockroach_kernel/cli.py` (Recovered Source): Contains the implementation of the overwrite refusal logic (`_write_receipt_set`, `_atomic_write_new`) raising `ValueError("OUTPUT_ALREADY_EXISTS")` which triggers exit code 2.
+- `residue-receipt.json`: Confirms the safe destruction of the workspace, successor, and temporary home (`original_workspace_absent: true`, `successor_absent: true`, `temporary_home_absent: true`).
+- `manifest.json` & `evidence-manifest.json`: Verify the content-addressed retention of the three declared work units (CLI code, test code, human edit).
+- `live-receipt.json`: Confirms the cloud role was `ADVISORY` and authority remained local (`deterministic_authority: "P4_AND_P7_LOCAL"`).
