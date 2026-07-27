@@ -2,9 +2,11 @@
 
 - `STATUS`: `LOCAL_PREFLIGHT_GREEN_PENDING_INDEPENDENT_JUDGES`
 - `UTC_RECORDED`: `2026-07-26T23:12:11Z`
+- `LAST_AMENDED_UTC`: `2026-07-27T00:16:32Z`
+- `AMENDMENT_NOTE`: `CURRENT_R3_FIELDS_ADDED_AFTER_ORIGINAL_EVIDENCE_TIME`
 - `P9_CLOUD_REGRESSION_SUBSET`: `113_OF_113_GREEN`
 - `P9_PARENT_TOTAL_AT_P9_GATE`: `229_OF_229_GREEN`
-- `S3_UNIT_TESTS`: `10_OF_10_GREEN`
+- `S3_UNIT_TESTS`: `11_OF_11_GREEN`
 - `GIT_DIFF_CHECK`: `GREEN`
 - `RUNPOD_S3_SCOPED_INVENTORY`: `[]`
 
@@ -33,7 +35,7 @@ No related local coordinator, worker, or database process remained.
 - result: `EXPECTED_REFUSAL:COORDINATOR_UNAVAILABLE`;
 - cloud calls: zero;
 - updated coordinator-guard proof SHA-256:
-  `a94d19dccc93be4df0c9b23cc2d24e5fad66fa7e4a47e68ab2ce2cadda4af214`;
+  `8512d0af41630eee31ba7ebf367eb7ff6eeb23f9b3d884c4dd1a83fe88879b11`;
 - normal case: guard exited GREEN without stopping the fake worker;
 - stale/failure case: guard emitted a stop marker and deleted the exact fake
   worker;
@@ -44,10 +46,10 @@ No related local coordinator, worker, or database process remained.
 
 ## Bundle proof
 
-- worker archive: 144,500,700 bytes, SHA-256
-  `5c33c443e8e4d0e0b8c6c539ddd94c4c291625a73e4c257daec5fc69ae38140f`;
+- worker archive: 144,503,519 bytes, SHA-256
+  `c0f0514c09d63da833361ec34ef2cbc2f0e96c210fca043cbc7d3c33a8e703d4`;
 - worker tree manifest SHA-256:
-  `c3d7613ce0d06031e2e3a11e692e7c707431328b740a8b92fabc51b96b479793`;
+  `21e068263d0724ce9d9e73293ff4540b09fc44bcfdbada16fea455b49643ddd5`;
 - host archive: 56,343 bytes, SHA-256
   `073f41533224232e8ee64f90e9a11aa8488f756c481ac565112bf54201bbda46`;
 - host tree manifest SHA-256:

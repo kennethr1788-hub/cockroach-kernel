@@ -13,6 +13,13 @@ epochs are base-10 integers; host, port, Pod ID, and PIDs come only from the
 verified provider response or newly started process. No value is evaluated as
 shell, SQL, URL, ARN, path traversal, or an extra argument.
 
+`S3_EXECUTION_SCHEDULE_R1.json` is the authority for `CAMPAIGN_ID`,
+`CAMPAIGN_PREFIX`, `ATTEMPT_NAME`, `STOP_ISO_UTC`, `STOP_EPOCH`,
+`TERMINATE_ISO_UTC`, `DELETE_EPOCH`, and the creation/campaign-ready windows.
+An attempt may use only the array element matching its one-based attempt
+number. No time, name, shape, or price value may be recomputed after packet
+freeze.
+
 ## Creation
 
 ```text
@@ -175,6 +182,34 @@ must then emit `COORDINATOR_GREEN`, the bridge must emit `BRIDGE_GREEN`, and the
 coordinator guard must emit `COORDINATOR_GUARD_GREEN`. The exact-ID lifecycle
 guard or explicit closeout then stops/deletes the Pod with bounded retries.
 Exact-ID absence plus empty S3-scoped running/all-status inventory is required.
+
+Before the local completion marker is created, retrieve evidence with the
+following fixed command families after substituting only validated schedule and
+provider values:
+
+```text
+/usr/bin/ssh <PINNED_SSH_OPTIONS> root@<VERIFIED_SSH_HOST>
+  python3 /workspace/<CAMPAIGN_ID>/bundle/s3-soak/freeze_evidence_manifest.py
+  --root /workspace/<CAMPAIGN_ID>/production
+  --output /workspace/<CAMPAIGN_ID>/production-tree.sha256
+
+/usr/bin/scp <PINNED_SCP_OPTIONS>
+  root@<VERIFIED_SSH_HOST>:/workspace/<CAMPAIGN_ID>/production-tree.sha256
+  <LOCAL_ATTEMPT_ROOT>/retrieved/production-tree.sha256
+
+/usr/bin/scp -r <PINNED_SCP_OPTIONS>
+  root@<VERIFIED_SSH_HOST>:/workspace/<CAMPAIGN_ID>/production
+  <LOCAL_ATTEMPT_ROOT>/retrieved/production
+
+cd <LOCAL_ATTEMPT_ROOT>/retrieved
+sha256sum --check production-tree.sha256
+```
+
+The fixed project-local Python helper performs the atomic manifest write. The
+receipt preserves the resolved vectors, helper hash, output summary, and
+manifest hash.
+The completion marker is forbidden until every listed file exists locally and
+the complete remote manifest validates.
 
 If any PID, hash, call count, deadline, path root, provider identity, evidence
 count, or resource limit differs, execution stops and the Pod is torn down.

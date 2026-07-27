@@ -1,6 +1,6 @@
 # S3 Status
 
-- `STATUS`: `S3_PREFLIGHT_R3_GREEN_CAMPAIGN_READY_PENDING`
+- `STATUS`: `S3_PREFLIGHT_R3_GREEN_INVALIDATED_R4_PACKET_PENDING`
 - `LAST_GREEN_GATE`: `CK_P9_INTEGRATION_GREEN`
 - `P9_COMMIT`: `fc296743dd97699a78a4777c8affcd47930f92e6`
 - `S3_PREFLIGHT_IMPLEMENTATION_COMMIT`: `9f9e1675b9d12e70e5531a196e33e28c76b9b68a`
@@ -13,11 +13,11 @@
 - `AUTHORIZATION_PROMPT_SHA256`: `51cdae6c688dafa0715a3120b74fb6ec162a34b5d25c4680268e4450f463394b`
 - `RUNPOD_ATTEMPTS`: `0`
 - `RUNPOD_EXPOSURE`: `$0.00`
-- `NEXT_ALLOWED_ACTION`: `START_BOUNDED_S3_RUNPOD_PRESTART_RETRY_ENVELOPE`
-- `FORBIDDEN_ACTION`: `PRODUCTION_RESTART_OR_REPLACEMENT_AFTER_43200_SECOND_TIMER_START; P10_OR_LATER`
-- `UTC_RECORDED`: `2026-07-27T00:10:31Z`
+- `NEXT_ALLOWED_ACTION`: `FREEZE_R4_PACKET_AND_RERUN_GLM_PLUS_CLAUDE`
+- `FORBIDDEN_ACTION`: `RUNPOD_CREATION_BEFORE_R4_GLM_AND_CLAUDE_GREEN; P10_OR_LATER`
+- `UTC_RECORDED`: `2026-07-27T00:13:02Z`
 
-S3 is not GREEN. The R3 preflight gate is GREEN, so the bounded sequential
-pre-start retry envelope may begin. `CK_S3_RELEASE_SOAK_GREEN` still requires
-campaign-ready proof, exactly 43,200 seconds of production execution, teardown,
-and final same-hash GLM plus Claude plus AGY GREEN.
+S3 is not GREEN. R3 judge outputs remain valid historical evidence but cannot
+authorize creation after the schedule/retrieval packet change. Both required
+judges must return GREEN on the exact R4 packet before the bounded retry
+envelope may begin.

@@ -4,6 +4,7 @@ from __future__ import annotations
 import copy
 import json
 from pathlib import Path
+import re
 import subprocess
 import sys
 import tempfile
@@ -11,6 +12,7 @@ import time
 import unittest
 
 import protocol
+import freeze_evidence_manifest
 import coordinator_guard
 
 
@@ -23,6 +25,29 @@ def hashes() -> dict[str, str]:
 
 
 class ProtocolTests(unittest.TestCase):
+    def test_frozen_evidence_manifest_is_sorted_and_atomic(self):
+        with tempfile.TemporaryDirectory(prefix="s3-manifest-proof-") as temporary:
+            campaign = Path(temporary) / "ck-s3-proof"
+            production = campaign / "production"
+            production.mkdir(parents=True)
+            (production / "b.txt").write_bytes(b"b")
+            nested = production / "nested"
+            nested.mkdir()
+            (nested / "a.txt").write_bytes(b"a")
+            output = campaign / "production-tree.sha256"
+            original = freeze_evidence_manifest.ROOT_RE
+            freeze_evidence_manifest.ROOT_RE = re.compile(
+                re.escape(production.resolve().as_posix()))
+            try:
+                result = freeze_evidence_manifest.freeze(production, output)
+            finally:
+                freeze_evidence_manifest.ROOT_RE = original
+            lines = output.read_text(encoding="utf-8").splitlines()
+            self.assertEqual(result["files"], 2)
+            self.assertTrue(lines[0].endswith("  production/b.txt"))
+            self.assertTrue(lines[1].endswith("  production/nested/a.txt"))
+            self.assertFalse(output.with_name(output.name + ".tmp").exists())
+
     def request(self, sequence: int = 1):
         operation = protocol.Operation.RUN_PROMOTE if sequence % 2 else protocol.Operation.RUN_REFUSE
         parent = protocol.GENESIS_HASH if sequence == 1 else "b" * 64
