@@ -1,0 +1,1 @@
+{"statusCode": 400, "headers": {"cache-control": "no-store", "content-type": "application/json; charset=utf-8", "x-content-type-options": "nosniff"}, "isBase64Encoded": false, "body": "{\"action_taken\":\"NONE\",\"reason\":\"QUERY_NOT_ALLOWED\",\"verdict\":\"INVALID\",\"version\":\"ck-public-demo-error-v1\"}"}

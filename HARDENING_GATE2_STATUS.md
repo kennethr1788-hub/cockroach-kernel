@@ -1,7 +1,7 @@
 # Hardening Gate 2 Status
 
-- `STATUS`: `HARDENING_2_BLOCKED`
-- `BLOCKER`: `FROZEN_SYNTHETIC_DEMO_ROWS_REMOVED_BY_PRIOR_P9_CLEANUP`
+- `STATUS`: `HARDENING_2_PENDING_FINAL_JUDGE`
+- `BLOCKER`: `FINAL_INDEPENDENT_GLM_REQUIRED`
 - `LAST_GREEN_GATE`: `HARDENING_1_CLI_GREEN`
 - `LOCAL_ADAPTER_COMMIT`: `ea4d3764dc6fd778af98f23788ba9871729cd99e`
 - `AWS_SESSION`: `ACTIVE_VERIFIED`
@@ -26,14 +26,17 @@
 - `LIVE_TEST_HARNESS_SHA256`: `2adfcfd13bd083ed8b4980173ecb570f5a9a69dbd276099acb19b79b32db7c0a`
 - `LIVE_ATTEMPT_R1`: `HARDENING_GATE2_LIVE_ATTEMPT_R1.md`
 - `RESEED_CHECKPOINT`: `HARDENING_GATE2_RESEED_CHECKPOINT_R1.md`
+- `RESEED_RECEIPT_R2`: `HARDENING_GATE2_RESEED_RECEIPT_R2.md`
+- `LIVE_ATTEMPT_R2`: `evidence/hardening-gate2-live-r2/`
+- `LIVE_ATTEMPT_R2_STATUS`: `LIVE_BEHAVIOR_GREEN`
+- `LIVE_ATTEMPT_R2_RESULT_SHA256`: `41c8a8f0733aa9ca9885ad4e3bdb5ae185a859f912d6ab4bd4ebfbae6e69e948`
+- `CLOSEOUT_REPORT_R2`: `HARDENING_GATE2_CLOSEOUT_REPORT_R2.md`
+- `CLOSEOUT_MANIFEST_HASH`: `d930fdc1b7b86363bca7ef95f181240be4ee20bf78c7046331f8e91487f807dd`
 - `UTC_RECORDED`: `2026-07-27T17:58:52Z`
 
-The local adapter and deterministic Lambda bundle are mechanically green.
-Kenneth approved the cost/access packet, confirmed cluster continuity, and
-completed AWS login. The dedicated `ck_hardening_demo` identity now exists and
-CockroachDB Cloud reported successful execution of exactly USAGE plus four
-SELECT grants. The credential was copied without being read or recorded, the
-authorized AWS secret exists with metadata-only readback, and the clipboard is
-empty. The exact AWS resources are now deployed and their configuration
-readback is green. Live behavior, database/query-plan proof, access, cost, and
-final independent review remain open. No Gate 2 GREEN claim is made.
+The exact AWS resources, database linkage, public promote/refuse behavior,
+negative cases, replay equivalence, topology, query plans, SQL/IAM boundaries,
+metrics, request logs, and cost projection are now directly evidenced. The
+credential was never read or recorded. Technical closeout is GREEN; final
+independent GLM review remains the sole open Gate 2 condition. No Gate 2 GREEN
+claim is made yet.

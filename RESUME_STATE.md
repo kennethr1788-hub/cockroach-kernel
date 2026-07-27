@@ -2,7 +2,7 @@
 
 - `CURRENT_PHASE`: `HARDENING_RUN_GATE_2_LIVE_AWS_DEPLOYMENT`
 - `LAST_GREEN_GATE`: `HARDENING_1_CLI_GREEN`
-- `NEXT_ALLOWED_ACTION`: Reapply only the four hash-bound preserved P9 synthetic seed/finalization transactions, verify exact rows and hashes, then run a new append-only Gate 2 live attempt
+- `NEXT_ALLOWED_ACTION`: Commit the frozen Gate 2 technical closeout, construct one exact-hash final packet, and obtain the required independent GLM verdict
 - `FORBIDDEN_ACTIONS`: Claim S3 GREEN; claim result 12; claim a complete twelve-hour run; replacement S3 worker without a newly frozen authorization; public actions; release; submission; HOME/live-memory mutation; credential exposure; any worker credential transfer
 - `CURRENT_COMMIT_AT_P9_PACKET_FREEZE`: `61d77d1704a3f074427f9f82b300abaaa201f79c`
 - `P9_IMPLEMENTATION_COMMIT`: `cbd58b3af9e1ce5c4ddf8885866b88e7e7c1ca0f`
@@ -12,7 +12,7 @@
 - `S3_PREFLIGHT_R4_REPAIR_COMMIT`: `06b54e8f61bf0fa227af3de2377a462e369d7d74`
 - `S3_PREFLIGHT_R6_REPAIR_COMMIT`: `8b1d5bd1038588527bd994eb8fcb5467cac47eac`
 - `S3_PREFLIGHT_R8_REPAIR_COMMIT`: `95408fb9386ced25b468c0957e86e8f73cb123e9`
-- `PENDING_BLOCKERS`: Gate 2 live deployment, behavior, access, configuration readback, cost evidence, and final GLM review; Hardening Gates 3 through 10, hardened candidate freeze, and separately authorized S3-R2 remain incomplete
+- `PENDING_BLOCKERS`: Gate 2 final GLM review; Hardening Gates 3 through 10, hardened candidate freeze, and separately authorized S3-R2 remain incomplete
 - `REQUIRED_JUDGE_STATE`: Hardening gates use the judge workflow declared by the Hardening Plan; S3-R2 requires a fresh preflight packet and its declared independent judges
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
@@ -33,7 +33,7 @@
 - `HARDENING_GATE2_AUTHORIZATION_PACKET`: `HARDENING_GATE2_PUBLIC_DEMO_AUTHORIZATION_PACKET_R1.md`
 - `HARDENING_GATE2_AUTHORIZATION_PACKET_SHA256`: `4189d411ae296bcac93e1ef55bf1fe774dbb9d2c1c0debca1a198c3374d87ea7`
 - `HARDENING_GATE2_PREFLIGHT_JUDGE`: `GLM_4_7_GREEN`
-- `HARDENING_GATE2_STATUS`: `DEPLOYED_CONFIGURATION_GREEN_RESEED_REQUIRED`
+- `HARDENING_GATE2_STATUS`: `TECHNICAL_CLOSEOUT_GREEN_PENDING_FINAL_GLM`
 - `HARDENING_GATE2_HUMAN_AUTHORIZATION_RECEIPT`: `HARDENING_GATE2_HUMAN_AUTHORIZATION_RECEIPT_R1.md`
 - `HARDENING_GATE2_AWS_AUTH`: `ACTIVE_VERIFIED`
 - `HARDENING_GATE2_COCKROACH_CONTINUITY`: `KENNETH_CONFIRMED_THROUGH_2026-09-15T21:00:00Z`
@@ -44,6 +44,8 @@
 - `HARDENING_GATE2_DEPLOY_HARNESS_SHA256`: `6cff71df2f4ebedcc36804b5afad46922d8a5de060ee676416086274fb2651ef`
 - `HARDENING_GATE2_PUBLIC_ENDPOINT`: `https://6rhijj3d37.execute-api.us-west-2.amazonaws.com`
 - `HARDENING_GATE2_DEPLOYMENT_RESULT_SHA256`: `037006d44221a417ee78151a562077feeec2c64e108b4604ffe6b896e6091e8b`
+- `HARDENING_GATE2_LIVE_R2_RESULT_SHA256`: `41c8a8f0733aa9ca9885ad4e3bdb5ae185a859f912d6ab4bd4ebfbae6e69e948`
+- `HARDENING_GATE2_CLOSEOUT_MANIFEST_HASH`: `d930fdc1b7b86363bca7ef95f181240be4ee20bf78c7046331f8e91487f807dd`
 - `S3_LOCAL_PREFLIGHT`: `R11_GLM_4_7_AND_CLAUDE_OPUS_4_8_GREEN`
 - `R11_PREFLIGHT_PACKET_SHA256`: `5904d8fb6cee6f8cfc57c051bb8bdc986671dd885cb339c5ed385f9ac86d44d4`
 - `R10_PREFLIGHT_PACKET_SHA256`: `ea6470d16c301a79254565ad110a4114ef25ce54d6577eba9669d6baafee5317`

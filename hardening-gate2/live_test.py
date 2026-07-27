@@ -142,7 +142,7 @@ def strip_raw(result: dict[str, Any]) -> dict[str, Any]:
 
 def main() -> int:
     repo = Path.cwd().resolve()
-    evidence = repo / "evidence/hardening-gate2-live-r1"
+    evidence = repo / "evidence/hardening-gate2-live-r2"
     if evidence.exists():
         raise RuntimeError("LIVE_EVIDENCE_DIRECTORY_ALREADY_EXISTS")
     evidence.mkdir(parents=True)
