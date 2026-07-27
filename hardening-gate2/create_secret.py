@@ -2,8 +2,10 @@
 """Create the one authorized Gate 2 database secret without logging its value.
 
 Kenneth enters the dedicated read-only SQL password through ``getpass``. The
-secret payload travels to the project-local AWS CLI through stdin, never argv,
-stdout, a file, shell history, or a receipt.
+``--clipboard`` mode reads a provider-generated value through macOS ``pbpaste``
+when a shared terminal makes an interactive prompt unsafe. The secret payload
+travels to the project-local AWS CLI through stdin, never argv, stdout, a file,
+shell history, or a receipt.
 """
 from __future__ import annotations
 
@@ -49,7 +51,24 @@ def main() -> int:
         print("SECRET_ALREADY_EXISTS", file=sys.stderr)
         return 3
 
-    password = getpass("Paste the dedicated ck_hardening_demo password (hidden): ")
+    arguments = sys.argv[1:]
+    if not arguments:
+        password = getpass("Paste the dedicated ck_hardening_demo password (hidden): ")
+    elif arguments == ["--clipboard"]:
+        clipboard = subprocess.run(
+            ["/usr/bin/pbpaste"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
+        if clipboard.returncode != 0:
+            print("CLIPBOARD_READ_FAILED", file=sys.stderr)
+            return 4
+        password = clipboard.stdout.decode("utf-8")
+        clipboard = None
+    else:
+        print("USAGE: create_secret.py [--clipboard]", file=sys.stderr)
+        return 2
     # CockroachDB Cloud currently generates a 22-character high-entropy
     # credential. Accept that provider-generated shape while still rejecting
     # short or malformed manual input.

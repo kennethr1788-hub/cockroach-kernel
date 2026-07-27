@@ -10,6 +10,7 @@
 - `PASSWORD_CLIPBOARD_STATE`: `temporary_pending_AWS_secret_handoff`
 - `GRANT_EXECUTION_RESULT`: `Success`
 - `AWS_SECRET_CREATED`: `no`
+- `FIRST_HANDOFF_ATTEMPT`: `HARDENING_GATE2_SECRET_HANDOFF_ATTEMPT_R1.md`
 
 ## Exact grants applied
 
