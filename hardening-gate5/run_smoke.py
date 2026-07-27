@@ -55,13 +55,19 @@ def network_deny_proof() -> dict[str, object]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("output_root", type=Path)
+    parser.add_argument("--campaign-id", default="gate5-local-smoke-r2")
+    parser.add_argument("--candidate-commit", default="GATE5_PREFREEZE_WORKTREE")
     args = parser.parse_args()
     output = args.output_root.resolve()
     output.mkdir(parents=True, exist_ok=False)
     restic = shutil.which("restic")
     if restic is None:
         raise RuntimeError("RESTIC_BINARY_NOT_FOUND")
-    child_env = dict(os.environ, CK_GATE5_RESTIC=str(Path(restic).resolve()))
+    git = shutil.which("git")
+    if git is None:
+        raise RuntimeError("GIT_BINARY_NOT_FOUND")
+    child_env = dict(os.environ, CK_GATE5_GIT=str(Path(git).resolve()),
+                     CK_GATE5_RESTIC=str(Path(restic).resolve()))
     proof = network_deny_proof()
     receipts = []
     script = Path(__file__).with_name("comparative.py")
@@ -74,6 +80,8 @@ def main() -> int:
             command = guarded([
                 sys.executable, str(script), scenario, "1", method, str(destination),
                 "--execution-order", str(execution_order),
+                "--campaign-id", args.campaign_id,
+                "--candidate-commit", args.candidate_commit,
             ])
             result = subprocess.run(command, cwd=comparative.BASE,
                                     env=child_env,
@@ -109,7 +117,9 @@ def main() -> int:
     for scenario, method in probes:
         destination = output / f"determinism--{scenario}--{method}.json"
         result = subprocess.run(guarded([
-            sys.executable, str(script), scenario, "1", method, str(destination)
+            sys.executable, str(script), scenario, "1", method, str(destination),
+            "--campaign-id", args.campaign_id,
+            "--candidate-commit", args.candidate_commit,
         ]), cwd=comparative.BASE, env=child_env,
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
             check=False, timeout=240)
@@ -144,9 +154,12 @@ def main() -> int:
     if leaked_roots:
         raise RuntimeError("TRIAL_RESIDUE_DETECTED")
     summary = {
-        "version": "gate5-local-smoke-v1",
+        "version": "gate5-local-smoke-v2",
         "status": "GREEN",
         "measured_campaign": False,
+        "evidence_mode": "PREFLIGHT",
+        "campaign_id": args.campaign_id,
+        "candidate_commit": args.candidate_commit,
         "executions": len(receipts),
         "classes": list(comparative.SCENARIO_CLASSES),
         "methods": list(comparative.METHODS),

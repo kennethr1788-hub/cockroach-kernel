@@ -13,6 +13,8 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import platform
+import re
 import secrets
 import shutil
 import signal
@@ -24,7 +26,7 @@ from typing import Any
 
 
 BASE = Path(__file__).resolve().parents[1]
-PROTOCOL_PATH = BASE / "HARDENING_GATE4_BASELINE_PROTOCOL_R1.md"
+PROTOCOL_PATH = BASE / "HARDENING_GATE4_BASELINE_PROTOCOL_R2.md"
 PROTOCOL_SHA256 = hashlib.sha256(PROTOCOL_PATH.read_bytes()).hexdigest()
 RECOVERY_BUDGET_SECONDS = 180
 SCENARIO_CLASSES = (
@@ -36,12 +38,20 @@ SCENARIO_CLASSES = (
     "clean-control",
 )
 METHODS = ("ordinary-git", "git-plus-restic-0.19.0", "product")
+EVIDENCE_MODES = ("PREFLIGHT", "MEASURED_GATE6")
+RESTIC_PROVENANCE = {
+    "f6c965a0f7f59464614130d79246479d48e2aa6780c34d27df6e48c8ee0308bd":
+        "restic 0.19.0 compiled with go1.26.4 on darwin/arm64",
+    "ae7fe58ab3511f830fd31d157158620b209522ff1332b119199d2e938d72338c":
+        "restic 0.19.0 compiled with go1.26.4 on linux/amd64",
+}
 CHECKPOINTS = (
     "BASE_COMMITTED", "AGENT_PROGRESS_SAVED", "HUMAN_EDIT_SAVED",
     "FINAL_PRELOSS",
 )
 RECEIPT_FIELDS = {
     "schema_version", "campaign_id", "protocol_sha256", "candidate_commit",
+    "evidence_mode", "runtime_platform",
     "scenario_class", "scenario_seed_hash", "repetition", "method",
     "execution_order", "source_manifest_sha256", "event_stream_sha256",
     "loss_receipt_sha256", "allowed_information_sha256", "tool_versions",
@@ -147,6 +157,28 @@ def isolated_env(trial: Path) -> dict[str, str]:
     }
     (trial / "temp-home").mkdir(parents=True, exist_ok=True)
     return env
+
+
+def evidence_limitations(evidence_mode: str) -> list[str]:
+    if evidence_mode == "PREFLIGHT":
+        return ["LOCAL_SYNTHETIC_PREFLIGHT", "NOT_LIVE_AWS",
+                "NOT_GATE6_MEASURED_EVIDENCE"]
+    if evidence_mode == "MEASURED_GATE6":
+        return ["SYNTHETIC_PAIRED_COMPARATIVE", "NOT_LIVE_AWS",
+                "NOT_PRODUCT_SCALE", "RUNPOD_GENERIC_COMPUTE"]
+    raise HarnessError("EVIDENCE_MODE_INVALID")
+
+
+def validate_evidence_context(evidence_mode: str, runtime_platform: str,
+                              candidate_commit: str, campaign_id: str) -> None:
+    evidence_limitations(evidence_mode)
+    if evidence_mode == "MEASURED_GATE6":
+        if runtime_platform != "Linux":
+            raise HarnessError("MEASURED_MODE_REQUIRES_LINUX")
+        if re.fullmatch(r"[0-9a-f]{40}", candidate_commit) is None:
+            raise HarnessError("MEASURED_CANDIDATE_COMMIT_INVALID")
+        if not campaign_id.startswith("ck-gate6-"):
+            raise HarnessError("MEASURED_CAMPAIGN_ID_INVALID")
 
 
 def command(args: list[str], *, cwd: Path, env: dict[str, str],
@@ -262,7 +294,7 @@ def generate_scenario(scenario_class: str, repetition: int) -> dict[str, Any]:
         "initial_files": {path: payload.hex() for path, payload in sorted(initial.items())},
         "events": events,
         "loss": loss,
-        "executable_command": [sys.executable, "tests/check.py"],
+        "executable_command": ["python3", "tests/check.py"],
         "work_units": units,
         "recovery_budget_seconds": RECOVERY_BUDGET_SECONDS,
     }
@@ -305,6 +337,17 @@ class Adapter:
     def setup(self) -> None:
         self.workspace.mkdir()
         self.custody.mkdir(mode=0o700)
+        python = shutil.which("python3", path=self.env["PATH"])
+        if python is None:
+            raise HarnessError("PYTHON_BINARY_NOT_FOUND")
+        self.python = Path(python).resolve()
+        if not self.python.is_file():
+            raise HarnessError("PYTHON_BINARY_INVALID")
+        raw, _ = command([str(self.python), "--version"], cwd=self.trial,
+                         env=self.env)
+        self.python_version = raw.decode("utf-8", errors="strict").strip()
+        self.python_hash = digest(self.python.read_bytes())
+        self.commands += 1
         first = self.scenario["public"]["initial_files"]
         materialize_event(self.workspace, {"files": first})
 
@@ -327,7 +370,7 @@ class Adapter:
         raise NotImplementedError
 
     def tools(self) -> tuple[dict[str, str], dict[str, str]]:
-        raise NotImplementedError
+        return ({"python": self.python_version}, {"python": self.python_hash})
 
 
 class GitAdapter(Adapter):
@@ -335,15 +378,26 @@ class GitAdapter(Adapter):
 
     def setup(self) -> None:
         super().setup()
+        configured = os.environ.get("CK_GATE5_GIT")
+        if not configured:
+            raise HarnessError("GIT_BINARY_NOT_DECLARED")
+        self.git = Path(configured).resolve()
+        if not self.git.is_file():
+            raise HarnessError("GIT_BINARY_INVALID")
+        raw, _ = command([str(self.git), "--version"], cwd=self.trial,
+                         env=self.env)
+        self.git_version = raw.decode("utf-8", errors="strict").strip()
+        self.git_hash = digest(self.git.read_bytes())
+        self.commands += 1
         self.remote = self.custody / "git-remote.git"
-        command(["/usr/bin/git", "init", "--bare", str(self.remote)],
+        command([str(self.git), "init", "--bare", str(self.remote)],
                 cwd=self.trial, env=self.env)
-        command(["/usr/bin/git", "init", "-b", "main"], cwd=self.workspace, env=self.env)
-        command(["/usr/bin/git", "config", "user.name", "Gate5 Fixture"],
+        command([str(self.git), "init", "-b", "main"], cwd=self.workspace, env=self.env)
+        command([str(self.git), "config", "user.name", "Gate5 Fixture"],
                 cwd=self.workspace, env=self.env)
-        command(["/usr/bin/git", "config", "user.email", "gate5@example.invalid"],
+        command([str(self.git), "config", "user.email", "gate5@example.invalid"],
                 cwd=self.workspace, env=self.env)
-        command(["/usr/bin/git", "remote", "add", "origin", str(self.remote)],
+        command([str(self.git), "remote", "add", "origin", str(self.remote)],
                 cwd=self.workspace, env=self.env)
         self.commands += 5
 
@@ -352,13 +406,13 @@ class GitAdapter(Adapter):
         super().checkpoint(packet)
         commit = None
         if packet["explicit_git_commit"]:
-            command(["/usr/bin/git", "add", "--all"], cwd=self.workspace, env=self.env)
-            command(["/usr/bin/git", "commit", "-m", packet["checkpoint"]],
+            command([str(self.git), "add", "--all"], cwd=self.workspace, env=self.env)
+            command([str(self.git), "commit", "-m", packet["checkpoint"]],
                     cwd=self.workspace, env=self.env)
-            raw, _ = command(["/usr/bin/git", "rev-parse", "HEAD"],
+            raw, _ = command([str(self.git), "rev-parse", "HEAD"],
                              cwd=self.workspace, env=self.env)
             commit = raw.decode().strip()
-            command(["/usr/bin/git", "push", "origin", "HEAD:refs/heads/main"],
+            command([str(self.git), "push", "origin", "HEAD:refs/heads/main"],
                     cwd=self.workspace, env=self.env)
             self.commands += 4
         elapsed = int((time.monotonic_ns() - started) / 1_000_000)
@@ -370,12 +424,12 @@ class GitAdapter(Adapter):
     def recover(self) -> tuple[Path, str]:
         if self.scenario["public"]["loss"]["type"] == "NONE":
             return self.workspace, "NO_ACTION"
-        command(["/usr/bin/git", "fsck", "--full", "--strict"],
+        command([str(self.git), "fsck", "--full", "--strict"],
                 cwd=self.remote, env=self.env)
-        command(["/usr/bin/git", "clone", "--no-local", "--branch", "main", str(self.remote),
+        command([str(self.git), "clone", "--no-local", "--branch", "main", str(self.remote),
                  str(self.successor)], cwd=self.trial, env=self.env)
         self.commands += 2
-        raw, _ = command(["/usr/bin/git", "rev-parse", "HEAD"],
+        raw, _ = command([str(self.git), "rev-parse", "HEAD"],
                          cwd=self.successor, env=self.env)
         self.selected = raw.decode().strip()
         if any(unit["category"] != "committed"
@@ -385,8 +439,10 @@ class GitAdapter(Adapter):
         return self.successor, "SUCCESS"
 
     def tools(self) -> tuple[dict[str, str], dict[str, str]]:
-        return ({"git": "git version 2.50.1 (Apple Git-155)"},
-                {"git": "179301dcb41ea78accc3fa0048a7e6f6710d891945a751a34addd622020c1818"})
+        versions, hashes = super().tools()
+        versions["git"] = self.git_version
+        hashes["git"] = self.git_hash
+        return versions, hashes
 
 
 class ResticAdapter(GitAdapter):
@@ -398,10 +454,18 @@ class ResticAdapter(GitAdapter):
         if not configured:
             raise HarnessError("RESTIC_BINARY_NOT_DECLARED")
         self.restic = Path(configured).resolve()
-        if (not self.restic.is_file() or
-                digest(self.restic.read_bytes()) !=
-                "f6c965a0f7f59464614130d79246479d48e2aa6780c34d27df6e48c8ee0308bd"):
+        if not self.restic.is_file():
+            raise HarnessError("RESTIC_BINARY_INVALID")
+        self.restic_hash = digest(self.restic.read_bytes())
+        expected_version = RESTIC_PROVENANCE.get(self.restic_hash)
+        if expected_version is None:
             raise HarnessError("RESTIC_BINARY_HASH_MISMATCH")
+        raw, _ = command([str(self.restic), "version"], cwd=self.trial,
+                         env=self.env)
+        self.restic_version = raw.decode("utf-8", errors="strict").strip()
+        if self.restic_version != expected_version:
+            raise HarnessError("RESTIC_VERSION_MISMATCH")
+        self.commands += 1
         self.repo = self.custody / "restic-repository"
         self.password = self.custody / "restic-password"
         self.password.write_bytes(secrets.token_bytes(32).hex().encode() + b"\n")
@@ -469,8 +533,8 @@ class ResticAdapter(GitAdapter):
 
     def tools(self) -> tuple[dict[str, str], dict[str, str]]:
         versions, hashes = super().tools()
-        versions["restic"] = "restic 0.19.0 compiled with go1.26.4 on darwin/arm64"
-        hashes["restic"] = "f6c965a0f7f59464614130d79246479d48e2aa6780c34d27df6e48c8ee0308bd"
+        versions["restic"] = self.restic_version
+        hashes["restic"] = self.restic_hash
         return versions, hashes
 
 
@@ -563,8 +627,10 @@ class ProductAdapter(Adapter):
 
     def tools(self) -> tuple[dict[str, str], dict[str, str]]:
         path = BASE / "p4-verifier/verifier.py"
-        return ({"product": "p4-deterministic-verifier-v1"},
-                {"product": digest(path.read_bytes())})
+        versions, hashes = super().tools()
+        versions["product"] = "p4-deterministic-verifier-v1"
+        hashes["product"] = digest(path.read_bytes())
+        return versions, hashes
 
 
 ADAPTERS = {adapter.name: adapter for adapter in (GitAdapter, ResticAdapter, ProductAdapter)}
@@ -584,7 +650,8 @@ def run_executable(target: Path, scenario: dict[str, Any],
 def score(adapter: Adapter, target: Path, operation_status: str,
           scenario: dict[str, Any], recovery_ms: int, setup_ms: int,
           teardown_ms: int, residue: int, *, campaign_id: str,
-          candidate_commit: str, execution_order: int) -> dict[str, Any]:
+          candidate_commit: str, execution_order: int,
+          evidence_mode: str, runtime_platform: str) -> dict[str, Any]:
     actual = manifest(target)
     expected = scenario["expected_manifest"]
     retained = sorted(path for path, item_hash in expected.items()
@@ -604,10 +671,12 @@ def score(adapter: Adapter, target: Path, operation_status: str,
     }
     public = scenario["public"]
     receipt = {
-        "schema_version": "gate5-comparative-receipt-v1",
+        "schema_version": "gate5-comparative-receipt-v2",
         "campaign_id": campaign_id,
         "protocol_sha256": PROTOCOL_SHA256,
         "candidate_commit": candidate_commit,
+        "evidence_mode": evidence_mode,
+        "runtime_platform": runtime_platform,
         "scenario_class": public["scenario_class"],
         "scenario_seed_hash": public["seed_hash"],
         "repetition": public["repetition"],
@@ -651,7 +720,7 @@ def score(adapter: Adapter, target: Path, operation_status: str,
         "residue_bytes_after_teardown": residue,
         "cleanup_pass": residue == 0,
         "command_receipt_hashes": [],
-        "limitations": ["LOCAL_SYNTHETIC_PREFLIGHT", "NOT_LIVE_AWS", "NOT_GATE6_MEASURED_EVIDENCE"],
+        "limitations": evidence_limitations(evidence_mode),
     }
     receipt["receipt_sha256"] = digest(receipt)
     return receipt
@@ -660,10 +729,29 @@ def score(adapter: Adapter, target: Path, operation_status: str,
 def validate_receipt(receipt: Any, raw: bytes | None = None) -> dict[str, Any]:
     if not isinstance(receipt, dict) or set(receipt) != RECEIPT_FIELDS:
         raise HarnessError("RECEIPT_FIELDS_INVALID")
-    if receipt["schema_version"] != "gate5-comparative-receipt-v1":
+    if receipt["schema_version"] != "gate5-comparative-receipt-v2":
         raise HarnessError("RECEIPT_VERSION_INVALID")
+    if receipt["evidence_mode"] not in EVIDENCE_MODES:
+        raise HarnessError("EVIDENCE_MODE_INVALID")
+    if receipt["runtime_platform"] not in {"Darwin", "Linux"}:
+        raise HarnessError("RUNTIME_PLATFORM_INVALID")
+    validate_evidence_context(receipt["evidence_mode"], receipt["runtime_platform"],
+                              receipt["candidate_commit"], receipt["campaign_id"])
+    if receipt["limitations"] != evidence_limitations(receipt["evidence_mode"]):
+        raise HarnessError("EVIDENCE_LIMITATIONS_INVALID")
     if receipt["scenario_class"] not in SCENARIO_CLASSES or receipt["method"] not in METHODS:
         raise HarnessError("RECEIPT_ENUM_INVALID")
+    expected_tools = {
+        "ordinary-git": {"python", "git"},
+        "git-plus-restic-0.19.0": {"python", "git", "restic"},
+        "product": {"python", "product"},
+    }[receipt["method"]]
+    if (set(receipt["tool_versions"]) != expected_tools or
+            set(receipt["tool_binary_sha256"]) != expected_tools):
+        raise HarnessError("TOOL_PROVENANCE_FIELDS_INVALID")
+    for value in receipt["tool_binary_sha256"].values():
+        if not isinstance(value, str) or re.fullmatch(r"[0-9a-f]{64}", value) is None:
+            raise HarnessError("TOOL_BINARY_HASH_INVALID")
     if receipt["operation_status"] not in {
             "SUCCESS", "NO_ACTION", "PARTIAL", "UNSUPPORTED_BY_METHOD",
             "FAILURE", "TIMEOUT", "INVALID_TRIAL"}:
@@ -693,10 +781,14 @@ def validate_receipt(receipt: Any, raw: bytes | None = None) -> dict[str, Any]:
 def run_one(scenario_class: str, repetition: int, method: str,
             output: Path, *, campaign_id: str = "gate5-local-smoke-r1",
             candidate_commit: str = "GATE5_PREFREEZE_WORKTREE",
-            execution_order: int = 1) -> dict[str, Any]:
+            execution_order: int = 1,
+            evidence_mode: str = "PREFLIGHT") -> dict[str, Any]:
     if method not in ADAPTERS:
         raise HarnessError("METHOD_INVALID")
     scenario = generate_scenario(scenario_class, repetition)
+    runtime_platform = platform.system()
+    validate_evidence_context(evidence_mode, runtime_platform, candidate_commit,
+                              campaign_id)
     run_root = Path(tempfile.mkdtemp(prefix="gate5-trial-", dir=output.parent))
     env = isolated_env(run_root)
     adapter = ADAPTERS[method](run_root, scenario, env)
@@ -727,7 +819,9 @@ def run_one(scenario_class: str, repetition: int, method: str,
             receipt = score(adapter, target, operation, scenario, recovery_ms,
                             setup_ms, 0, 0, campaign_id=campaign_id,
                             candidate_commit=candidate_commit,
-                            execution_order=execution_order)
+                            execution_order=execution_order,
+                            evidence_mode=evidence_mode,
+                            runtime_platform=runtime_platform)
         finally:
             signal.setitimer(signal.ITIMER_REAL, 0)
             signal.signal(signal.SIGALRM, prior_handler)
@@ -755,11 +849,13 @@ def main() -> int:
     parser.add_argument("--campaign-id", default="gate5-local-smoke-r1")
     parser.add_argument("--candidate-commit", default="GATE5_PREFREEZE_WORKTREE")
     parser.add_argument("--execution-order", type=int, choices=(1, 2, 3), default=1)
+    parser.add_argument("--evidence-mode", choices=EVIDENCE_MODES,
+                        default="PREFLIGHT")
     args = parser.parse_args()
     receipt = run_one(
         args.scenario, args.repetition, args.method, args.output.resolve(),
         campaign_id=args.campaign_id, candidate_commit=args.candidate_commit,
-        execution_order=args.execution_order)
+        execution_order=args.execution_order, evidence_mode=args.evidence_mode)
     print(canonical({"status": "GREEN", "receipt_sha256": receipt["receipt_sha256"]}).decode())
     return 0
 

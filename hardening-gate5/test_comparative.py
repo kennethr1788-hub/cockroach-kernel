@@ -7,6 +7,7 @@ from pathlib import Path
 import shutil
 import tempfile
 import unittest
+from unittest import mock
 
 import comparative
 import heldout_contract
@@ -22,6 +23,34 @@ class ComparativeContractTests(unittest.TestCase):
                 self.assertEqual(comparative.canonical(first), comparative.canonical(second))
                 hashes.add(first["source_bundle_hash"])
         self.assertEqual(len(hashes), 18)
+
+    def test_source_bundle_is_platform_neutral(self):
+        with mock.patch.object(comparative.sys, "executable", "/host/a/python"):
+            first = comparative.generate_scenario("complete-loss", 2)
+        with mock.patch.object(comparative.sys, "executable", "/other/python3"):
+            second = comparative.generate_scenario("complete-loss", 2)
+        self.assertEqual(comparative.canonical(first), comparative.canonical(second))
+        self.assertEqual(first["public"]["executable_command"],
+                         ["python3", "tests/check.py"])
+
+    def test_evidence_modes_are_explicit_and_fail_closed(self):
+        comparative.validate_evidence_context(
+            "PREFLIGHT", "Darwin", "GATE5_PREFREEZE_WORKTREE",
+            "gate5-local-smoke-r2")
+        comparative.validate_evidence_context(
+            "MEASURED_GATE6", "Linux", "2" * 40, "ck-gate6-run1-r2")
+        with self.assertRaisesRegex(comparative.HarnessError,
+                                    "MEASURED_MODE_REQUIRES_LINUX"):
+            comparative.validate_evidence_context(
+                "MEASURED_GATE6", "Darwin", "2" * 40, "ck-gate6-run1-r2")
+        with self.assertRaisesRegex(comparative.HarnessError,
+                                    "MEASURED_CANDIDATE_COMMIT_INVALID"):
+            comparative.validate_evidence_context(
+                "MEASURED_GATE6", "Linux", "not-a-commit", "ck-gate6-run1-r2")
+        with self.assertRaisesRegex(comparative.HarnessError,
+                                    "MEASURED_CAMPAIGN_ID_INVALID"):
+            comparative.validate_evidence_context(
+                "MEASURED_GATE6", "Linux", "2" * 40, "gate5-local-smoke-r2")
 
     def test_isolated_environment_drops_cloud_and_credential_state(self):
         with tempfile.TemporaryDirectory(prefix="gate5-env-") as temporary:
@@ -59,7 +88,7 @@ class ComparativeContractTests(unittest.TestCase):
         self.assertEqual([verifier.verify(refused) for _ in range(5)],
                          [("REFUSE", "POLICY_VETO")] * 5)
 
-    def test_frozen_binary_provenance_matches_local_tools(self):
+    def test_frozen_binary_provenance_matches_local_tools_and_linux_restic(self):
         git = Path("/usr/bin/git")
         restic_path = shutil.which("restic")
         self.assertIsNotNone(restic_path)
@@ -68,6 +97,11 @@ class ComparativeContractTests(unittest.TestCase):
                          "179301dcb41ea78accc3fa0048a7e6f6710d891945a751a34addd622020c1818")
         self.assertEqual(comparative.digest(restic.read_bytes()),
                          "f6c965a0f7f59464614130d79246479d48e2aa6780c34d27df6e48c8ee0308bd")
+        self.assertEqual(
+            comparative.RESTIC_PROVENANCE[
+                "ae7fe58ab3511f830fd31d157158620b209522ff1332b119199d2e938d72338c"],
+            "restic 0.19.0 compiled with go1.26.4 on linux/amd64",
+        )
 
     def test_heldout_contract_has_two_known_and_twenty_one_postfreeze_vectors(self):
         known = heldout_contract.known_preflight_vectors()
