@@ -1,0 +1,25 @@
+# S3 Attempt A01 Receipt
+
+- `ATTEMPT`: `1_OF_8`
+- `POD_ID`: `bre4wr6bkeoya1`
+- `POD_NAME`: `ck-s3-20260727-r1-a01`
+- `CREATED_UTC`: `2026-07-27T00:59:54.841Z`
+- `RESULT`: `PREUPLOAD_WORKER_SHAPE_MISMATCH`
+- `RETURNED_SHAPE`: `2_VCPU_4_GIB_CPU`
+- `APPROVED_R7_SHAPE`: `2_VCPU_8_GIB_CPU`
+- `RETURNED_COMPUTE_RATE_USD_PER_HOUR`: `$0.06`
+- `UPLOAD_STARTED`: `NO`
+- `WORKLOAD_STARTED`: `NO`
+- `REQUEST_SHA256`: `aff92d6a4c5169263a4e2612b7157c2f2a3798bd019681fba68238a717368929`
+- `SANITIZED_RESPONSE_SHA256`: `42a633b23209b47c353b3569e6a6e587a0f7d2430e258dd1aedb4243574fa43f`
+- `STOPPED_UTC`: `2026-07-27T01:00:06Z`
+- `DELETED`: `GREEN`
+- `EXACT_ID_LOOKUP_AFTER_DELETE`: `404_ABSENT`
+- `S3_SCOPED_INVENTORY_AFTER_DELETE`: `[]`
+- `CALCULATED_MAXIMUM_USD`: `$0.001667`
+- `RETRY_CLASSIFICATION`: `RETURNED_APPROVED_PACKET_SHAPE_MISMATCH_RETRYABLE_PRESTART`
+
+The provider returned an outer-authorization-compatible 4-GiB worker, but the
+independently GREEN R7 schedule narrowed acceptance to exactly 8 GiB. The Pod
+was stopped and deleted before any upload. No SSH, transfer, guard, database,
+coordinator, or workload process was started.
