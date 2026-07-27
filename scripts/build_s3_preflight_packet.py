@@ -11,26 +11,24 @@ PROMPT = Path(
     "read-and-execute-the-prompt-afterlife/"
     "COCKROACH_KERNEL_P9_COMPLETION_S3_RETRY_EXECUTION_PROMPT_20260726_R1.md"
 )
-OUTPUT = ROOT / "S3_PREFLIGHT_PACKET_R3.md"
+OUTPUT = ROOT / "S3_PREFLIGHT_PACKET_R4.md"
 
 FILES = [
     ROOT / "S3_FEATURE_FREEZE_RECEIPT_R1.md",
     ROOT / "S3_BUILDER_CONTINUITY_RECEIPT_R1.md",
     ROOT / "S3_CONTRACT_R1.md",
-    ROOT / "S3_PREFLIGHT_HISTORY_R1.md",
     ROOT / "S3_LOCAL_PREFLIGHT_RECEIPT_R1.md",
     ROOT / "S3_EXECUTION_WIRING_R1.md",
-    ROOT / "S3_PREFLIGHT_REPAIR_RECEIPT_R2.md",
     ROOT / "S3_PREFLIGHT_REPAIR_RECEIPT_R3.md",
+    ROOT / "S3_PREFLIGHT_REPAIR_RECEIPT_R4.md",
+    ROOT / "S3_EXECUTION_SCHEDULE_R1.json",
     ROOT / "S3_RESOURCE_ALLOWLIST_R1.json",
     ROOT / "S3_THRESHOLDS_R1.json",
     ROOT / "S3_RUNTIME_HASHES_R1.json",
     ROOT / "S3_STATUS.md",
-    ROOT / "S3_PREFLIGHT_CHECKPOINT_R3.md",
+    ROOT / "S3_PREFLIGHT_CHECKPOINT_R4.md",
     ROOT / "P9_STATUS.md",
     ROOT / "P9_FINAL_JUDGE_RECEIPT_R1.md",
-    ROOT / "P9_COMPLETION_PERSONA_SOURCE_RECEIPT_R1.md",
-    ROOT / "P9_COMPLETION_BUILDER_CONTRIBUTIONS_R1.md",
     ROOT / "s2-soak/lifecycle_guard.py",
     ROOT / "s2-soak/run_soak.py",
     ROOT / "p4-verifier/verifier.py",
@@ -42,6 +40,7 @@ FILES = [
     ROOT / "s3-soak/cloud_adapter.py",
     ROOT / "s3-soak/remote_bridge.py",
     ROOT / "s3-soak/coordinator_guard.py",
+    ROOT / "s3-soak/freeze_evidence_manifest.py",
     ROOT / "s3-soak/prove_coordinator_guard.py",
     ROOT / "s3-soak/test_protocol.py",
     PROMPT,
@@ -56,7 +55,7 @@ def label(path: Path) -> str:
 
 def main() -> int:
     chunks = [
-        b"# S3 Preflight Packet R3\n\n",
+        b"# S3 Preflight Packet R4\n\n",
         b"Decision requested: return GREEN only if the frozen S3 design can "
         b"safely create one bounded credential-free RunPod worker and begin "
         b"the one authorized release soak. Otherwise return NOT_GREEN with "
