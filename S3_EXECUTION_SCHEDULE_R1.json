@@ -41,5 +41,6 @@
   "accepted_memory_gib_values": [
     4,
     8
-  ]
+  ],
+  "delete_epoch": 1785162300
 }
