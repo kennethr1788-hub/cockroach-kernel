@@ -38,8 +38,10 @@ relaxed after S3 results exist.
 
 ## RunPod envelope
 
-- current smallest sufficient accepted shape: exactly `2 vCPU / 8 GiB RAM`;
-- current observed compute price: `$0.08/hour`;
+- accepted CPU shapes: exactly `2 vCPU / 4 GiB RAM` at no more than
+  `$0.06/hour` compute, or exactly `2 vCPU / 8 GiB RAM` at no more than
+  `$0.08/hour` compute;
+- current smallest sufficient accepted shape: exactly `2 vCPU / 4 GiB RAM`;
 - 20 GiB disposable container disk expected price: `$0.004/hour`;
 - maximum active rate: `$0.10/hour`;
 - maximum successful paid lifetime: 14 hours;
@@ -57,8 +59,12 @@ relaxed after S3 results exist.
 
 Current authenticated UI and CLI inventory were checked at
 `2026-07-26T23:06:51Z`. S3-scoped inventory was empty. The UI showed the
-2-vCPU/8-GiB CPU class at `$0.08/hour`, and the authenticated CLI listed the
-official image/template above. The provider does not expose image digest
+2-vCPU/8-GiB CPU class at `$0.08/hour`, and attempt A01 later returned the
+outer-authorization-compatible 2-vCPU/4-GiB CPU class at `$0.06/hour`.
+The completed six-hour S2 production run measured peak RSS of `836284416`
+bytes, below both the S3 frozen RSS ceiling of `1610612736` bytes and 4 GiB of
+worker RAM. Both explicitly authorized shapes are therefore sufficient without
+relaxing a workload threshold. The provider does not expose image digest
 readback on Pod creation; the creation request, current registry digest, and
 post-start runtime image evidence must therefore all be preserved.
 

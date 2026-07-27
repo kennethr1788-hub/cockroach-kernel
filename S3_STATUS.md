@@ -1,6 +1,6 @@
 # S3 Status
 
-- `STATUS`: `S3_PREFLIGHT_R7_GREEN_CAMPAIGN_READY_PENDING`
+- `STATUS`: `S3_PREFLIGHT_R8_REVIEW_PENDING`
 - `LAST_GREEN_GATE`: `CK_P9_INTEGRATION_GREEN`
 - `P9_COMMIT`: `fc296743dd97699a78a4777c8affcd47930f92e6`
 - `S3_PREFLIGHT_IMPLEMENTATION_COMMIT`: `9f9e1675b9d12e70e5531a196e33e28c76b9b68a`
@@ -15,10 +15,13 @@
 - `AUTHORIZATION_PROMPT_SHA256`: `51cdae6c688dafa0715a3120b74fb6ec162a34b5d25c4680268e4450f463394b`
 - `RUNPOD_ATTEMPTS`: `1`
 - `RUNPOD_EXPOSURE`: `CALCULATED_MAXIMUM_$0.001667`
-- `NEXT_ALLOWED_ACTION`: `START_ATTEMPT_A02_AFTER_TEARDOWN_GREEN`
+- `NEXT_ALLOWED_ACTION`: `FREEZE_R8_PACKET_AND_OBTAIN_FRESH_GLM_PLUS_CLAUDE_GREEN`
 - `FORBIDDEN_ACTION`: `UPLOAD_BEFORE_RETURNED_WORKER_VERIFICATION; SECOND_PRODUCTION_ATTEMPT; P10_OR_LATER`
 - `UTC_RECORDED`: `2026-07-27T00:59:08Z`
 
-S3 is not GREEN. The R7 preflight is dual-GREEN, so the bounded pre-start retry
-envelope may begin. Campaign-ready proof, the 43,200-second run, teardown, and
-the final three-judge packet remain open.
+S3 is not GREEN. Attempt A01 returned the outer-authorization-compatible
+2-vCPU/4-GiB shape, but R7 had narrowed worker acceptance to 8 GiB. A01 was
+deleted before upload. The R7 verdicts are historical after the R8 shape
+revision; no A02 creation is allowed until fresh GLM and Claude verdicts are
+GREEN over one R8 packet hash. Campaign-ready proof, the 43,200-second run,
+teardown, and the final three-judge packet remain open.

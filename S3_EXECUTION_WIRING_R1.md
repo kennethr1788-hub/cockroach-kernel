@@ -37,9 +37,11 @@ freeze.
   --output json
 ```
 
-The returned worker must be exactly 2 vCPU / 8 GiB, CPU-only, zero GPU and
-zero volume, at no more than $0.10/hour including disk. A mismatch is deleted
-before upload and may consume only a pre-start retry.
+The returned worker must be CPU-only with exactly 2 vCPU and either exactly
+4 GiB at no more than $0.06/hour compute or exactly 8 GiB at no more than
+$0.08/hour compute. It must have zero GPU and zero volume and cost no more than
+$0.10/hour including disk. A mismatch is deleted before upload and may consume
+only a pre-start retry.
 
 ## Host-local exact-ID lifecycle guard
 
