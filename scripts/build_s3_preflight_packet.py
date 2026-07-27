@@ -11,7 +11,7 @@ PROMPT = Path(
     "read-and-execute-the-prompt-afterlife/"
     "COCKROACH_KERNEL_P9_COMPLETION_S3_RETRY_EXECUTION_PROMPT_20260726_R1.md"
 )
-OUTPUT = ROOT / "S3_PREFLIGHT_PACKET_R6.md"
+OUTPUT = ROOT / "S3_PREFLIGHT_PACKET_R7.md"
 
 FILES = [
     ROOT / "S3_FEATURE_FREEZE_RECEIPT_R1.md",
@@ -19,8 +19,8 @@ FILES = [
     ROOT / "S3_CONTRACT_R1.md",
     ROOT / "S3_LOCAL_PREFLIGHT_RECEIPT_R1.md",
     ROOT / "S3_EXECUTION_WIRING_R1.md",
-    ROOT / "S3_PREFLIGHT_REPAIR_RECEIPT_R5.md",
     ROOT / "S3_PREFLIGHT_REPAIR_RECEIPT_R6.md",
+    ROOT / "S3_PREFLIGHT_REPAIR_RECEIPT_R7.md",
     ROOT / "S3_P9_ANCESTRY_RECEIPT_R1.md",
     ROOT / "S3_EXECUTION_SCHEDULE_R1.json",
     ROOT / "S3_RESOURCE_ALLOWLIST_R1.json",
@@ -55,7 +55,7 @@ def label(path: Path) -> str:
 
 def main() -> int:
     chunks = [
-        b"# S3 Preflight Packet R6\n\n",
+        b"# S3 Preflight Packet R7\n\n",
         b"Decision requested: return GREEN only if the frozen S3 design can "
         b"safely create one bounded credential-free RunPod worker and begin "
         b"the one authorized release soak. Otherwise return NOT_GREEN with "

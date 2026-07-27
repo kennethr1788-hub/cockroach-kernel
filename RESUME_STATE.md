@@ -1,9 +1,9 @@
 # Resume State
 
-- `CURRENT_PHASE`: `S3_PREFLIGHT_R6`
+- `CURRENT_PHASE`: `S3_PREFLIGHT_R7`
 - `LAST_GREEN_GATE`: `CK_P9_INTEGRATION_GREEN`
-- `NEXT_ALLOWED_ACTION`: Freeze R6 bridge-topology repair, then obtain fresh GLM plus Claude GREEN
-- `FORBIDDEN_ACTIONS`: RunPod creation before R6 preflight GREEN; feature additions after P9; P10 or later; public actions; release; submission; HOME/live-memory mutation; credential exposure; more than one worker; any worker credential transfer
+- `NEXT_ALLOWED_ACTION`: Freeze R7 with stale current-authority fields removed, then obtain fresh GLM plus Claude GREEN
+- `FORBIDDEN_ACTIONS`: RunPod creation before R7 preflight GREEN; feature additions after P9; P10 or later; public actions; release; submission; HOME/live-memory mutation; credential exposure; more than one worker; any worker credential transfer
 - `CURRENT_COMMIT_AT_P9_PACKET_FREEZE`: `61d77d1704a3f074427f9f82b300abaaa201f79c`
 - `P9_IMPLEMENTATION_COMMIT`: `cbd58b3af9e1ce5c4ddf8885866b88e7e7c1ca0f`
 - `S3_PREFLIGHT_IMPLEMENTATION_COMMIT`: `9f9e1675b9d12e70e5531a196e33e28c76b9b68a`
@@ -11,7 +11,7 @@
 - `S3_PREFLIGHT_R3_REPAIR_COMMIT`: `8147f593dc200c454ce020087d2319868b74ba74`
 - `S3_PREFLIGHT_R4_REPAIR_COMMIT`: `06b54e8f61bf0fa227af3de2377a462e369d7d74`
 - `S3_PREFLIGHT_R6_REPAIR_COMMIT`: `8b1d5bd1038588527bd994eb8fcb5467cac47eac`
-- `PENDING_BLOCKERS`: R6 GLM plus Claude preflight review, RunPod campaign-ready proof, 43,200-second production soak, teardown, and final GLM plus Claude plus AGY review remain incomplete
+- `PENDING_BLOCKERS`: R7 GLM plus Claude preflight review, RunPod campaign-ready proof, 43,200-second production soak, teardown, and final GLM plus Claude plus AGY review remain incomplete
 - `REQUIRED_JUDGE_STATE`: S3 preflight requires GLM plus Claude on one hash; S3 final requires GLM plus Claude plus AGY on one hash
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
@@ -22,8 +22,8 @@
 - `RUNPOD_ATTEMPTS`: `0`
 - `RUNPOD_EXPOSURE`: `$0.00`
 - `LATEST_CHECKPOINT`: `S3_PREFLIGHT_CHECKPOINT_R6.md`
-- `S3_LOCAL_PREFLIGHT`: `R3_GREEN_INVALIDATED_BY_R4_PACKET_CHANGE`
-- `S3_PREFLIGHT_PACKET_SHA256`: `098cf186e1e8da56f1e6731f21e09e2833c3b7eea4c3df0cd88e4d18fb2cb2c9`
+- `S3_LOCAL_PREFLIGHT`: `R6_CLAUDE_BLOCKED_R7_PACKET_PENDING`
+- `R3_PREFLIGHT_PACKET_SHA256_HISTORICAL`: `098cf186e1e8da56f1e6731f21e09e2833c3b7eea4c3df0cd88e4d18fb2cb2c9`
 - `S3_CONTRACT`: `S3_CONTRACT_R1.md`
 - `S3_RUNTIME_HASHES`: `S3_RUNTIME_HASHES_R1.json`
 - `AUTHORIZATION_PROMPT`: `COCKROACH_KERNEL_P9_COMPLETION_S3_RETRY_EXECUTION_PROMPT_20260726_R1.md`
