@@ -82,16 +82,7 @@ def main() -> int:
         "port": 26257,
         "user": DEMO_USER,
     }
-    request = {
-        "Name": SECRET_NAME,
-        "Description": "Read-only CockroachDB identity for the bounded Hardening Gate 2 demo",
-        "SecretString": json.dumps(secret_value, sort_keys=True, separators=(",", ":")),
-        "Tags": [
-            {"Key": "Project", "Value": "cockroach-kernel"},
-            {"Key": "Gate", "Value": "hardening-2"},
-            {"Key": "ManagedBy", "Value": "codex"},
-        ],
-    }
+    secret_json = json.dumps(secret_value, sort_keys=True, separators=(",", ":"))
     password = ""
     secret_value.clear()
     completed = subprocess.run(
@@ -99,16 +90,24 @@ def main() -> int:
         + [
             "secretsmanager",
             "create-secret",
-            "--cli-input-json",
+            "--name",
+            SECRET_NAME,
+            "--description",
+            "Read-only CockroachDB identity for the bounded Hardening Gate 2 demo",
+            "--secret-string",
             "file:///dev/stdin",
+            "--tags",
+            "Key=Project,Value=cockroach-kernel",
+            "Key=Gate,Value=hardening-2",
+            "Key=ManagedBy,Value=codex",
         ],
         env=environment,
-        input=(json.dumps(request, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8"),
+        input=(secret_json + "\n").encode("utf-8"),
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         check=False,
     )
-    request.clear()
+    secret_json = ""
     if completed.returncode != 0:
         print("SECRET_CREATE_FAILED", file=sys.stderr)
         return 5
