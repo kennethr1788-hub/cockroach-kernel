@@ -1,9 +1,9 @@
 # Resume State
 
-- `CURRENT_PHASE`: `S3_CAMPAIGN_READY`
+- `CURRENT_PHASE`: `S3_PRODUCTION_RUNNING`
 - `LAST_GREEN_GATE`: `CK_P9_INTEGRATION_GREEN`
-- `NEXT_ALLOWED_ACTION`: Start the one exact 43,200-second production attempt; retry authority ends at production start
-- `FORBIDDEN_ACTIONS`: Upload before returned worker verification; feature additions after P9; second production attempt; P10 or later; public actions; release; submission; HOME/live-memory mutation; credential exposure; more than one worker; any worker credential transfer
+- `NEXT_ALLOWED_ACTION`: Supervise the running production attempt, retrieve and verify evidence, tear down A04, then run the final same-hash judges
+- `FORBIDDEN_ACTIONS`: Feature additions after P9; second production attempt; replacement worker; P10 or later; public actions; release; submission; HOME/live-memory mutation; credential exposure; more than one worker; any worker credential transfer
 - `CURRENT_COMMIT_AT_P9_PACKET_FREEZE`: `61d77d1704a3f074427f9f82b300abaaa201f79c`
 - `P9_IMPLEMENTATION_COMMIT`: `cbd58b3af9e1ce5c4ddf8885866b88e7e7c1ca0f`
 - `S3_PREFLIGHT_IMPLEMENTATION_COMMIT`: `9f9e1675b9d12e70e5531a196e33e28c76b9b68a`
@@ -12,7 +12,7 @@
 - `S3_PREFLIGHT_R4_REPAIR_COMMIT`: `06b54e8f61bf0fa227af3de2377a462e369d7d74`
 - `S3_PREFLIGHT_R6_REPAIR_COMMIT`: `8b1d5bd1038588527bd994eb8fcb5467cac47eac`
 - `S3_PREFLIGHT_R8_REPAIR_COMMIT`: `95408fb9386ced25b468c0957e86e8f73cb123e9`
-- `PENDING_BLOCKERS`: RunPod campaign-ready proof, 43,200-second production soak, teardown, and final GLM plus Claude plus AGY review remain incomplete
+- `PENDING_BLOCKERS`: The running 43,200-second production soak, evidence retrieval, teardown, and final GLM plus Claude plus AGY review remain incomplete
 - `REQUIRED_JUDGE_STATE`: S3 preflight requires GLM plus Claude on one hash; S3 final requires GLM plus Claude plus AGY on one hash
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
@@ -22,7 +22,7 @@
 - `P9_JUDGE_EVIDENCE`: `evidence/p9-final-judges-r1/`
 - `RUNPOD_ATTEMPTS`: `4`
 - `RUNPOD_EXPOSURE`: `PROJECTED_AGGREGATE_MAXIMUM_$1.189989`
-- `LATEST_CHECKPOINT`: `S3_CAMPAIGN_READY_RECEIPT_R1.md`
+- `LATEST_CHECKPOINT`: `S3_PRODUCTION_START_RECEIPT_R1.md`
 - `S3_LOCAL_PREFLIGHT`: `R11_GLM_4_7_AND_CLAUDE_OPUS_4_8_GREEN`
 - `R11_PREFLIGHT_PACKET_SHA256`: `5904d8fb6cee6f8cfc57c051bb8bdc986671dd885cb339c5ed385f9ac86d44d4`
 - `R10_PREFLIGHT_PACKET_SHA256`: `ea6470d16c301a79254565ad110a4114ef25ce54d6577eba9669d6baafee5317`

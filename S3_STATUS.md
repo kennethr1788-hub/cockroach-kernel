@@ -1,6 +1,6 @@
 # S3 Status
 
-- `STATUS`: `S3_CAMPAIGN_READY`
+- `STATUS`: `S3_PRODUCTION_RUNNING`
 - `LAST_GREEN_GATE`: `CK_P9_INTEGRATION_GREEN`
 - `P9_COMMIT`: `fc296743dd97699a78a4777c8affcd47930f92e6`
 - `S3_PREFLIGHT_IMPLEMENTATION_COMMIT`: `9f9e1675b9d12e70e5531a196e33e28c76b9b68a`
@@ -27,14 +27,13 @@
 - `AUTHORIZATION_PROMPT_SHA256`: `51cdae6c688dafa0715a3120b74fb6ec162a34b5d25c4680268e4450f463394b`
 - `RUNPOD_ATTEMPTS`: `4`
 - `RUNPOD_EXPOSURE`: `PROJECTED_AGGREGATE_MAXIMUM_$1.189989`
-- `NEXT_ALLOWED_ACTION`: `START_ONE_43200_SECOND_PRODUCTION_ATTEMPT`
-- `FORBIDDEN_ACTION`: `UPLOAD_BEFORE_RETURNED_WORKER_VERIFICATION; SECOND_PRODUCTION_ATTEMPT; P10_OR_LATER`
-- `UTC_RECORDED`: `2026-07-27T02:04:10Z`
+- `NEXT_ALLOWED_ACTION`: `SUPERVISE_RUNNING_ATTEMPT_THEN_RETRIEVE_VERIFY_TEARDOWN_AND_FINAL_JUDGES`
+- `FORBIDDEN_ACTION`: `SECOND_PRODUCTION_ATTEMPT; REPLACEMENT_WORKER; P10_OR_LATER`
+- `UTC_RECORDED`: `2026-07-27T03:40:35Z`
 
-The external authentication gate is resolved. Attempts A01 through A03 are all
-deleted, scoped inventory is empty, and no production attempt was consumed.
-Only the provider-native paid-resource safety fuses changed for R11; this does
-not add a project completion deadline. Local revalidation plus fresh GLM and
-Claude GREEN verdicts over the exact R11 packet are required before A04.
-Campaign-ready proof, the 43,200-second run, teardown, and the final three-judge
-packet remain open.
+The exact 43,200-second production attempt began on A04 at
+`2026-07-27T03:40:35Z`. The first cloud exchange passed and the host
+coordinator, remote bridge, coordinator guard, and RunPod lifecycle guard were
+alive and advancing at the production-start checkpoint. The one authorized
+production attempt is consumed permanently. Supervision, evidence retrieval,
+verified teardown, and the final three-judge packet remain open.
