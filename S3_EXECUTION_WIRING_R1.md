@@ -15,7 +15,9 @@ shell, SQL, URL, ARN, path traversal, or an extra argument.
 
 `S3_EXECUTION_SCHEDULE_R1.json` is the authority for `CAMPAIGN_ID`,
 `CAMPAIGN_PREFIX`, `ATTEMPT_NAME`, `STOP_ISO_UTC`, `STOP_EPOCH`,
-`TERMINATE_ISO_UTC`, `DELETE_EPOCH`, and the creation/campaign-ready windows.
+`TERMINATE_ISO_UTC`, and `DELETE_EPOCH`. There is no arbitrary creation,
+campaign-ready, or retry-clock deadline; attempt count, cost, and teardown
+gates control progression.
 An attempt may use only the array element matching its one-based attempt
 number. No time, name, shape, or price value may be recomputed after packet
 freeze.

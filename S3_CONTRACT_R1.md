@@ -52,7 +52,9 @@ relaxed after S3 results exist.
 - image index digest: `sha256:ffe1c3b1ec997f7eaaef8561c2a701792c79ece19754d528222a14ee25d24cb0`;
 - linux/amd64 manifest digest: `sha256:27b844c0606ec6e5550fa90bc6647c4b41cf4ee53a44781bd3dbff8ca1beb297`;
 - GPU, persistent/network volume, retained IP, and snapshot: zero;
-- attempts: at most eight sequential pre-start attempts in 90 minutes;
+- attempts: at most eight sequential pre-start attempts, bounded by count,
+  aggregate cost, one-worker-at-a-time, and teardown gates rather than an
+  arbitrary campaign-ready clock;
 - simultaneous workers: at most one;
 - provider-native `--stop-after` and `--terminate-after`: mandatory;
 - detached exact-ID lifecycle guard and separate coordinator guard: mandatory.
