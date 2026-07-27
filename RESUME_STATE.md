@@ -2,7 +2,7 @@
 
 - `CURRENT_PHASE`: `HARDENING_RUN_GATE_3_REAL_WORKFLOW`
 - `LAST_GREEN_GATE`: `HARDENING_2_AWS_DEMO_GREEN`
-- `NEXT_ALLOWED_ACTION`: Prepare the isolated Gate 3 trace, then stop until Kenneth states one concrete non-sensitive coding task and visibly makes/saves one independent non-sensitive edit
+- `NEXT_ALLOWED_ACTION`: Await Kenneth's concrete non-sensitive coding task; then freeze the isolated Gate 3 trace and stop again for Kenneth's visibly saved independent edit
 - `FORBIDDEN_ACTIONS`: Claim S3 GREEN; claim result 12; claim a complete twelve-hour run; replacement S3 worker without a newly frozen authorization; public actions; release; submission; HOME/live-memory mutation; credential exposure; any worker credential transfer
 - `CURRENT_COMMIT_AT_P9_PACKET_FREEZE`: `61d77d1704a3f074427f9f82b300abaaa201f79c`
 - `P9_IMPLEMENTATION_COMMIT`: `cbd58b3af9e1ce5c4ddf8885866b88e7e7c1ca0f`
@@ -50,6 +50,7 @@
 - `HARDENING_GATE2_FINAL_JUDGE_STATE`: `GLM_5_2_GREEN`
 - `HARDENING_GATE2_FINAL_JUDGE_RAW_SHA256`: `10a9c7fb4d52568f6fec9192192a69b574b5a957f0814bf763ffed3e9701bd45`
 - `HARDENING_GATE2_GREEN_COMMIT`: `9123fa0c550b151943e5997ea465cd5311c0cb3e`
+- `HARDENING_GATE3_HUMAN_ACTION`: `HARDENING_GATE3_HUMAN_ACTION_REQUIRED.md`
 - `S3_LOCAL_PREFLIGHT`: `R11_GLM_4_7_AND_CLAUDE_OPUS_4_8_GREEN`
 - `R11_PREFLIGHT_PACKET_SHA256`: `5904d8fb6cee6f8cfc57c051bb8bdc986671dd885cb339c5ed385f9ac86d44d4`
 - `R10_PREFLIGHT_PACKET_SHA256`: `ea6470d16c301a79254565ad110a4114ef25ce54d6577eba9669d6baafee5317`
