@@ -2,11 +2,11 @@
 
 - `STATUS`: `LOCAL_PREFLIGHT_GREEN_PENDING_INDEPENDENT_JUDGES`
 - `UTC_RECORDED`: `2026-07-26T23:12:11Z`
-- `LAST_AMENDED_UTC`: `2026-07-27T00:16:32Z`
+- `LAST_AMENDED_UTC`: `2026-07-27T00:35:00Z`
 - `AMENDMENT_NOTE`: `CURRENT_R3_FIELDS_ADDED_AFTER_ORIGINAL_EVIDENCE_TIME`
 - `P9_CLOUD_REGRESSION_SUBSET`: `113_OF_113_GREEN`
 - `P9_PARENT_TOTAL_AT_P9_GATE`: `229_OF_229_GREEN`
-- `S3_UNIT_TESTS`: `11_OF_11_GREEN`
+- `S3_UNIT_TESTS`: `12_OF_12_GREEN`
 - `GIT_DIFF_CHECK`: `GREEN`
 - `RUNPOD_S3_SCOPED_INVENTORY`: `[]`
 
@@ -50,10 +50,10 @@ No related local coordinator, worker, or database process remained.
   `c0f0514c09d63da833361ec34ef2cbc2f0e96c210fca043cbc7d3c33a8e703d4`;
 - worker tree manifest SHA-256:
   `21e068263d0724ce9d9e73293ff4540b09fc44bcfdbada16fea455b49643ddd5`;
-- host archive: 56,343 bytes, SHA-256
-  `073f41533224232e8ee64f90e9a11aa8488f756c481ac565112bf54201bbda46`;
+- host archive: 56,468 bytes, SHA-256
+  `97357e45e8eba6e7763c8f493cb30f228ecb5ad8a552b9c7f71c1e4bc567f8c8`;
 - host tree manifest SHA-256:
-  `5dfb70ca791b063a0ae87bb67c39480065609ed769871e5a81ba6e195f15a42a`;
+  `5c736027fb3d33e3f96cb1b6fcd769d7eec2455700c460a3198c7c2cb71a98a5`;
 - host `gitleaks`: zero;
 - host `detect-secrets`: zero;
 - host private-path/key scan: zero;

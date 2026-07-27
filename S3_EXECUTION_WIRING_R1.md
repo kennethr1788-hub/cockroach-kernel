@@ -77,6 +77,25 @@ screen -dmS <COORDINATOR_SESSION> caffeinate -dimsu
 
 ## SSH bridge
 
+Before starting the bridge, resolve and pin its host boundary:
+
+```text
+/tmp/runpodctl-v2.7.2-darwin-arm64 ssh info <POD_ID> --output json
+/usr/bin/ssh-keyscan -p <VERIFIED_SSH_PORT> -t ed25519 <VERIFIED_SSH_HOST>
+/usr/bin/ssh-keyscan -p <VERIFIED_SSH_PORT> -t ed25519 <VERIFIED_SSH_HOST>
+/usr/bin/cmp <SCAN_ONE> <SCAN_TWO>
+/usr/bin/install -m 0600 <SCAN_ONE> <ATTEMPT_SCOPED_KNOWN_HOSTS>
+/usr/bin/ssh <PINNED_SSH_OPTIONS> root@<VERIFIED_SSH_HOST> printf S3_SSH_READY
+```
+
+The two independent scans must be byte-identical, nonempty, contain only the
+validated provider host and port, and contain no private-key material. This is
+first-use pinning, not provider-signed host-key attestation; the limitation is
+recorded in the attempt receipt. After pinning, every SSH/SCP operation uses
+`StrictHostKeyChecking=yes`, the attempt-scoped known-hosts file, and the exact
+identity path reported by the authenticated RunPod CLI without copying or
+recording the private key bytes.
+
 ```text
 screen -dmS <BRIDGE_SESSION> caffeinate -dimsu
   python3 s3-soak/remote_bridge.py

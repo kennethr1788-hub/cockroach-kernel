@@ -124,7 +124,10 @@ def main() -> int:
                 time.sleep(1)
             else:
                 raise BridgeFailure("REMOTE_REQUEST_DEADLINE")
-            local_temporary = local_requests / (request_name + ".download")
+            # This name is a shared contract with host_coordinator's strict
+            # directory validator. The coordinator permits only the current
+            # sequence's `.json.tmp` while a transfer is incomplete.
+            local_temporary = local_requests / (request_name + ".tmp")
             transfer = run([*scp, f"{args.user}@{args.host}:{remote_request}",
                             str(local_temporary)], timeout=60)
             if transfer.returncode != 0:

@@ -22,12 +22,12 @@
     "s3-soak/host_coordinator.py": "8fe2f7cf88c10680d2eed9309b0c8e0c4ae8976e3e035fffc2de0bd04c2574a0",
     "s3-soak/protocol.py": "20bfeac7bf3923394fa193343c904b67bde3efee62561b530fad6ff96d41178c",
     "s3-soak/prove_coordinator_guard.py": "c20c2f988055cefc0a7200df8b8e654e139ad296fd16d5187c1bdd771d94ffda",
-    "s3-soak/remote_bridge.py": "d55a16fd73d750b2db847d4cc6aae309c8dedba1f247bdcdb4f66ff17c1a9fba",
-    "s3-soak/test_protocol.py": "a3f2092b4a87094182fa0eeafc12c7fec1db5146665fab5f615b2fb571882491",
+    "s3-soak/remote_bridge.py": "f96168781fe453eae52db953ebafdb7a710b8ffc0894629b9405f0816ac07685",
+    "s3-soak/test_protocol.py": "42ba7a827674980df77cb5c94dbf4140648992a55834b023d431ceeb347515ae",
     "s3-soak/worker.py": "0d533e83ae7df392e3150f592998f8b56590c34c5d788c5889e50d1746449a31"
   },
-  "host_bundle_sha256": "073f41533224232e8ee64f90e9a11aa8488f756c481ac565112bf54201bbda46",
-  "host_tree_manifest_sha256": "5dfb70ca791b063a0ae87bb67c39480065609ed769871e5a81ba6e195f15a42a",
+  "host_bundle_sha256": "97357e45e8eba6e7763c8f493cb30f228ecb5ad8a552b9c7f71c1e4bc567f8c8",
+  "host_tree_manifest_sha256": "5c736027fb3d33e3f96cb1b6fcd769d7eec2455700c460a3198c7c2cb71a98a5",
   "p9_commit": "fc296743dd97699a78a4777c8affcd47930f92e6",
   "p9_packet_sha256": "9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb",
   "runpodctl": {

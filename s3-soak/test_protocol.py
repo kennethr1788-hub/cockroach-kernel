@@ -10,10 +10,12 @@ import sys
 import tempfile
 import time
 import unittest
+from unittest import mock
 
 import protocol
 import freeze_evidence_manifest
 import coordinator_guard
+import remote_bridge
 
 
 def metrics() -> dict[str, int]:
@@ -25,6 +27,79 @@ def hashes() -> dict[str, str]:
 
 
 class ProtocolTests(unittest.TestCase):
+    def test_remote_bridge_and_coordinator_share_atomic_staging_contract(self):
+        with tempfile.TemporaryDirectory(prefix="s3-topology-proof-") as temporary:
+            root = Path(temporary)
+            bridge = root / "bridge"
+            evidence = root / "evidence"
+            identity = root / "identity"
+            known_hosts = root / "known_hosts"
+            log = root / "bridge.ndjson"
+            identity.write_text("proof", encoding="utf-8")
+            identity.chmod(0o600)
+            known_hosts.write_text("proof", encoding="utf-8")
+            campaign = "ck-s3-topology-proof"
+            request = protocol.make_request(
+                campaign, 1, protocol.GENESIS_HASH,
+                protocol.Operation.RUN_PROMOTE, "hour-01")
+            request_raw = protocol.canonical(request)
+            uploaded: dict[str, bytes] = {}
+
+            coordinator = subprocess.Popen([
+                sys.executable, str(Path(__file__).parent / "host_coordinator.py"),
+                "--bridge-root", str(bridge), "--evidence-root", str(evidence),
+                "--campaign-id", campaign, "--expected-requests", "1",
+                "--lambda-call-ceiling", "1", "--cockroach-operation-ceiling", "9",
+                "--deadline-epoch", str(int(time.time()) + 20),
+                "--mode", "fixture", "--heartbeat-seconds", "1",
+            ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+            def fake_transport(command: list[str], timeout: int = 30):
+                del timeout
+                if command[0] == "/usr/bin/ssh" and "test" in command:
+                    return subprocess.CompletedProcess(command, 0, stdout=b"")
+                if command[0] == "/usr/bin/scp":
+                    source, destination = command[-2:]
+                    if source.startswith("root@example.invalid:"):
+                        target = Path(destination)
+                        target.parent.mkdir(parents=True, exist_ok=True)
+                        midpoint = len(request_raw) // 2
+                        target.write_bytes(request_raw[:midpoint])
+                        time.sleep(0.3)
+                        with target.open("ab") as handle:
+                            handle.write(request_raw[midpoint:])
+                        return subprocess.CompletedProcess(command, 0, stdout=b"")
+                    uploaded[destination] = Path(source).read_bytes()
+                    return subprocess.CompletedProcess(command, 0, stdout=b"")
+                if command[0] == "/usr/bin/ssh" and "mv" in command:
+                    return subprocess.CompletedProcess(command, 0, stdout=b"")
+                return subprocess.CompletedProcess(command, 1, stdout=b"unexpected")
+
+            arguments = [
+                "remote_bridge.py", "--host", "example.invalid", "--port", "22",
+                "--user", "root", "--identity", str(identity),
+                "--known-hosts", str(known_hosts),
+                "--remote-root", f"/workspace/{campaign}/bridge",
+                "--local-root", str(bridge), "--campaign-id", campaign,
+                "--expected-requests", "1",
+                "--deadline-epoch", str(int(time.time()) + 20),
+                "--heartbeat-seconds", "1", "--log", str(log),
+            ]
+            try:
+                with mock.patch.object(remote_bridge, "run", side_effect=fake_transport), \
+                        mock.patch.object(sys, "argv", arguments):
+                    bridge_exit = remote_bridge.main()
+                coordinator_output, _ = coordinator.communicate(timeout=10)
+            finally:
+                if coordinator.poll() is None:
+                    coordinator.terminate()
+                    coordinator.wait(timeout=5)
+            self.assertEqual(bridge_exit, 0)
+            self.assertEqual(coordinator.returncode, 0, coordinator_output)
+            self.assertTrue(any(key.endswith("result-0001.json.tmp") for key in uploaded))
+            events = [json.loads(line)["event"] for line in log.read_bytes().splitlines()]
+            self.assertEqual(events[-1], "BRIDGE_GREEN")
+
     def test_frozen_evidence_manifest_is_sorted_and_atomic(self):
         with tempfile.TemporaryDirectory(prefix="s3-manifest-proof-") as temporary:
             campaign = Path(temporary) / "ck-s3-proof"

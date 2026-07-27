@@ -1,16 +1,16 @@
 # Resume State
 
-- `CURRENT_PHASE`: `S3_PREFLIGHT_R5`
+- `CURRENT_PHASE`: `S3_PREFLIGHT_R6`
 - `LAST_GREEN_GATE`: `CK_P9_INTEGRATION_GREEN`
-- `NEXT_ALLOWED_ACTION`: Freeze sanitized R5, then obtain fresh GLM plus Claude GREEN
-- `FORBIDDEN_ACTIONS`: RunPod creation before R5 preflight GREEN; feature additions after P9; P10 or later; public actions; release; submission; HOME/live-memory mutation; credential exposure; more than one worker; any worker credential transfer
+- `NEXT_ALLOWED_ACTION`: Freeze R6 bridge-topology repair, then obtain fresh GLM plus Claude GREEN
+- `FORBIDDEN_ACTIONS`: RunPod creation before R6 preflight GREEN; feature additions after P9; P10 or later; public actions; release; submission; HOME/live-memory mutation; credential exposure; more than one worker; any worker credential transfer
 - `CURRENT_COMMIT_AT_P9_PACKET_FREEZE`: `61d77d1704a3f074427f9f82b300abaaa201f79c`
 - `P9_IMPLEMENTATION_COMMIT`: `cbd58b3af9e1ce5c4ddf8885866b88e7e7c1ca0f`
 - `S3_PREFLIGHT_IMPLEMENTATION_COMMIT`: `9f9e1675b9d12e70e5531a196e33e28c76b9b68a`
 - `S3_PREFLIGHT_REPAIR_COMMIT`: `8ebca75b4e8bf3a0a1069b345148e60e6825cbf0`
 - `S3_PREFLIGHT_R3_REPAIR_COMMIT`: `8147f593dc200c454ce020087d2319868b74ba74`
 - `S3_PREFLIGHT_R4_REPAIR_COMMIT`: `06b54e8f61bf0fa227af3de2377a462e369d7d74`
-- `PENDING_BLOCKERS`: R5 GLM plus Claude preflight review, RunPod campaign-ready proof, 43,200-second production soak, teardown, and final GLM plus Claude plus AGY review remain incomplete
+- `PENDING_BLOCKERS`: R6 GLM plus Claude preflight review, RunPod campaign-ready proof, 43,200-second production soak, teardown, and final GLM plus Claude plus AGY review remain incomplete
 - `REQUIRED_JUDGE_STATE`: S3 preflight requires GLM plus Claude on one hash; S3 final requires GLM plus Claude plus AGY on one hash
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
