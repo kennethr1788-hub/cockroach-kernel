@@ -1,0 +1,47 @@
+```json
+{
+  "verdict": "GREEN",
+  "packet_sha256": "41efeb9270b76a0d4e1f711d5b1ab3270ecd92d32eccce93f07bef8a6ba036c0",
+  "candidate_commit": "8718fbecc2b145ff36ce8c3ed655e92b5906aeab",
+  "gate4": "GREEN",
+  "gate5": "GREEN",
+  "findings": [
+    {
+      "severity": "LOW",
+      "acceptance_condition": "Platform-dependent common source bytes are eliminated, preserving scenario semantics and information equality.",
+      "evidence": "Common executable bytes are exactly [\"python3\",\"tests/check.py\"]; no candidate receives hidden data or post-result tuning."
+    },
+    {
+      "severity": "LOW",
+      "acceptance_condition": "Runtime-attested Python/Git provenance prevents false cross-platform identity and allows exact value freezing.",
+      "evidence": "Each adapter records resolved Python version/hash; Git-bearing adapters use and record one configured Git version/hash, avoiding false Darwin identity on Linux."
+    },
+    {
+      "severity": "LOW",
+      "acceptance_condition": "Restic allowlist accepts only official 0.19.0 Darwin arm64 and Linux amd64 artifacts bound to their exact version outputs.",
+      "evidence": "Restic verifies observed binary hash and matching version before repository init; Linux binary is not executed on Darwin."
+    },
+    {
+      "severity": "LOW",
+      "acceptance_condition": "Preflight and measured modes are explicit, canonical, disjoint, and fail-closed against mislabeling.",
+      "evidence": "MEASURED_GATE6 blocks execution on non-Linux platforms, non-40-hex commits, or missing ck-gate6- prefixes; receipt schema v2 requires evidence_mode and runtime_platform."
+    },
+    {
+      "severity": "LOW",
+      "acceptance_condition": "Receipt validator requires correct provenance for every method.",
+      "evidence": "Validator requires the exact tool key set per method and valid SHA-256 values."
+    },
+    {
+      "severity": "LOW",
+      "acceptance_condition": "All R1 fairness, pairing, methods, scenarios, metrics, timeout, no-tuning, raw-reporting, authority, and limitation clauses are preserved.",
+      "evidence": "R1 remains incorporated at exact SHA-256; all R1 fairness and authority clauses remain binding; the unchanged P4 verifier remains the sole authority."
+    },
+    {
+      "severity": "LOW",
+      "acceptance_condition": "Candidate is ready to be frozen for Linux Gate 6 preflight without inferring success.",
+      "evidence": "Candidate explicitly restricts evaluation to Gate 5 Darwin preflight; requires Gate 6 to freeze the Linux tuple, execute the binary, and prove network denial."
+    }
+  ],
+  "summary": "Gate 4 and Gate 5 pass. R2 successfully standardizes executable bytes, enforces disjoint fail-closed evidence modes, binds Restic/Python/Git provenance, and preserves R1 fairness without inferring Gate 6 measured success."
+}
+```

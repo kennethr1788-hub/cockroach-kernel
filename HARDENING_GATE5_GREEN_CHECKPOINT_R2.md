@@ -1,0 +1,23 @@
+# Hardening Gate 5 — Green Checkpoint R2
+
+- `STATUS`: `HARDENING_5_EVIDENCE_CANDIDATE_R2_GREEN`
+- `PARENT_GATE`: `HARDENING_4_BASELINE_PROTOCOL_R2_GREEN`
+- `CANDIDATE_IMPLEMENTATION_COMMIT`: `8718fbecc2b145ff36ce8c3ed655e92b5906aeab`
+- `GATE4_PROTOCOL_R2_SHA256`: `a17705c4b6f273b4a538249393bd63d8f645540db57d0cc36082259331f8fe52`
+- `FINAL_PACKET_SHA256`: `41efeb9270b76a0d4e1f711d5b1ab3270ecd92d32eccce93f07bef8a6ba036c0`
+- `STATUS_FILE_SHA256`: `c9bf7e330187695e2b359ed3510aaa00d7bd5c7026f421aede7430c7ea8a1cae`
+- `EVIDENCE_REPORT_SHA256`: `5d65945758d1b5f5aff77c9c24f6d28ded69e3e1ffddabe56e3db81433f10757`
+- `JUDGE_RECEIPTS_SHA256`: `aff4cd568995238f6fe885937ff6cbc51853cfd0d31625abb7784be4a3342efb`
+- `SECRET_SCAN_CLASSIFICATION_SHA256`: `db854b232615376316124f81af409309ea2de411764e255cfd9a5a209a122749`
+- `SANITIZED_SMOKE_SUMMARY_SHA256`: `08d23b3fe14b2c623c79344f203e74ec5571fb696d88a2e0c1fb93f294ba6801`
+- `GLM_RAW_SHA256`: `aeb7368a182fd1ad4cdfc615e0e31828c1ec80a1e36418ca585b9c1b5d6cc644`
+- `CLAUDE_RAW_SHA256`: `120f440b93e0ed0557910bda585bf2958dad5d12a377acb145cdd704766907b4`
+- `JUDGE_STATE`: `GLM_5_2_GREEN; CLAUDE_OPUS_4_8_GREEN_RECUSAL_CLEAR`
+- `CHECKPOINT_TAG`: `hardening-gate5-r2-green`
+- `NEXT_TARGET`: `HARDENING_6_RUN1_R2_PREFLIGHT`
+- `UTC_RECORDED`: `2026-07-27T22:57:33Z`
+
+The candidate is frozen for a new Gate 6 preflight. This checkpoint does not
+authorize provider creation or claim any Linux measured execution. Gate 6 must
+freeze exact Linux tool provenance, orchestration, payload, worker/cost/lifecycle
+controls, and obtain its separately required same-hash reviews first.

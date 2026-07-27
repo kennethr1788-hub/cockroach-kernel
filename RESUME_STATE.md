@@ -1,9 +1,9 @@
 # Resume State
 
-- `CURRENT_PHASE`: `HARDENING_RUN_GATE_6_BLOCKED_CANDIDATE_INVALIDATED`
-- `LAST_GREEN_GATE`: `HARDENING_5_EVIDENCE_CANDIDATE_GREEN`
-- `NEXT_ALLOWED_ACTION`: Reopen the applicable Gate 4/Gate 5 contracts, correct platform-stable source and tool provenance plus campaign receipt labeling, rerun affected independent reviews, and freeze a new evidence candidate before a new Gate 6 packet
-- `FORBIDDEN_ACTIONS`: Launch Gate 6 RunPod worker; relabel Gate 5 smoke as Gate 6 evidence; patch or wrap measured receipts after freeze; claim Gate 6 or S3 GREEN; claim result 12; claim a complete twelve-hour run; replacement S3 worker without a newly frozen authorization; public actions; release; submission; HOME/live-memory mutation; credential exposure; any worker credential transfer
+- `CURRENT_PHASE`: `HARDENING_RUN_GATE_6_RUN1_R2_PREFLIGHT_READY`
+- `LAST_GREEN_GATE`: `HARDENING_5_EVIDENCE_CANDIDATE_R2_GREEN`
+- `NEXT_ALLOWED_ACTION`: Construct and freeze the Gate 6 R2 orchestration, 54-row manifest, sanitized payload, exact Linux tool/worker/cost/lifecycle packet, and obtain required same-hash GLM and Claude preflight GREEN before any RunPod worker creation
+- `FORBIDDEN_ACTIONS`: Launch Gate 6 RunPod worker before the new R2 preflight packet and required judges are GREEN; relabel Gate 5 smoke as Gate 6 evidence; patch or wrap measured receipts after freeze; change candidate 8718fbe; claim Gate 6 or S3 GREEN; claim result 12; claim a complete twelve-hour run; replacement S3 worker without a newly frozen authorization; public actions; release; submission; HOME/live-memory mutation; credential exposure; any worker credential transfer
 - `CURRENT_COMMIT_AT_P9_PACKET_FREEZE`: `61d77d1704a3f074427f9f82b300abaaa201f79c`
 - `P9_IMPLEMENTATION_COMMIT`: `cbd58b3af9e1ce5c4ddf8885866b88e7e7c1ca0f`
 - `S3_PREFLIGHT_IMPLEMENTATION_COMMIT`: `9f9e1675b9d12e70e5531a196e33e28c76b9b68a`
@@ -12,8 +12,8 @@
 - `S3_PREFLIGHT_R4_REPAIR_COMMIT`: `06b54e8f61bf0fa227af3de2377a462e369d7d74`
 - `S3_PREFLIGHT_R6_REPAIR_COMMIT`: `8b1d5bd1038588527bd994eb8fcb5467cac47eac`
 - `S3_PREFLIGHT_R8_REPAIR_COMMIT`: `95408fb9386ced25b468c0957e86e8f73cb123e9`
-- `PENDING_BLOCKERS`: Gate 6 evidence candidate is invalid for Linux RunPod because Restic/Git provenance and receipt/source contracts are Darwin/preflight bound; Hardening Gates 6 through 10 and separately authorized S3-R2 remain incomplete
-- `REQUIRED_JUDGE_STATE`: After freezing a corrected candidate, Gate 6 requires same-hash GLM and Claude preflight/final review; S3-R2 requires a fresh preflight packet and its declared independent judges
+- `PENDING_BLOCKERS`: Gate 6 R2 orchestration, Linux worker/tool provenance, payload, lifecycle/cost packet, same-hash preflight reviews, measured 54-row execution, final reviews, Hardening Gates 7 through 10, and separately authorized S3-R2 remain incomplete
+- `REQUIRED_JUDGE_STATE`: Gate 4/5 R2 is GLM 5.2 GREEN and Claude Opus 4.8 GREEN with recusal clear; Gate 6 still requires same-hash GLM and Claude preflight/final review; S3-R2 requires a fresh preflight packet and its declared independent judges
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
 - `P9_FINAL_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; RECUSAL_CLEAR`
@@ -22,9 +22,9 @@
 - `P9_JUDGE_EVIDENCE`: `evidence/p9-final-judges-r1/`
 - `RUNPOD_ATTEMPTS`: `4`
 - `RUNPOD_EXPOSURE`: `PROJECTED_AGGREGATE_MAXIMUM_$1.189989`
-- `LATEST_CHECKPOINT`: `HARDENING_GATE6_BLOCKED_CHECKPOINT_R1.md`
-- `HARDENING_GATE6_STATUS`: `HARDENING_6_RUN1_BLOCKED`
-- `HARDENING_GATE6_BLOCKER`: `EVIDENCE_CANDIDATE_INVALIDATED`
+- `LATEST_CHECKPOINT`: `HARDENING_GATE5_GREEN_CHECKPOINT_R2.md`
+- `HARDENING_GATE6_STATUS`: `R1_BLOCKED_HISTORICAL; R2_PREFLIGHT_READY_NOT_FROZEN`
+- `HARDENING_GATE6_BLOCKER`: `R1_EVIDENCE_CANDIDATE_INVALIDATED_CLOSED_BY_R2; R2_PREFLIGHT_OPEN`
 - `HARDENING_GATE6_PREFLIGHT_PACKET_SHA256`: `f648e8433928053649ffe4e515a2fae824b2cdeb34afd3403c2fdf4f56e0aed1`
 - `HARDENING_GATE6_MEASURED_EXECUTIONS`: `0`
 - `HARDENING_GATE6_RUNPOD_ATTEMPTS`: `0`
@@ -72,21 +72,22 @@
 - `HARDENING_GATE3_CONTINUATION_RECEIPT_SHA256`: `cb2bcc1df56f6a88276b2a685fc9f3bc5e30816bb54d151091364d384d06a050`
 - `HARDENING_GATE3_RESIDUE_RECEIPT_SHA256`: `03be225cf64c4a741e683b3f725725be97372c22e1740b58f6901ee254162249`
 - `HARDENING_GATE3_GREEN_COMMIT`: `194ea04bc888d9612cf015fef5ed6237c2520b90`
-- `HARDENING_GATE4_STATUS`: `HARDENING_4_BASELINE_PROTOCOL_GREEN`
-- `HARDENING_GATE4_PROTOCOL_SHA256`: `12da9def248c5056f001fd60a448b8c17e50adf5df6cb2261cab55d6a97ca70e`
+- `HARDENING_GATE4_STATUS`: `HARDENING_4_BASELINE_PROTOCOL_R2_GREEN`
+- `HARDENING_GATE4_PROTOCOL_SHA256`: `a17705c4b6f273b4a538249393bd63d8f645540db57d0cc36082259331f8fe52`
 - `HARDENING_GATE4_RESEARCH_SHA256`: `35536d9b7f3b43313e70672ac887c93b35eb38c7c73ef4f8f6e91eb89d7b2223`
-- `HARDENING_GATE4_PACKET_SHA256`: `484686e1c02ef84c82a5433c6365559d1683502f9e92fb39d9a039a4b327429d`
-- `HARDENING_GATE4_JUDGE_STATE`: `GLM_4_7_GREEN; CLAUDE_OPUS_4_8_GREEN`
-- `HARDENING_GATE4_GLM_RAW_SHA256`: `2df987e6a3769b85981851aa25c99eb4d8e4bd9ed4d6b465d63f6473bb46c8d2`
-- `HARDENING_GATE4_CLAUDE_RAW_SHA256`: `375aff0fdf679ee210b81124a4908609e4e4f23132d022ffcf4fe5ffb3b75247`
+- `HARDENING_GATE4_PACKET_SHA256`: `41efeb9270b76a0d4e1f711d5b1ab3270ecd92d32eccce93f07bef8a6ba036c0`
+- `HARDENING_GATE4_JUDGE_STATE`: `GLM_5_2_GREEN; CLAUDE_OPUS_4_8_GREEN_RECUSAL_CLEAR`
+- `HARDENING_GATE4_GLM_RAW_SHA256`: `aeb7368a182fd1ad4cdfc615e0e31828c1ec80a1e36418ca585b9c1b5d6cc644`
+- `HARDENING_GATE4_CLAUDE_RAW_SHA256`: `120f440b93e0ed0557910bda585bf2958dad5d12a377acb145cdd704766907b4`
 - `HARDENING_GATE4_GREEN_COMMIT`: `b5910385cbfd9bc76835b33491559d79955296dd`
-- `HARDENING_GATE5_STATUS`: `HARDENING_5_EVIDENCE_CANDIDATE_GREEN`
-- `HARDENING_GATE5_CANDIDATE_COMMIT`: `bd29bd23e831175aa54526b9e3c48bd04e8af3ed`
-- `HARDENING_GATE5_REPORT_SHA256`: `d7978736195b1fe1bfa8efd14445ff3125ca53d55287975afff2c4f38b2c7ebd`
-- `HARDENING_GATE5_PACKET_SHA256`: `8d72c554e3b23b1fafac05b265dd410406e76990b733b48ed9496ff05efaff29`
-- `HARDENING_GATE5_LOCAL_SMOKE_SHA256`: `3050feda1e6d089c34b45cebd6f01247786ca16d7c72f0d30d22a3efd62254ea`
-- `HARDENING_GATE5_JUDGE_STATE`: `GLM_4_7_GREEN`
-- `HARDENING_GATE5_GLM_RAW_SHA256`: `14ca7c68c2d0625f5b4218b682c3eee8eb7ea6e5aa208f82ae887850f49628fc`
+- `HARDENING_GATE5_STATUS`: `HARDENING_5_EVIDENCE_CANDIDATE_R2_GREEN`
+- `HARDENING_GATE5_CANDIDATE_COMMIT`: `8718fbecc2b145ff36ce8c3ed655e92b5906aeab`
+- `HARDENING_GATE5_REPORT`: `HARDENING_GATE5_EVIDENCE_REPORT_R2.md`
+- `HARDENING_GATE5_PACKET_SHA256`: `41efeb9270b76a0d4e1f711d5b1ab3270ecd92d32eccce93f07bef8a6ba036c0`
+- `HARDENING_GATE5_LOCAL_SMOKE_SHA256`: `781531c80ce1415ca208c4f2119cb57be660db73276f556610f1b57dd83b7c1b`
+- `HARDENING_GATE5_JUDGE_STATE`: `GLM_5_2_GREEN; CLAUDE_OPUS_4_8_GREEN_RECUSAL_CLEAR`
+- `HARDENING_GATE5_GLM_RAW_SHA256`: `aeb7368a182fd1ad4cdfc615e0e31828c1ec80a1e36418ca585b9c1b5d6cc644`
+- `HARDENING_GATE5_CLAUDE_RAW_SHA256`: `120f440b93e0ed0557910bda585bf2958dad5d12a377acb145cdd704766907b4`
 - `HARDENING_GATE5_GREEN_COMMIT`: `f43c57c8599c77e98ae139a3107f73022ed5100c`
 - `S3_LOCAL_PREFLIGHT`: `R11_GLM_4_7_AND_CLAUDE_OPUS_4_8_GREEN`
 - `R11_PREFLIGHT_PACKET_SHA256`: `5904d8fb6cee6f8cfc57c051bb8bdc986671dd885cb339c5ed385f9ac86d44d4`

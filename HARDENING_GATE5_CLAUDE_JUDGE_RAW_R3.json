@@ -1,0 +1,18 @@
+{
+  "role": "non-authoring evidence judge",
+  "packet_sha256": "41efeb9270b76a0d4e1f711d5b1ab3270ecd92d32eccce93f07bef8a6ba036c0",
+  "verdict": "GREEN",
+  "blockers": [],
+  "non_blocking_risks": [
+    "All mechanical results (compile PASS, comparative 7/7, regressions 264/264, smoke receipts 18/18 VALID, Python provenance 18/18, pair source/event/loss 6/6, network-deny BLOCKED, cleanup 18/18 with 0 residue bytes, 0 public actions) are self-attested inside the packet; a no-tool judge cannot independently re-execute or confirm them.",
+    "Portability correctness depends on an unperformed future step: per the packet Gate 6 must freeze the single observed Linux Git/Python/Restic tuple in its preflight packet and require receipts to match it, and that step is not yet independently reviewed.",
+    "The comparator is local Restic at completed checkpoints only, disclosed as not off-site backup nor interruption-during-capture evidence.",
+    "The experiment is disclosed as small, synthetic, and author-designed, so it cannot support population-level or global-superiority claims."
+  ],
+  "evidence_gaps": [
+    "The two Restic allowlist digests are shown truncated (f6c965a0..., ae7fe58a...) on this sanitized surface, so the packet alone does not confirm they equal the official Restic 0.19.0 Darwin arm64 and Linux amd64 artifact hashes bound to their version output.",
+    "No Linux measured evidence, no 54-row campaign, and no live-AWS execution exist; the packet explicitly states this is not a Gate 5 defect and must not be read as Gate 6 measured success, and it can only be closed by a later independently reviewed Gate 6 preflight.",
+    "Candidate source and summary SHA-256 values are listed but the underlying artifacts are not included, so their contents cannot be verified from the packet surface."
+  ],
+  "recusal_check": "clear"
+}
