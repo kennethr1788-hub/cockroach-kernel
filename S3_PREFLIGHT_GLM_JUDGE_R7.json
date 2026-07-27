@@ -1,0 +1,12 @@
+{
+  "ROLE": "GLM_5_2_JUDGE",
+  "PACKET_SHA256": "94b449510eecbdb7f6a6d961375412950cdcd566196e004290b9fb62149125f2",
+  "VERDICT": "GREEN",
+  "BLOCKERS": [],
+  "NON_BLOCKING_RISKS": [
+    "SSH first-use trust model relies on two independent ssh-keyscan comparisons rather than cryptographic provider attestation, as explicitly documented in the wiring receipt.",
+    "RunPod image-digest readback is unavailable for the CPU Pod surface; runtime evidence relies on echoing the configured image name and preserving preflight digests instead of full post-start cryptographic verification."
+  ],
+  "EVIDENCE_GAPS": [],
+  "RECUSAL_CHECK": "CLEAR"
+}

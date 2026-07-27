@@ -1,6 +1,6 @@
 # S3 Status
 
-- `STATUS`: `S3_PREFLIGHT_R6_CLAUDE_BLOCKED_R7_PACKET_PENDING`
+- `STATUS`: `S3_PREFLIGHT_R7_GREEN_CAMPAIGN_READY_PENDING`
 - `LAST_GREEN_GATE`: `CK_P9_INTEGRATION_GREEN`
 - `P9_COMMIT`: `fc296743dd97699a78a4777c8affcd47930f92e6`
 - `S3_PREFLIGHT_IMPLEMENTATION_COMMIT`: `9f9e1675b9d12e70e5531a196e33e28c76b9b68a`
@@ -15,10 +15,10 @@
 - `AUTHORIZATION_PROMPT_SHA256`: `51cdae6c688dafa0715a3120b74fb6ec162a34b5d25c4680268e4450f463394b`
 - `RUNPOD_ATTEMPTS`: `0`
 - `RUNPOD_EXPOSURE`: `$0.00`
-- `NEXT_ALLOWED_ACTION`: `FREEZE_R7_PACKET_AND_RERUN_GLM_PLUS_CLAUDE`
-- `FORBIDDEN_ACTION`: `RUNPOD_CREATION_BEFORE_R7_GLM_AND_CLAUDE_GREEN; P10_OR_LATER`
-- `UTC_RECORDED`: `2026-07-27T00:47:34Z`
+- `NEXT_ALLOWED_ACTION`: `START_ATTEMPT_A01_AND_PROVE_CAMPAIGN_READY`
+- `FORBIDDEN_ACTION`: `UPLOAD_BEFORE_RETURNED_WORKER_VERIFICATION; SECOND_PRODUCTION_ATTEMPT; P10_OR_LATER`
+- `UTC_RECORDED`: `2026-07-27T00:59:08Z`
 
-S3 is not GREEN. R6 was correctly blocked because its status artifact exposed
-stale R3 authority as if current. Both required judges must return GREEN on the
-exact R7 packet before the retry envelope may begin.
+S3 is not GREEN. The R7 preflight is dual-GREEN, so the bounded pre-start retry
+envelope may begin. Campaign-ready proof, the 43,200-second run, teardown, and
+the final three-judge packet remain open.

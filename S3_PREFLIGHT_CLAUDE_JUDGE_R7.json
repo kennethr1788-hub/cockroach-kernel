@@ -1,0 +1,20 @@
+{
+  "role": "Independent non-authoring evidence judge — S3 preflight (Claude Opus 4.8 lane)",
+  "packet_sha256": "94b449510eecbdb7f6a6d961375412950cdcd566196e004290b9fb62149125f2",
+  "verdict": "GREEN",
+  "blockers": [],
+  "non_blocking_risks": [
+    "SSH host boundary uses first-use trust (two matching ssh-keyscans + StrictHostKeyChecking after pinning), not provider-signed host-key attestation; disclosed in S3_EXECUTION_WIRING_R1. Residual MITM-on-first-scan risk is bounded because the worker is credential-free and every request/result is strictly validated by the credential-holding host coordinator.",
+    "Image integrity relies on registry index/linux-amd64 manifest digests plus provider name echo and runtime binary hashing; RunPod exposes no cryptographic image-digest readback for this CPU pod (disclosed provider limitation), so runtime image identity is corroborated, not cryptographically proven.",
+    "Schedule margins are tight: production 43,200s must complete before provider_stop 2026-07-27T14:15Z while the creation/retry window closes 02:00Z; a late start could truncate the final hour and force a fail-closed incomplete campaign (no unsafe or over-budget state, but wasted attempt).",
+    "A small idle-cost window can exist between worker completion and the lifecycle-guard stop epoch unless explicit closeout deletes promptly; remains within the $3.00 aggregate and 14h lifetime caps."
+  ],
+  "evidence_gaps": [
+    "Test-pass and scanner-clean claims are self-reported in receipts and cannot be independently reproduced by a no-tools judge.",
+    "RunPod CLI support for exact create flags is asserted but not included as help evidence; unsupported flags fail closed before creation.",
+    "The real SSH/SCP bridge is first exercised at the retryable campaign-ready smoke; the in-packet topology test uses a mocked transport.",
+    "The GLM verdict on the identical R7 hash is necessarily external to the frozen packet.",
+    "Point-in-time provider inventory and pricing require live recheck before creation."
+  ],
+  "recusal_check": "clear"
+}
