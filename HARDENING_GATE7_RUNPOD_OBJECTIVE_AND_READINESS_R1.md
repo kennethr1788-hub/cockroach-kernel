@@ -158,6 +158,9 @@ created. No replacement is allowed after measured evidence begins.
 ## Isolation and data boundary
 
 - synthetic and sanitized inputs only;
+- never upload the repository wholesale; construct a minimal allowlisted
+  transfer archive because the preserved private evidence tree is not a clean
+  payload surface;
 - no API keys, OAuth artifacts, browser state, HOME state, client data, private
   memory, Qdrant, StateV2, launchd, or unrelated repository content;
 - no credential transfer to RunPod;

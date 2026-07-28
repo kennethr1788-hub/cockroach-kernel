@@ -73,8 +73,13 @@ This is input-sizing evidence only, not database-performance evidence.
    the last live call by at least 15 minutes.
 5. Current RunPod image/shape/price, safety deadlines, aggregate spend, transfer
    archive, detached guard, and teardown commands are not frozen.
-6. Same-hash GLM and AGY preflight review is not complete.
-7. Kenneth has not yet authorized the final frozen Gate 7 spend/lifecycle
+6. A whole-repository `gitleaks` scan reports 507 historical findings in the
+   preserved private evidence tree. The repository must not be uploaded
+   wholesale. The Gate 7 source and new planning artifacts pass targeted
+   `gitleaks` and `detect-secrets`; the final minimal allowlisted transfer
+   archive must be built and rescanned independently.
+7. Same-hash GLM and AGY preflight review is not complete.
+8. Kenneth has not yet authorized the final frozen Gate 7 spend/lifecycle
    envelope.
 
 ## Current outcome
