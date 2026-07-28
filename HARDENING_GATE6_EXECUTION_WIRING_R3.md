@@ -71,7 +71,7 @@ env -i PATH=/usr/bin:/bin:/usr/sbin:/sbin
   --manifest bundle/HARDENING_GATE6_EXECUTION_MANIFEST_R3.json
   --output-root measured-parent/campaign
   --comparative bundle/hardening-gate5/comparative.py
-  --tools bundle/HARDENING_GATE6_LINUX_TOOL_PROVENANCE_R2.json
+  --tools bundle/HARDENING_GATE6_LINUX_TOOL_PROVENANCE_R3.json
   --git /usr/bin/git
   --restic /workspace/ck-gate6-20260727-run1-r3/bundle/runtime/restic
   --python /usr/bin/python3
