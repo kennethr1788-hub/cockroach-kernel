@@ -107,15 +107,19 @@ def main() -> int:
     parser.add_argument("--aws-session-expiry-epoch", type=int)
     parser.add_argument("--final-cloud-exchange-epoch", type=int)
     parser.add_argument("--session-margin-seconds", type=int, default=900)
+    parser.add_argument("--aws-login-auto-refresh", action="store_true")
     args = parser.parse_args()
     if not 1 <= args.expected_requests <= protocol.MAX_SEQUENCE:
         raise CoordinatorFailure("EXPECTED_REQUESTS_INVALID")
     if args.mode == "live" and args.config is None:
         raise CoordinatorFailure("LIVE_CONFIG_REQUIRED")
     if args.mode == "live" and any(value is None for value in (
-            args.custody_root, args.aws_session_expiry_epoch,
-            args.final_cloud_exchange_epoch)):
+            args.custody_root, args.final_cloud_exchange_epoch)):
         raise CoordinatorFailure("LIVE_CUSTODY_OR_SESSION_GATE_REQUIRED")
+    if (args.mode == "live" and
+            (args.aws_login_auto_refresh ==
+             (args.aws_session_expiry_epoch is not None))):
+        raise CoordinatorFailure("LIVE_SESSION_MODE_INVALID")
     if (args.mode == "live" and
             (args.final_cloud_exchange_epoch < int(time.time()) or
              args.final_cloud_exchange_epoch > args.deadline_epoch)):
@@ -139,13 +143,24 @@ def main() -> int:
         custody = hardening.CheckpointCustody(
             args.custody_root, args.campaign_id)
     if args.mode == "live":
-        assert args.aws_session_expiry_epoch is not None
         assert args.final_cloud_exchange_epoch is not None
-        session_receipt = hardening.validate_session_window(
-            expires_epoch=args.aws_session_expiry_epoch,
-            final_exchange_epoch=args.final_cloud_exchange_epoch,
-            margin_seconds=args.session_margin_seconds,
-        )
+        if args.aws_login_auto_refresh:
+            provider_receipt = cloud_adapter.prove_aws_login_provider(args.config)
+            hardening.write_atomic(
+                evidence / "aws-login-provider.json", provider_receipt)
+            session_receipt = hardening.login_refresh_pending_receipt(
+                final_exchange_deadline_epoch=args.final_cloud_exchange_epoch,
+                margin_seconds=args.session_margin_seconds,
+                provider_receipt_hash=provider_receipt["receipt_hash"],
+            )
+        else:
+            assert args.aws_session_expiry_epoch is not None
+            provider_receipt = None
+            session_receipt = hardening.validate_session_window(
+                expires_epoch=args.aws_session_expiry_epoch,
+                final_exchange_epoch=args.final_cloud_exchange_epoch,
+                margin_seconds=args.session_margin_seconds,
+            )
         hardening.write_atomic(evidence / "aws-session-window.json", session_receipt)
     log = ChainLog(evidence / "coordinator.ndjson", args.campaign_id)
     processed: set[str] = set()
@@ -153,6 +168,7 @@ def main() -> int:
     parent_hash = protocol.GENESIS_HASH
     lambda_calls = 0
     cockroach_operations = 0
+    last_exchange_epoch: int | None = None
     stopped = False
 
     def stop(_signum: int, _frame: Any) -> None:
@@ -238,9 +254,49 @@ def main() -> int:
                 "lambda_calls": lambda_calls,
                 "cockroach_operations": cockroach_operations,
             })
+            last_exchange_epoch = int(time.time())
             processed.add(request["request_hash"])
             parent_hash = request["request_hash"]
             expected_sequence += 1
+        if args.mode == "live" and args.aws_login_auto_refresh:
+            assert provider_receipt is not None
+            assert last_exchange_epoch is not None
+            required_probe_epoch = last_exchange_epoch + args.session_margin_seconds
+            while int(time.time()) < required_probe_epoch:
+                if stopped:
+                    raise CoordinatorFailure("COORDINATOR_STOPPED")
+                if int(time.time()) >= args.deadline_epoch:
+                    raise CoordinatorFailure("AWS_MARGIN_PROBE_DEADLINE")
+                now = time.monotonic()
+                if now - last_heartbeat >= args.heartbeat_seconds:
+                    log.emit("HEARTBEAT", {
+                        "next_sequence": expected_sequence,
+                        "processed": len(processed),
+                        "lambda_calls": lambda_calls,
+                        "cockroach_operations": cockroach_operations,
+                        "awaiting_aws_margin_probe": True,
+                        "remaining_margin_seconds": max(
+                            0, required_probe_epoch - int(time.time())),
+                    })
+                    last_heartbeat = now
+                time.sleep(0.2)
+            identity_probe = cloud_adapter.probe_aws_identity(args.config)
+            postcheck = hardening.login_refresh_postcheck_receipt(
+                provider_receipt_hash=provider_receipt["receipt_hash"],
+                last_exchange_epoch=last_exchange_epoch,
+                probe_epoch=int(time.time()),
+                margin_seconds=args.session_margin_seconds,
+                identity_output_sha256=identity_probe["identity_output_sha256"],
+                latency_ms=identity_probe["latency_ms"],
+            )
+            if postcheck["status"] != "PASS":
+                raise CoordinatorFailure("AWS_LOGIN_POSTCHECK_BLOCKED")
+            hardening.write_atomic(
+                evidence / "aws-session-margin-postcheck.json", postcheck)
+            log.emit("AWS_SESSION_MARGIN_VERIFIED", {
+                "postcheck_receipt_hash": postcheck["receipt_hash"],
+                "margin_seconds": args.session_margin_seconds,
+            })
         if args.completion_marker is not None:
             marker = args.completion_marker.resolve()
             while not marker.exists():

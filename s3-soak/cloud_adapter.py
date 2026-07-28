@@ -28,6 +28,7 @@ sys.path.insert(0, str(P9))
 import records  # type: ignore  # noqa: E402
 
 AWS_REQUEST_RE = re.compile(r"RequestId:\s*([A-Za-z0-9-]{8,64})")
+AWS_LOGIN_REFRESH_MARKER = b"refresh the temporary credentials automatically"
 
 
 class CloudAdapterError(RuntimeError):
@@ -159,6 +160,64 @@ def _aws_invoke(config: dict[str, Any], request_path: Path,
         "function_error": metadata.get("FunctionError"),
         "aws_request_id": request_id,
     }, elapsed
+
+
+def prove_aws_login_provider(config_path: Path) -> dict[str, Any]:
+    """Prove the scoped profile uses the refreshable AWS login provider."""
+    config = _read_config(config_path.resolve())
+    aws_env = os.environ.copy()
+    aws_env["AWS_PAGER"] = ""
+    listed, list_ms = _run([
+        config["aws_cli"], "configure", "list", "--profile",
+        config["aws_profile"],
+    ], family="aws", env=aws_env, timeout=30)
+    if listed.lower().count(b"login") < 2:
+        raise CloudAdapterError("AWS_LOGIN_PROVIDER_NOT_ACTIVE")
+    help_output, help_ms = _run([
+        config["aws_cli"], "login", "help",
+    ], family="aws", env=aws_env, timeout=30)
+    normalized = b" ".join(help_output.lower().split())
+    if AWS_LOGIN_REFRESH_MARKER not in normalized:
+        raise CloudAdapterError("AWS_LOGIN_REFRESH_CONTRACT_MISSING")
+    version_output, version_ms = _run([
+        config["aws_cli"], "--version",
+    ], family="aws", env=aws_env, timeout=30)
+    core = {
+        "version": "s3-aws-login-provider-proof-v1",
+        "aws_profile": config["aws_profile"],
+        "aws_region": config["aws_region"],
+        "credential_provider": "login",
+        "automatic_refresh_contract_observed": True,
+        "configure_list_output_sha256": protocol.sha256(listed),
+        "login_help_output_sha256": protocol.sha256(help_output),
+        "aws_cli_version_output_sha256": protocol.sha256(version_output),
+        "latency_ms": list_ms + help_ms + version_ms,
+        "credential_bytes_recorded": False,
+        "status": "PASS",
+    }
+    return {**core, "receipt_hash": protocol.sha256(core)}
+
+
+def probe_aws_identity(config_path: Path) -> dict[str, Any]:
+    """Perform one sanitized read-only identity probe after the margin."""
+    config = _read_config(config_path.resolve())
+    aws_env = os.environ.copy()
+    aws_env["AWS_PAGER"] = ""
+    raw, elapsed = _run([
+        config["aws_cli"], "sts", "get-caller-identity",
+        "--profile", config["aws_profile"], "--region", config["aws_region"],
+        "--output", "json", "--no-cli-pager",
+    ], family="aws", env=aws_env, timeout=30)
+    value = json.loads(raw)
+    if not isinstance(value, dict) or set(value) != {"Account", "Arn", "UserId"}:
+        raise CloudAdapterError("AWS_IDENTITY_SCHEMA_INVALID")
+    return {
+        "identity_fields": sorted(value),
+        "identity_output_sha256": protocol.sha256(raw),
+        "latency_ms": elapsed,
+        "credential_bytes_recorded": False,
+        "status": "PASS",
+    }
 
 
 def run_live(request: dict[str, Any], config_path: Path,

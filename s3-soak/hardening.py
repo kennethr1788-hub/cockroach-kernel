@@ -155,6 +155,75 @@ def validate_session_window(*, expires_epoch: int, final_exchange_epoch: int,
     return receipt
 
 
+def login_refresh_pending_receipt(*, final_exchange_deadline_epoch: int,
+                                  margin_seconds: int = SESSION_MARGIN_SECONDS,
+                                  provider_receipt_hash: str) -> dict[str, Any]:
+    """Bind an AWS-login campaign without claiming a false static expiry.
+
+    ``aws login`` rotates its short-term access credentials.  This mode is
+    fail-closed: the campaign is not session-GREEN until a second read-only
+    identity probe succeeds after the required post-exchange margin.
+    """
+    if (isinstance(final_exchange_deadline_epoch, bool) or
+            not isinstance(final_exchange_deadline_epoch, int) or
+            final_exchange_deadline_epoch <= int(time.time())):
+        raise RuntimeError("AWS_LOGIN_FINAL_EXCHANGE_DEADLINE_INVALID")
+    if (isinstance(margin_seconds, bool) or
+            not isinstance(margin_seconds, int) or
+            margin_seconds < SESSION_MARGIN_SECONDS):
+        raise RuntimeError("AWS_SESSION_MARGIN_TOO_SMALL")
+    if (not isinstance(provider_receipt_hash, str) or
+            len(provider_receipt_hash) != 64):
+        raise RuntimeError("AWS_LOGIN_PROVIDER_RECEIPT_INVALID")
+    core = {
+        "version": "s3-aws-login-refresh-window-v1",
+        "mode": "AWS_LOGIN_AUTO_REFRESH_POSTCHECK",
+        "provider_receipt_hash": provider_receipt_hash,
+        "final_exchange_deadline_epoch": final_exchange_deadline_epoch,
+        "margin_seconds": margin_seconds,
+        "future_expiry_claimed": False,
+        "status": "PENDING_POST_EXCHANGE_PROBE",
+        "stable_reason_code": "AWS_LOGIN_POST_EXCHANGE_PROBE_REQUIRED",
+    }
+    return {**core, "receipt_hash": protocol.sha256(core)}
+
+
+def login_refresh_postcheck_receipt(*, provider_receipt_hash: str,
+                                    last_exchange_epoch: int,
+                                    probe_epoch: int,
+                                    margin_seconds: int,
+                                    identity_output_sha256: str,
+                                    latency_ms: int) -> dict[str, Any]:
+    values = (last_exchange_epoch, probe_epoch, margin_seconds, latency_ms)
+    if any(isinstance(value, bool) or not isinstance(value, int)
+           for value in values):
+        raise RuntimeError("AWS_LOGIN_POSTCHECK_VALUE_INVALID")
+    if margin_seconds < SESSION_MARGIN_SECONDS or latency_ms < 0:
+        raise RuntimeError("AWS_LOGIN_POSTCHECK_VALUE_INVALID")
+    if any(not isinstance(value, str) or len(value) != 64 for value in
+           (provider_receipt_hash, identity_output_sha256)):
+        raise RuntimeError("AWS_LOGIN_POSTCHECK_HASH_INVALID")
+    required_probe_epoch = last_exchange_epoch + margin_seconds
+    status = "PASS" if probe_epoch >= required_probe_epoch else "BLOCKED"
+    core = {
+        "version": "s3-aws-login-refresh-postcheck-v1",
+        "provider_receipt_hash": provider_receipt_hash,
+        "last_exchange_epoch": last_exchange_epoch,
+        "probe_epoch": probe_epoch,
+        "margin_seconds": margin_seconds,
+        "required_probe_epoch": required_probe_epoch,
+        "identity_output_sha256": identity_output_sha256,
+        "credential_bytes_recorded": False,
+        "latency_ms": latency_ms,
+        "status": status,
+        "stable_reason_code": (
+            "AWS_LOGIN_POST_EXCHANGE_MARGIN_VERIFIED" if status == "PASS"
+            else "AWS_LOGIN_POST_EXCHANGE_MARGIN_INSUFFICIENT"
+        ),
+    }
+    return {**core, "receipt_hash": protocol.sha256(core)}
+
+
 def cleanup_trial_exact(trial_root: Path, evidence_root: Path) -> dict[str, Any]:
     """Remove exactly one generated trial root and prove zero path residue."""
     trial = trial_root.resolve(strict=False)

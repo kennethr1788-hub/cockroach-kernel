@@ -112,6 +112,38 @@ class HardeningTests(unittest.TestCase):
             margin_seconds=900)
         self.assertEqual(passing["status"], "PASS")
 
+    def test_login_refresh_mode_requires_a_real_post_exchange_margin(self):
+        with mock.patch.object(hardening.time, "time", return_value=10_000):
+            pending = hardening.login_refresh_pending_receipt(
+                final_exchange_deadline_epoch=20_000,
+                margin_seconds=900,
+                provider_receipt_hash="a" * 64,
+            )
+        self.assertEqual(pending["status"], "PENDING_POST_EXCHANGE_PROBE")
+        self.assertFalse(pending["future_expiry_claimed"])
+        early = hardening.login_refresh_postcheck_receipt(
+            provider_receipt_hash="a" * 64,
+            last_exchange_epoch=20_000,
+            probe_epoch=20_899,
+            margin_seconds=900,
+            identity_output_sha256="b" * 64,
+            latency_ms=7,
+        )
+        self.assertEqual(early["status"], "BLOCKED")
+        passing = hardening.login_refresh_postcheck_receipt(
+            provider_receipt_hash="a" * 64,
+            last_exchange_epoch=20_000,
+            probe_epoch=20_900,
+            margin_seconds=900,
+            identity_output_sha256="b" * 64,
+            latency_ms=7,
+        )
+        self.assertEqual(passing["status"], "PASS")
+        self.assertEqual(
+            passing["stable_reason_code"],
+            "AWS_LOGIN_POST_EXCHANGE_MARGIN_VERIFIED",
+        )
+
     def test_coordinated_local_shutdown_proves_all_processes_absent(self):
         processes = [
             subprocess.Popen(["/bin/sleep", "30"]),
