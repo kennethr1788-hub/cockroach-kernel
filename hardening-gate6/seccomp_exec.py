@@ -27,6 +27,7 @@ BPF_W = 0x00
 BPF_ABS = 0x20
 BPF_JMP = 0x05
 BPF_JEQ = 0x10
+BPF_JSET = 0x40
 BPF_K = 0x00
 BPF_RET = 0x06
 SECCOMP_RET_KILL_PROCESS = 0x80000000
@@ -35,6 +36,7 @@ SECCOMP_RET_ALLOW = 0x7FFF0000
 PR_SET_NO_NEW_PRIVS = 38
 PR_SET_SECCOMP = 22
 SECCOMP_MODE_FILTER = 2
+X32_SYSCALL_BIT = 0x40000000
 
 # Linux x86_64. Socket operations are denied directly. The additional entries
 # close alternate kernel interfaces that can submit network work or acquire a
@@ -135,7 +137,7 @@ def inherited_socket_fds() -> list[int]:
             target = os.readlink(entry)
         except (OSError, ValueError):
             continue
-        if descriptor > 2 and target.startswith("socket:["):
+        if target.startswith("socket:["):
             found.append(descriptor)
     return sorted(found)
 
@@ -158,6 +160,10 @@ def build_filter() -> tuple[Any, SockFprog]:
         SockFilter(BPF_JMP | BPF_JEQ | BPF_K, 1, 0, AUDIT_ARCH_X86_64),
         SockFilter(BPF_RET | BPF_K, 0, 0, SECCOMP_RET_KILL_PROCESS),
         SockFilter(BPF_LD | BPF_W | BPF_ABS, 0, 0, 0),
+        # x32 uses the same AUDIT_ARCH with bit 30 set on the syscall number.
+        # Kill that ABI rather than allowing its differently numbered sockets.
+        SockFilter(BPF_JMP | BPF_JSET | BPF_K, 0, 1, X32_SYSCALL_BIT),
+        SockFilter(BPF_RET | BPF_K, 0, 0, SECCOMP_RET_KILL_PROCESS),
     ]
     for number in sorted(set(DENIED_SYSCALLS.values())):
         instructions.extend((
@@ -234,7 +240,7 @@ def attest(path: Path) -> dict[str, Any]:
         "network_socket_probe_errno": socket_errno,
         "network_socket_probe_result": "DENIED_EPERM",
         "exec_canary": "PASS",
-        "inherited_socket_fds": [],
+        "inherited_socket_fds": inherited_socket_fds(),
         "filter_spec": filter_spec(),
         "filter_spec_sha256": digest(filter_spec()),
     }

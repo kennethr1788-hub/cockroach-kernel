@@ -31,7 +31,7 @@ environment. It then:
 1. calls `prctl(PR_SET_NO_NEW_PRIVS, 1)`;
 2. installs a classic seccomp-BPF filter using
    `prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, ...)`;
-3. kills a foreign syscall architecture;
+3. kills a foreign syscall architecture and the x32 ABI syscall-number form;
 4. returns `EPERM` for every declared x86_64 socket syscall and for alternate
    kernel paths that could create, submit, or acquire network work (`bpf`,
    `io_uring_*`, `pidfd_getfd`, `setns`, and `unshare`);
@@ -59,7 +59,7 @@ empty environment. A valid canary requires:
 - Linux x86_64;
 - UID/EUID 10001 and nonzero;
 - `CapEff=0000000000000000`;
-- no inherited socket descriptor;
+- no inherited socket descriptor, including descriptors 0, 1, or 2;
 - `NoNewPrivs=1` and `Seccomp=2` after installation;
 - filter-spec hash agreement;
 - AF_INET creation denied with `EPERM`;

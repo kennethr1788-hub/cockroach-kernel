@@ -14,13 +14,15 @@
 - R2 plus R3 Gate 6 unit tests: `7/7 PASS`.
 - Broader project regression: `271/271 PASS` across `24` established test
   files, including the new R3 tests.
-- Test-log aggregate SHA-256: `5cc6b7e67108086cb3921e7ca834c621cdc358b67de1faff8b63fb4101ac1436`.
+- Test-log aggregate SHA-256: `ffce7ff7ba9a80090c365e9c974d941c32b040bf21a548969eaed591be7174db`.
 - Exact 54-row R3 manifest validation: `PASS`.
 - Manifest embedded SHA-256:
   `1e73682e0eb880c95f5826d731cf6c1b6fe1f61e342bfb2d36c7fd1d3600d711`.
 - Manifest file SHA-256:
   `a4c7c12c135475b712199916a8257b90543a1dd2b346e15bb6519f1d9ec80d3d`.
 - Python byte compilation: `PASS`.
+- x32 ABI kill branch and all-descriptor inherited-socket rejection: `PASS`
+  under structural unit tests; live kernel proof remains remote-canary gated.
 - `git diff --check`: `PASS`.
 - Candidate comparative/verifier/scenario diff from candidate commit: empty.
 - Current RunPod running inventory: empty; Gate 6 campaign-scoped active

@@ -44,13 +44,15 @@ class Gate6R3Tests(unittest.TestCase):
         }
         self.assertTrue(required.issubset(launcher.DENIED_SYSCALLS))
         filters, program = launcher.build_filter()
-        self.assertEqual(program.length, 5 + 2 * len(set(
+        self.assertEqual(program.length, 7 + 2 * len(set(
             launcher.DENIED_SYSCALLS.values())))
         self.assertEqual(len(filters), program.length)
 
     def test_foreign_arch_is_killed_and_default_allows(self):
         filters, _ = launcher.build_filter()
         self.assertEqual(filters[2].k, launcher.SECCOMP_RET_KILL_PROCESS)
+        self.assertEqual(filters[4].k, launcher.X32_SYSCALL_BIT)
+        self.assertEqual(filters[5].k, launcher.SECCOMP_RET_KILL_PROCESS)
         self.assertEqual(filters[-1].k, launcher.SECCOMP_RET_ALLOW)
 
 

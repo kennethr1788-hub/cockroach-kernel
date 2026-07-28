@@ -37,9 +37,11 @@ env -i PATH=/usr/bin:/bin:/usr/sbin:/sbin
 ```
 
 Validate the exact script hash, canonical attestation hash, UID/capability
-fields, `NoNewPrivs=1`, `Seccomp=2`, filter-spec hash, `DENIED_EPERM`, and exec
-canary. A pre-payload capability/readiness failure may tear down and consume a
-sequential retry. Teardown and exact-ID absence are mandatory before another.
+fields, no inherited socket on any descriptor (including 0/1/2),
+`NoNewPrivs=1`, `Seccomp=2`, filter-spec hash, x32 kill branch,
+`DENIED_EPERM`, and exec canary. A pre-payload capability/readiness failure may
+tear down and consume a sequential retry. Teardown and exact-ID absence are
+mandatory before another.
 
 ## Payload and setup
 
