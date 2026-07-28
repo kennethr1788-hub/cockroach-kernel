@@ -1,0 +1,35 @@
+# Claude Opus 4.8 — R3 Preflight Recusal Receipt
+
+## Identity and recusal
+
+I am Claude Opus 4.8. The controlling decision, the Judge Substitution Authorization, and the Judge Contract Amendment all state that my lane is **permanently recusal-required for R3** because my first R3 review materially shaped the x32 ABI kill branch, the all-descriptor inherited-socket rejection, and the `seccomp_exec.py` network-denial mechanism that are now under review. Kenneth authorized AGY as the independent replacement lane.
+
+I will therefore not return a substantive GREEN or BLOCKED verdict on this packet, and I will not impersonate GLM 5.2 or AGY. Either action would violate the recusal, the amendment, and the same-hash two-independent-lane quorum contract. The only contract-honest output from my lane is `RECUSAL_REQUIRED`.
+
+## Structured receipt (historical Claude format)
+
+```json
+{
+  "role": "ICARUS Claude Opus 4.8 non-authoring evidence judge",
+  "packet": "HARDENING_GATE6_R3_AGY_R1 (GLM + AGY same-hash preflight substitution packet)",
+  "packet_sha256": "NOT_COMPUTED_BY_RECUSED_LANE",
+  "verdict": "RECUSAL_REQUIRED",
+  "blockers": [],
+  "non_blocking_risks": [],
+  "evidence_gaps": [],
+  "recusal_check": "recusal_required",
+  "recusal_reason": "Claude Opus 4.8 materially shaped the R3 isolation hardening under review (x32 ABI kill branch, inherited standard-descriptor socket rejection, unprivileged no_new_privs inherited seccomp-BPF network denial). Independent judgment of one's own shaping work is not available. Kenneth authorized AGY (pinned Gemini 3.1 Pro High) as the independent replacement lane.",
+  "binding_effect": "This recusal does not itself block provider creation. The amendment anticipated it. Provider creation remains gated on fresh same-hash GLM 5.2 GREEN plus AGY GREEN, both with recusal clear, on this exact packet."
+}
+```
+
+## What this recusal does and does not do
+
+- **Does not block on its own.** The valid R3 quorum is now GLM 5.2 GREEN + AGY GREEN on the same fresh packet SHA-256, both with recusal clear. My recusal is the expected state of my lane, not a new blocker.
+- **Does not count as a lane verdict for quorum.** A recused lane cannot be promoted to quorum GREEN, and a prior GREEN over a different hash cannot count.
+- **Does not authorize anything.** No RunPod worker creation, no payload upload, no Gate 7, no candidate change, no lifecycle widening. Provider creation stays forbidden until both independent lanes return GREEN on this exact hash.
+- **Does not conceal provenance.** The R1 review that surfaced the x32 and inherited-descriptor issues, the R2 receipt showing `RECUSAL_REQUIRED`, and this receipt must all remain in the evidence chain.
+
+## Required next state
+
+Fresh packet → GLM 5.2 returns GREEN with recusal clear → AGY (pinned Gemini 3.1 Pro High, `agy-judge` route, signed CLI 1.1.5 at the recorded SHA-256, strict deny-all tools, fresh non-agent conversation) returns GREEN with recusal clear → both bind the exact same packet SHA-256. Only then may one CPU worker be created for the pre-payload capability canary. GREEN from the two independent lanes would not assert the canary will pass, predict product results, or authorize Gate 7.
