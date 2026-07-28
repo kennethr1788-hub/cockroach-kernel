@@ -42,3 +42,18 @@ candidate and is not represented as a clean-repository result.
 `BLACK_BOX_R4_PUBLIC_CANARY_R1_STATUS.md` is SHA-256
 `614792320b65ca346f58c9775e05342664a41e082b507bc18c19cadab367eeb4`.
 R1 remains `NOT_GREEN_SAFE_REJECTION`; R2 does not overwrite it.
+
+## Independent audit
+
+- Frozen judge packet SHA-256:
+  `f4c85a5f5d67fe8dffb6a34253a39d15ed5f3bcf46df9340c0a8c704a1ac5c04`
+- Attempt 1 invalid identity-label receipt SHA-256:
+  `96d59c4573659b3919f905994ea7228d4ed09f20874ccd28ff7495ce1b2f7fa1`
+- Attempt 2 invalid identity-label receipt SHA-256:
+  `88e5736703fce627f325ba44379e93abbd9770560a53dd4b1e8101097e604b2e`
+- Final valid GLM 5.2 GREEN receipt SHA-256:
+  `a8b6287bc8dcfc4a311853a3f6226bd59c59c30f8646d63c371c6d9ab5f62e65`
+
+The invalid attempts are preserved but do not count. The final receipt binds
+the wrapper-verified and structured served model to `glm-5.2`, matches the
+packet hash, and grants GREEN only for the narrow public smoke.
