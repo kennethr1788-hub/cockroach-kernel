@@ -1,0 +1,25 @@
+PACKET_SHA256: c71d114911a5f8ae617a070a90ed279a7a780c1728474c196e0fad282065fb9d
+GLM_VERDICT: GREEN
+BLOCKERS:
+- none
+NON_BLOCKING_RISKS:
+- Provider billing endpoint returned empty after deletion; exact charge remains pending. This is preserved as a limitation (not invented as an exact charge), with rate $0.06/h, lifetime ≤709.044 s, and bounded ceiling $0.0196956667 recorded, per Kenneth's authorization that delayed exact charge is not a Gate 6 completion blocker.
+- Evidence is synthetic paired comparative on generic RunPod CPU compute; not live AWS, not product scale, not population inference, not independent third-party benchmark design. These mandatory limitations are preserved and do not negate Gate 6 closure.
+- Seccomp network denial is correctly labeled `KERNEL_SECCOMP_NETWORK_DENIAL_NOT_NETWORK_NAMESPACE` across aggregate, index, and attempt-03 receipt; not relabeled as a network namespace.
+EVIDENCE_GAPS:
+- none
+RECUSAL_CHECK: clear
+REQUIRED_RERUNS:
+- none
+
+Findings supporting GREEN against the eight required conditions:
+1. Immutable candidate `8718fbecc2b145ff36ce8c3ed655e92b5906aeab` is consistent across control state, attempt-03 post-upload smoke, evidence validation receipt, aggregate, and measured evidence index.
+2. 54 canonical receipts cover all 54 frozen `(scenario_class, repetition, method)` combinations; checkpoint chain is `54_OF_54` with correct `previous_event_sha256` linkage and final checkpoint `f0da23ae…ef11` matching the aggregate; manifest bindings `56_OF_56` (54 receipts + aggregate + checkpoints); aggregate binds the same final checkpoint and embedded `aggregate_sha256`.
+3. Aggregate reports `pair_count=18`, `unsafe_acceptance_count=0`, `original_workspace_mutation_count=0`, `cleanup_pass=54`, `residue_bytes=0`; pair hash matches are 18/18 for source, event, loss, and allowed_information.
+4. Isolation attestation proves UID/GID 10001, `CapEff=0000000000000000`, `NoNewPrivs=1`, `Seccomp=2`, `network_socket_probe_result=DENIED_EPERM` (errno 1), `inherited_socket_fds=[]`, `exec_canary=PASS`; filter-spec denies socket(2) and related network syscall surface.
+5. Post-upload smoke is GREEN on the exact candidate; payload archive `c3958a58…403a` and tree `6bb049a1…95a3` are bound; remote evidence archive `1ed09238…14e5` matches the retrieved archive; local revalidation recomputed all embedded receipt/manifest/checkpoint/aggregate/isolation hashes and returned `GREEN_CANDIDATE_PENDING_INDEPENDENT_FINAL_REVIEW`.
+6. All three attempts honestly recorded: attempt-01 and attempt-02 failed before row 1 with root causes documented and pods deleted (`not_found`); attempt-03 measured 54 rows and was deleted; `CAMPAIGN_ACTIVE_INVENTORY_AFTER_DELETE=[]`; lifecycle final event `TEARDOWN_GREEN` with `campaign_active:[]`, `exact_id_absent:true`; `RUNPOD_RUNNING_INVENTORY=[]`.
+7. All mandatory limitations preserved verbatim in both aggregate and evidence index; provider charge preserved as `null` with empty query result; seccomp explicitly not relabeled as a network namespace.
+8. Status, amendment, authorization, and attempt receipts all restrict closure to Gate 6 only; `GATE7: FORBIDDEN`; no release, public action, or submission authority granted.
+
+This GREEN is GLM 5.2's independent final-review verdict only and does not by itself close Gate 6; closure additionally requires AGY's pinned Gemini 3.1 Pro (High) GREEN on this exact same packet SHA-256 with recusal clear.

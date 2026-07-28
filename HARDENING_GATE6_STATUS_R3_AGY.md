@@ -1,6 +1,6 @@
 # Hardening Gate 6 R3 — AGY Substitution Status
 
-- `STATUS`: `ATTEMPT03_MEASURED_GREEN_TEARDOWN_GREEN_FINAL_REVIEW_PENDING`
+- `STATUS`: `HARDENING_6_RUN1_GREEN`
 - `LAST_GREEN_GATE`: `HARDENING_5_EVIDENCE_CANDIDATE_R2_GREEN`
 - `CANDIDATE_COMMIT`: `8718fbecc2b145ff36ce8c3ed655e92b5906aeab`
 - `REQUIRED_PREFLIGHT`: `GLM 5.2 AND AGY GREEN ON THE SAME HASH`
@@ -36,8 +36,12 @@
 - `R3_ATTEMPT03_EVIDENCE_INDEX_SHA256`: `6ebb1cf552466cfa3410e9a2973d3aa69e38eec2485f5b8009f705852b638ac7`
 - `R3_ATTEMPT03_COST`: `EXACT_PROVIDER_CHARGE_PENDING; BOUNDED_ACTIVE_RATE_MAX_$0.0196956667`
 - `FINAL_REVIEW`: `GLM 5.2 AND AGY REQUIRED ON ONE EXACT PACKET HASH`
+- `FINAL_PACKET_SHA256`: `c71d114911a5f8ae617a070a90ed279a7a780c1728474c196e0fad282065fb9d`
+- `FINAL_GLM`: `GREEN; glm-5.2; RECUSAL_CLEAR`
+- `FINAL_AGY`: `GREEN; Gemini 3.1 Pro High; RECUSAL_CLEAR`
+- `FINAL_SAME_HASH`: `yes`
 
 No replacement worker is authorized or needed. The measured evidence candidate
-is frozen and the worker is deleted. Gate 6 can close only after a final packet
-containing the complete evidence bindings receives both required independent
-GREEN verdicts. Gate 7 remains forbidden.
+is frozen, every worker is deleted, and GLM 5.2 plus AGY independently returned
+GREEN over the exact same final packet hash. Gate 6 is closed. Gate 7 remains
+forbidden in this run.
