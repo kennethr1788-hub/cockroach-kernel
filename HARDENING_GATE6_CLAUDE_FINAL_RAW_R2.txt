@@ -1,0 +1,23 @@
+[claude-judge] served model: claude-opus-4-8
+{
+  "role": "ICARUS Claude Opus 4.8 independent non-authoring evidence judge",
+  "packet_sha256": "6f3b1d8a3c10244d88feb99a8a39c9ce13ae836abf9c0117617d7adfcac12ede",
+  "verdict": "BLOCKED",
+  "blockers": [
+    "Required unprivileged network-denial proof is ABSENT: the frozen contract's mandatory `unshare --user --map-root-user --net --mount-proc` step failed with `unshare: unshare failed: Operation not permitted` (NETWORK_NAMESPACE_PROBE: BLOCKED_OPERATION_NOT_PERMITTED), classified by the plan as an isolation/capability failure that blocks measurement. Substitutes (root execution, in-process socket guard, host firewall change, replacement pod, relabeled rows) are explicitly forbidden and none were used. This blocks GREEN.",
+    "Zero of the 54 mandatory measured executions completed (MEASURED_EXECUTIONS_COMPLETED: 0; REMOTE_SMOKE_EXECUTIONS: 0; MEASURED_RECEIPT_COUNT: 0). The 54 canonical receipts, 54-event checkpoint chain, and 18 equal-information paired groups required for HARDENING_6_RUN1_GREEN are absent and cannot be waived, so BLOCKED is the only evidence-supported closeout."
+  ],
+  "non_blocking_risks": [
+    "COST_STATE is BILLING_PENDING; the exact provider charge is not yet exposed and rests on a bounded estimate (OBSERVED_LIFECYCLE_COST_BOUND_USD 0.0060 against a 25.00 ceiling). Contract-permitted after verified deletion, but final reconciliation remains unconfirmed.",
+    "Two private runtime files (RAW_PROVIDER_FILES_WITH_LOCAL_IDENTITY_PATH_LABELS: 2) hold local identity-path labels in ignored private custody; the 'no private identity bytes read or committed' claim is scanner-supported (gitleaks/detect-secrets 0 findings) but not independently re-verifiable from this packet.",
+    "The same model (Claude Opus 4.8) served as a preflight authorizing judge (CLAUDE_VERDICT GREEN) and is the named post-teardown judge; declared non-authoring, but this reduces reviewer-model diversity/independence.",
+    "SSH host authentication relies on disclosed trust-on-first-use rather than provider-signed host identity; accepted but weaker, and moot here since measurement never ran."
+  ],
+  "evidence_gaps": [
+    "Nearly all evidence is presented only as SHA-256 digests (guard/lifecycle log 13585292..., network-denial failure 8f8f94..., provider create/setup/tool-proof, inventories, billing query 37517e5f..., scanner reports) without underlying raw bytes; content cannot be independently recomputed or inspected from this packet.",
+    "The raw candidate comparative source is excluded from the external packet (local egress rule flagged its ephemeral Restic password assignment) and is only hash-bound (CANDIDATE_COMPARATIVE_SHA256 f9fa1d5c...); immaterial to this BLOCKED closeout but a standing gap for any future GREEN attempt.",
+    "Multiple distinct artifacts share one digest (FINAL_RUNNING_INVENTORY_SHA256, RUNNING_INVENTORY_SHA256, GITLEAKS_REPORT_SHA256, BILLING_QUERY_SHA256 all equal 37517e5f...); consistent with empty canonical outputs (all counts 0) but not confirmable without raw bytes.",
+    "The namespace failure is documented by a single stderr line plus NETWORK_DENIAL_FAILURE_SHA256 8f8f94...; no capability/seccomp diagnostic is included to confirm root cause or non-retryability. Does not change the BLOCKED outcome, since any inability to create the namespace blocks measurement."
+  ],
+  "recusal_check": "clear"
+}
