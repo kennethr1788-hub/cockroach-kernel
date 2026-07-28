@@ -2,7 +2,7 @@
 
 - `CURRENT_PHASE`: `HARDENING_RUN_GATE_6_RUN1_R3_PREFLIGHT`
 - `LAST_GREEN_GATE`: `HARDENING_5_EVIDENCE_CANDIDATE_R2_GREEN`
-- `NEXT_ALLOWED_ACTION`: Freeze the R3 byte-complete sanitized packet over orchestration commit dc5024d21f71bf23ae35ce3c2c72721e910f362d; obtain fresh same-hash GLM 5.2 plus Claude Opus 4.8 GREEN before any replacement RunPod worker
+- `NEXT_ALLOWED_ACTION`: Submit exact packet 49068ab24f16b51120b447514bd928e527d02428a8343ae10443f8a83041613b to GLM 5.2 and Claude Opus 4.8; create no replacement worker unless both return GREEN with recusal clear
 - `FORBIDDEN_ACTIONS`: Begin Gate 7; create a replacement Gate 6 worker before the R3 packet and both same-hash reviews are GREEN; upload the benchmark payload before a capability canary passes; relabel seccomp as a namespace; relabel Gate 5 smoke as Gate 6 evidence; claim any Gate 6 measured row before execution; change candidate 8718fbe; claim Gate 6 or S3 GREEN; public actions; release; submission; HOME/live-memory mutation; credential exposure; any worker credential transfer
 - `CURRENT_COMMIT`: `dc5024d21f71bf23ae35ce3c2c72721e910f362d`
 - `CURRENT_COMMIT_AT_P9_PACKET_FREEZE`: `61d77d1704a3f074427f9f82b300abaaa201f79c`
@@ -38,7 +38,7 @@
 - `HARDENING_GATE6_CLOSEOUT_COMMIT`: `cfc3c8bfc07be66b1990fc04cb2b6f79d60e80ad`
 - `HARDENING_GATE6_R3_AMENDMENT_COMMIT`: `dc5024d21f71bf23ae35ce3c2c72721e910f362d`
 - `HARDENING_GATE6_R3_ISOLATION`: `UNPRIVILEGED_NO_NEW_PRIVS_INHERITED_SECCOMP_BPF; NETWORK_NAMESPACE_NOT_CLAIMED`
-- `HARDENING_GATE6_R3_PREFLIGHT_PACKET_SHA256`: `PENDING`
+- `HARDENING_GATE6_R3_PREFLIGHT_PACKET_SHA256`: `49068ab24f16b51120b447514bd928e527d02428a8343ae10443f8a83041613b`
 - `HARDENING_GATE6_R3_JUDGE_STATE`: `PENDING_GLM_5_2_AND_CLAUDE_OPUS_4_8`
 - `HARDENING_GATE6_R3_RUNPOD_INVENTORY`: `[]`
 - `HARDENING_PLAN_SHA256`: `1ce953127138a35bd9588d686bbefefc0b012e8f2188a8fea736842030d57310`
