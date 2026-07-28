@@ -5,7 +5,7 @@ Return GREEN only if the correction preserves the frozen product candidate, 84-c
 ## Bindings
 - `PACKET_VERSION`: `gate7-aws-login-refresh-preflight-r1`
 - `PRODUCT_CANDIDATE`: `1c483b1930e629c9ecb6d73418b9554897dc08ad`
-- `ORCHESTRATION_HEAD`: `e970b4d76b7d9801a0d43ba2e5ed10450cb01d22`
+- `ORCHESTRATION_HEAD`: `0a1683cbc46f4ca0290d6a66770ab26e4c6174eb`
 - `PRIOR_PACKET_SHA256`: `4fd89d699dccd0d3e15451fab40435ad2e9b3f7300061ff8791913dc4b7ecf44`
 - `PRIOR_JUDGES`: `GLM_5_2_GREEN; AGY_GEMINI_3_1_PRO_HIGH_GREEN; SAME_HASH; RECUSAL_CLEAR`
 - `REMOTE_BUNDLE_SHA256`: `b95c6b8e20ec30473676b8f2dbe7e128fdb78bfd33a72105131c51bf45634eb0`
@@ -86,6 +86,7 @@ HARDENING_GATE7_ATTEMPT_A02_REQUEST_R1.json
 HARDENING_GATE7_ATTEMPT_A03_REQUEST_R1.json
 HARDENING_GATE7_AWS_LOGIN_REFRESH_AMENDMENT_R1.md
 HARDENING_GATE7_AWS_LOGIN_REFRESH_CLOUD_ADAPTER_REVIEW_R1.md
+HARDENING_GATE7_AWS_LOGIN_REFRESH_CODE_REVIEW_R1.md
 HARDENING_GATE7_AWS_LOGIN_REFRESH_PREFLIGHT_PACKET_R1.md
 HARDENING_GATE7_AWS_LOGIN_REFRESH_TEST_RECEIPT_R1.md
 HARDENING_GATE7_BUNDLE_REPAIR_AUTHORIZATION_RECEIPT_R1.md
@@ -362,6 +363,68 @@ mutation, or product mutation is introduced by these functions.
 
 ```
 
+## FILE: HARDENING_GATE7_AWS_LOGIN_REFRESH_CODE_REVIEW_R1.md
+- `BYTES`: `2756`
+- `SHA256`: `57b9fe31b32728296e090dbd47a69598ebe28d37c0641d27aefff4daa48f79c0`
+```text
+# Gate 7 AWS Login Refresh Code Review R1
+
+## Exact source bindings
+
+- `s3-soak/hardening.py`: `9f985eaa36a3ab50e3ebc9c12f088cd3c616ecad4e50a349658c437e45d53934`
+- `s3-soak/cloud_adapter.py`: `e1a7a99c11744244312462a8127d1234bc0179b867f1d106c549feca7507a8ca`
+- `s3-soak/host_coordinator.py`: `b4c258189c2619815c81fed52732071db49404e30350e2c37057b438d1234fb1`
+- `s3-soak/test_hardening.py`: `b23e9b2550da9466d0136b8a7c30aca98c8c3b4226f96c65a2ef5992fbd96612`
+
+These are host-side Gate 7 orchestration and tests. The frozen remote payload
+contains only `s3-soak/protocol.py` and `s3-soak/worker.py`; neither changed.
+
+## Receipt primitives
+
+The new pending-window primitive rejects non-integer, past, undersized-margin,
+and malformed-hash inputs. Its receipt declares that no future expiry is being
+claimed and stays pending until the post-exchange provider probe exists.
+
+The new postcheck primitive requires integer last-exchange/probe/margin/latency
+values, a margin of at least 900 seconds, and two 64-character SHA-256 values.
+It returns PASS only when the probe epoch is at or after the last exchange plus
+the full margin. An early probe returns BLOCKED with a stable reason code.
+
+## Coordinator state machine
+
+The legacy fixed-expiration mode remains available. Live execution selects
+exactly one mode: legacy fixed expiration or the explicit AWS-login automatic
+refresh mode. Selecting both or neither fails before the coordinator starts.
+
+In automatic-refresh mode the coordinator:
+
+1. proves the login provider and installed refresh contract;
+2. writes the pending session receipt;
+3. executes the unchanged twelve-request loop with the unchanged Lambda and
+   Cockroach operation ceilings;
+4. records the wall-clock epoch immediately after each committed result;
+5. after result twelve, waits until the final recorded epoch plus 900 seconds;
+6. emits hash-chained heartbeats while waiting and continues enforcing the
+   stop signal and absolute lifecycle deadline;
+7. performs one sanitized read-only identity probe;
+8. validates and fsyncs the final postcheck receipt;
+9. emits a hash-chained margin-verified event; and
+10. only then proceeds to the pre-existing completion-marker and GREEN path.
+
+A failed provider proof, refresh, identity probe, time check, stop check, or
+deadline check enters the existing coordinator BLOCKED path. It cannot be
+averaged away or relabeled as product success.
+
+## Tests
+
+The complete `s3-soak` suite passed 17/17. The new test proves an 899-second
+probe is BLOCKED and an exact 900-second probe is PASS. Existing tests continue
+to cover sanitized external failures, expiry-mode rejection, sequence/order,
+hash linkage, atomic evidence, coordinator completion waiting, bridge staging,
+and exact local shutdown.
+
+```
+
 ## FILE: HARDENING_GATE7_A03_CAMPAIGN_READY_PRECHECK_RECEIPT_R1.md
 - `BYTES`: `3030`
 - `SHA256`: `b383c11cdf5ea2e9d0990dffc731e0b8e1ed684a84679c7e4cfa55451baf76a3`
@@ -472,698 +535,4 @@ any measurement, evidence, teardown, or final-review gate.
 - `SHA256`: `7f5190d82cdd6bdaf4ad31e9883179c3ec0509905ff1b36e16feb572ab492234`
 ```text
 {"aws_authenticated":true,"aws_identity_fields":["Account","Arn","UserId"],"aws_identity_output_sha256":"2f3d21c2f735725e3923e7d3ff8ba82cced4ceb9df2f7ff4837dc1322a286e5b","aws_latency_ms":476,"aws_profile":"ck-s3","aws_region":"us-west-2","cockroach_host_sha256":"7c6a8cd6aa77cf89ebe905cc35fc8279f01e09e17d46a0089a5e08a13a58e342","cockroach_latency_ms":2978,"cockroach_output_sha256":"804a35024e7d9edb6254a882cb1410d10f023851994a74d71a06ee61c99eeab6","cockroach_reachable":true,"credential_bytes_recorded":false,"read_only":true,"receipt_sha256":"7dba1517728342f15e65fa8f6e9635f3f425a7f16d2f2e7f3c3b940bc0dae55b","status":"GREEN","version":"hardening-gate7-live-readiness-v1"}
-```
-
-## FILE: s3-soak/hardening.py
-- `BYTES`: `13976`
-- `SHA256`: `9f985eaa36a3ab50e3ebc9c12f088cd3c616ecad4e50a349658c437e45d53934`
-```text
-#!/usr/bin/env python3
-"""Fail-closed S3 hardening primitives.
-
-This module deliberately stores only stable classifications and hashes of
-external-command output.  Raw command output, credentials, and environment
-contents are never written to evidence.
-"""
-from __future__ import annotations
-
-from dataclasses import dataclass
-import os
-from pathlib import Path
-import shutil
-import signal
-import time
-from typing import Any
-
-import protocol
-
-
-AWS_AUTHENTICATION = "AWS_AUTHENTICATION"
-AWS_AUTHORIZATION_OR_THROTTLING = "AWS_AUTHORIZATION_OR_THROTTLING"
-COCKROACH_CONNECTIVITY = "COCKROACH_CONNECTIVITY"
-UNKNOWN_EXTERNAL_COMMAND = "UNKNOWN_EXTERNAL_COMMAND"
-SESSION_MARGIN_SECONDS = 900
-
-_AWS_AUTH_MARKERS = (
-    b"expiredtoken", b"expired token", b"token has expired",
-    b"unauthorizedssotoken", b"sso session", b"login session",
-    b"invalidclienttokenid", b"unrecognizedclientexception",
-)
-_AWS_AUTHZ_MARKERS = (
-    b"accessdenied", b"not authorized", b"unauthorizedoperation",
-    b"throttl", b"too many requests", b"requestlimitexceeded",
-)
-_COCKROACH_CONNECTIVITY_MARKERS = (
-    b"connection refused", b"connection reset", b"connection timed out",
-    b"no such host", b"could not connect", b"failed to connect",
-    b"server closed the connection", b"tls handshake", b"x509:",
-    b"certificate", b"dial tcp", b"network is unreachable",
-)
-
-
-@dataclass(frozen=True)
-class ExternalCommandFailure(RuntimeError):
-    command_family: str
-    return_code: int
-    output_hash: str
-    failure_class: str
-
-    def __str__(self) -> str:
-        return f"{self.failure_class}:{self.command_family}:{self.return_code}"
-
-
-def classify_external_failure(command_family: str, output: bytes) -> str:
-    """Classify bounded command output without returning or retaining it."""
-    lowered = bytes(output[:1_048_576]).lower()
-    if command_family == "aws":
-        if any(marker in lowered for marker in _AWS_AUTH_MARKERS):
-            return AWS_AUTHENTICATION
-        if any(marker in lowered for marker in _AWS_AUTHZ_MARKERS):
-            return AWS_AUTHORIZATION_OR_THROTTLING
-    if command_family == "cockroach" and any(
-            marker in lowered for marker in _COCKROACH_CONNECTIVITY_MARKERS):
-        return COCKROACH_CONNECTIVITY
-    return UNKNOWN_EXTERNAL_COMMAND
-
-
-def command_failure(command_family: str, return_code: int,
-                    output: bytes) -> ExternalCommandFailure:
-    return ExternalCommandFailure(
-        command_family=command_family,
-        return_code=return_code,
-        output_hash=protocol.sha256(output),
-        failure_class=classify_external_failure(command_family, output),
-    )
-
-
-def write_atomic(path: Path, value: dict[str, Any]) -> None:
-    path = path.resolve()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    if path.parent.is_symlink() or (path.exists() and path.is_symlink()):
-        raise RuntimeError("EVIDENCE_PATH_UNSAFE")
-    raw = protocol.canonical(value) + b"\n"
-    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
-    descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-    try:
-        with os.fdopen(descriptor, "wb", closefd=True) as handle:
-            handle.write(raw)
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(temporary, path)
-        directory = os.open(path.parent, os.O_RDONLY)
-        try:
-            os.fsync(directory)
-        finally:
-            os.close(directory)
-    finally:
-        if temporary.exists():
-            temporary.unlink()
-
-
-def failure_receipt(*, campaign_id: str, sequence: int, stage: str,
-                    request_hash: str, failure: ExternalCommandFailure,
-                    utc: str | None = None) -> dict[str, Any]:
-    core = {
-        "version": "s3-stage-failure-v1",
-        "campaign_id": campaign_id,
-        "sequence": sequence,
-        "stage": stage,
-        "request_hash": request_hash,
-        "failure_class": failure.failure_class,
-        "command_family": failure.command_family,
-        "return_code": failure.return_code,
-        "sanitized_output_sha256": failure.output_hash,
-        "raw_output_stored": False,
-        "utc": utc or time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-    }
-    return {**core, "receipt_hash": protocol.sha256(core)}
-
-
-def session_window_receipt(*, expires_epoch: int, final_exchange_epoch: int,
-                           margin_seconds: int = SESSION_MARGIN_SECONDS) -> dict[str, Any]:
-    if any(isinstance(item, bool) or not isinstance(item, int)
-           for item in (expires_epoch, final_exchange_epoch, margin_seconds)):
-        raise RuntimeError("AWS_SESSION_WINDOW_INVALID")
-    if margin_seconds < SESSION_MARGIN_SECONDS:
-        raise RuntimeError("AWS_SESSION_MARGIN_TOO_SMALL")
-    required_expiry = final_exchange_epoch + margin_seconds
-    status = "PASS" if expires_epoch >= required_expiry else "BLOCKED"
-    core = {
-        "version": "s3-aws-session-window-v1",
-        "expires_epoch": expires_epoch,
-        "final_exchange_epoch": final_exchange_epoch,
-        "margin_seconds": margin_seconds,
-        "required_expiry_epoch": required_expiry,
-        "status": status,
-        "stable_reason_code": (
-            "AWS_SESSION_MARGIN_VERIFIED" if status == "PASS"
-            else "AWS_SESSION_MARGIN_INSUFFICIENT"
-        ),
-    }
-    return {**core, "receipt_hash": protocol.sha256(core)}
-
-
-def validate_session_window(*, expires_epoch: int, final_exchange_epoch: int,
-                            margin_seconds: int = SESSION_MARGIN_SECONDS) -> dict[str, Any]:
-    receipt = session_window_receipt(
-        expires_epoch=expires_epoch,
-        final_exchange_epoch=final_exchange_epoch,
-        margin_seconds=margin_seconds,
-    )
-    if receipt["status"] != "PASS":
-        raise RuntimeError("AWS_SESSION_MARGIN_INSUFFICIENT")
-    return receipt
-
-
-def login_refresh_pending_receipt(*, final_exchange_deadline_epoch: int,
-                                  margin_seconds: int = SESSION_MARGIN_SECONDS,
-                                  provider_receipt_hash: str) -> dict[str, Any]:
-    """Bind an AWS-login campaign without claiming a false static expiry.
-
-    ``aws login`` rotates its short-term access credentials.  This mode is
-    fail-closed: the campaign is not session-GREEN until a second read-only
-    identity probe succeeds after the required post-exchange margin.
-    """
-    if (isinstance(final_exchange_deadline_epoch, bool) or
-            not isinstance(final_exchange_deadline_epoch, int) or
-            final_exchange_deadline_epoch <= int(time.time())):
-        raise RuntimeError("AWS_LOGIN_FINAL_EXCHANGE_DEADLINE_INVALID")
-    if (isinstance(margin_seconds, bool) or
-            not isinstance(margin_seconds, int) or
-            margin_seconds < SESSION_MARGIN_SECONDS):
-        raise RuntimeError("AWS_SESSION_MARGIN_TOO_SMALL")
-    if (not isinstance(provider_receipt_hash, str) or
-            len(provider_receipt_hash) != 64):
-        raise RuntimeError("AWS_LOGIN_PROVIDER_RECEIPT_INVALID")
-    core = {
-        "version": "s3-aws-login-refresh-window-v1",
-        "mode": "AWS_LOGIN_AUTO_REFRESH_POSTCHECK",
-        "provider_receipt_hash": provider_receipt_hash,
-        "final_exchange_deadline_epoch": final_exchange_deadline_epoch,
-        "margin_seconds": margin_seconds,
-        "future_expiry_claimed": False,
-        "status": "PENDING_POST_EXCHANGE_PROBE",
-        "stable_reason_code": "AWS_LOGIN_POST_EXCHANGE_PROBE_REQUIRED",
-    }
-    return {**core, "receipt_hash": protocol.sha256(core)}
-
-
-def login_refresh_postcheck_receipt(*, provider_receipt_hash: str,
-                                    last_exchange_epoch: int,
-                                    probe_epoch: int,
-                                    margin_seconds: int,
-                                    identity_output_sha256: str,
-                                    latency_ms: int) -> dict[str, Any]:
-    values = (last_exchange_epoch, probe_epoch, margin_seconds, latency_ms)
-    if any(isinstance(value, bool) or not isinstance(value, int)
-           for value in values):
-        raise RuntimeError("AWS_LOGIN_POSTCHECK_VALUE_INVALID")
-    if margin_seconds < SESSION_MARGIN_SECONDS or latency_ms < 0:
-        raise RuntimeError("AWS_LOGIN_POSTCHECK_VALUE_INVALID")
-    if any(not isinstance(value, str) or len(value) != 64 for value in
-           (provider_receipt_hash, identity_output_sha256)):
-        raise RuntimeError("AWS_LOGIN_POSTCHECK_HASH_INVALID")
-    required_probe_epoch = last_exchange_epoch + margin_seconds
-    status = "PASS" if probe_epoch >= required_probe_epoch else "BLOCKED"
-    core = {
-        "version": "s3-aws-login-refresh-postcheck-v1",
-        "provider_receipt_hash": provider_receipt_hash,
-        "last_exchange_epoch": last_exchange_epoch,
-        "probe_epoch": probe_epoch,
-        "margin_seconds": margin_seconds,
-        "required_probe_epoch": required_probe_epoch,
-        "identity_output_sha256": identity_output_sha256,
-        "credential_bytes_recorded": False,
-        "latency_ms": latency_ms,
-        "status": status,
-        "stable_reason_code": (
-            "AWS_LOGIN_POST_EXCHANGE_MARGIN_VERIFIED" if status == "PASS"
-            else "AWS_LOGIN_POST_EXCHANGE_MARGIN_INSUFFICIENT"
-        ),
-    }
-    return {**core, "receipt_hash": protocol.sha256(core)}
-
-
-def cleanup_trial_exact(trial_root: Path, evidence_root: Path) -> dict[str, Any]:
-    """Remove exactly one generated trial root and prove zero path residue."""
-    trial = trial_root.resolve(strict=False)
-    evidence = evidence_root.resolve()
-    if trial.parent != evidence or trial == evidence or trial.is_symlink():
-        raise RuntimeError("TRIAL_CLEANUP_SCOPE_INVALID")
-    existed = trial.exists()
-    if existed:
-        shutil.rmtree(trial)
-    residue = trial.exists() or trial.is_symlink()
-    core = {
-        "version": "s3-trial-cleanup-v1",
-        "trial_name": trial.name,
-        "existed_before_cleanup": existed,
-        "residue_entries": 1 if residue else 0,
-        "status": "BLOCKED" if residue else "PASS",
-        "stable_reason_code": "TRIAL_RESIDUE" if residue else "ZERO_TRIAL_RESIDUE",
-    }
-    receipt = {**core, "receipt_hash": protocol.sha256(core)}
-    if residue:
-        raise RuntimeError("TRIAL_RESIDUE")
-    return receipt
-
-
-class CheckpointCustody:
-    """Append-only, per-exchange custody outside the disposable trial root."""
-
-    def __init__(self, root: Path, campaign_id: str) -> None:
-        self.root = root.resolve()
-        self.root.mkdir(parents=True, exist_ok=False)
-        self.campaign_id = campaign_id
-        self.previous = protocol.GENESIS_HASH
-        self.sequence = 0
-
-    def capture(self, request: dict[str, Any], result: dict[str, Any]) -> dict[str, Any]:
-        protocol.validate_request(request)
-        protocol.validate_result(result, request)
-        expected = self.sequence + 1
-        if request["campaign_id"] != self.campaign_id or request["sequence"] != expected:
-            raise RuntimeError("CUSTODY_SEQUENCE_INVALID")
-        core = {
-            "version": "s3-checkpoint-custody-v1",
-            "campaign_id": self.campaign_id,
-            "sequence": expected,
-            "previous_receipt_hash": self.previous,
-            "request_hash": request["request_hash"],
-            "result_hash": result["result_hash"],
-            "request_bytes_sha256": protocol.sha256(protocol.canonical(request)),
-            "result_bytes_sha256": protocol.sha256(protocol.canonical(result)),
-        }
-        receipt = {**core, "receipt_hash": protocol.sha256(core)}
-        write_atomic(self.root / f"exchange-{expected:04d}.json", receipt)
-        self.previous = receipt["receipt_hash"]
-        self.sequence = expected
-        return receipt
-
-
-def coordinated_local_shutdown(processes: list[tuple[str, int]],
-                               timeout_seconds: float = 5.0) -> dict[str, Any]:
-    """Terminate exact local coordinator/bridge PIDs and prove their absence."""
-    if timeout_seconds <= 0:
-        raise RuntimeError("SHUTDOWN_TIMEOUT_INVALID")
-    ordered = []
-    for role, pid in processes:
-        if role not in {"worker", "bridge", "coordinator"} or pid <= 1 or pid == os.getpid():
-            raise RuntimeError("SHUTDOWN_TARGET_INVALID")
-        ordered.append((role, pid))
-    for _role, pid in ordered:
-        try:
-            os.kill(pid, signal.SIGTERM)
-        except ProcessLookupError:
-            pass
-    deadline = time.monotonic() + timeout_seconds
-    remaining: list[tuple[str, int]] = []
-    while time.monotonic() < deadline:
-        remaining = []
-        for role, pid in ordered:
-            try:
-                waited, _status = os.waitpid(pid, os.WNOHANG)
-                if waited == pid:
-                    continue
-            except ChildProcessError:
-                pass
-            try:
-                os.kill(pid, 0)
-            except ProcessLookupError:
-                continue
-            remaining.append((role, pid))
-        if not remaining:
-            break
-        time.sleep(0.05)
-    if remaining:
-        for _role, pid in remaining:
-            try:
-                os.kill(pid, signal.SIGKILL)
-            except ProcessLookupError:
-                pass
-        time.sleep(0.05)
-    live = []
-    for role, pid in ordered:
-        try:
-            waited, _status = os.waitpid(pid, os.WNOHANG)
-            if waited == pid:
-                continue
-        except ChildProcessError:
-            pass
-        try:
-            os.kill(pid, 0)
-        except ProcessLookupError:
-            continue
-        live.append(role)
-    core = {
-        "version": "s3-coordinated-shutdown-v1",
-        "requested_roles": [role for role, _pid in ordered],
-        "live_roles_after_shutdown": live,
-        "status": "PASS" if not live else "BLOCKED",
-    }
-    receipt = {**core, "receipt_hash": protocol.sha256(core)}
-    if live:
-        raise RuntimeError("COORDINATED_SHUTDOWN_INCOMPLETE")
-    return receipt
-
-```
-
-## FILE: s3-soak/host_coordinator.py
-- `BYTES`: `14992`
-- `SHA256`: `b4c258189c2619815c81fed52732071db49404e30350e2c37057b438d1234fb1`
-```text
-#!/usr/bin/env python3
-"""Detached S3 host coordinator with strict sequence and call ceilings."""
-from __future__ import annotations
-
-import argparse
-import json
-import os
-from pathlib import Path
-import signal
-import time
-from typing import Any
-import re
-
-import cloud_adapter
-import hardening
-import protocol
-
-
-class CoordinatorFailure(RuntimeError):
-    pass
-
-
-REQUEST_NAME_RE = re.compile(r"^request-([0-9]{4})\.json$")
-
-
-def verify_request_directory(requests: Path, expected_sequence: int,
-                             processed: set[str]) -> None:
-    expected_temporary = f"request-{expected_sequence:04d}.json.tmp"
-    for entry in requests.iterdir():
-        if entry.is_symlink() or not entry.is_file():
-            raise CoordinatorFailure("REQUEST_ENTRY_UNSAFE")
-        match = REQUEST_NAME_RE.fullmatch(entry.name)
-        if match is None:
-            if entry.name == expected_temporary:
-                continue
-            raise CoordinatorFailure("REQUEST_FILE_UNKNOWN")
-        sequence = int(match.group(1))
-        if sequence > expected_sequence:
-            raise CoordinatorFailure("OUT_OF_ORDER_REQUEST")
-        if sequence < expected_sequence:
-            prior = protocol.decode_request(entry.read_bytes())
-            if prior["sequence"] != sequence or prior["request_hash"] not in processed:
-                raise CoordinatorFailure("STALE_REQUEST_MISMATCH")
-
-
-def write_atomic(path: Path, value: dict[str, Any]) -> None:
-    raw = protocol.canonical(value)
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    with temporary.open("xb") as handle:
-        handle.write(raw)
-        handle.flush()
-        os.fsync(handle.fileno())
-    os.replace(temporary, path)
-    directory = os.open(path.parent, os.O_RDONLY)
-    try:
-        os.fsync(directory)
-    finally:
-        os.close(directory)
-
-
-class ChainLog:
-    def __init__(self, path: Path, campaign_id: str) -> None:
-        if path.exists():
-            raise CoordinatorFailure("LOG_EXISTS")
-        path.parent.mkdir(parents=True, exist_ok=True)
-        self.path = path
-        self.campaign_id = campaign_id
-        self.previous = protocol.GENESIS_HASH
-        self.sequence = 0
-
-    def emit(self, event: str, details: Any) -> dict[str, Any]:
-        self.sequence += 1
-        core = {
-            "version": "s3-coordinator-log-v1",
-            "campaign_id": self.campaign_id,
-            "sequence": self.sequence,
-            "previous_hash": self.previous,
-            "event": event,
-            "details": details,
-            "utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-            "monotonic_ns": time.monotonic_ns(),
-        }
-        record = {**core, "event_hash": protocol.sha256(core)}
-        with self.path.open("ab") as handle:
-            handle.write(protocol.canonical(record) + b"\n")
-            handle.flush()
-            os.fsync(handle.fileno())
-        self.previous = record["event_hash"]
-        return record
-
-
-def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--bridge-root", type=Path, required=True)
-    parser.add_argument("--evidence-root", type=Path, required=True)
-    parser.add_argument("--campaign-id", required=True)
-    parser.add_argument("--expected-requests", type=int, required=True)
-    parser.add_argument("--lambda-call-ceiling", type=int, required=True)
-    parser.add_argument("--cockroach-operation-ceiling", type=int, required=True)
-    parser.add_argument("--deadline-epoch", type=int, required=True)
-    parser.add_argument("--mode", choices=("live", "fixture", "offline-refusal"),
-                        required=True)
-    parser.add_argument("--config", type=Path)
-    parser.add_argument("--heartbeat-seconds", type=int, default=5)
-    parser.add_argument("--completion-marker", type=Path)
-    parser.add_argument("--custody-root", type=Path)
-    parser.add_argument("--aws-session-expiry-epoch", type=int)
-    parser.add_argument("--final-cloud-exchange-epoch", type=int)
-    parser.add_argument("--session-margin-seconds", type=int, default=900)
-    parser.add_argument("--aws-login-auto-refresh", action="store_true")
-    args = parser.parse_args()
-    if not 1 <= args.expected_requests <= protocol.MAX_SEQUENCE:
-        raise CoordinatorFailure("EXPECTED_REQUESTS_INVALID")
-    if args.mode == "live" and args.config is None:
-        raise CoordinatorFailure("LIVE_CONFIG_REQUIRED")
-    if args.mode == "live" and any(value is None for value in (
-            args.custody_root, args.final_cloud_exchange_epoch)):
-        raise CoordinatorFailure("LIVE_CUSTODY_OR_SESSION_GATE_REQUIRED")
-    if (args.mode == "live" and
-            (args.aws_login_auto_refresh ==
-             (args.aws_session_expiry_epoch is not None))):
-        raise CoordinatorFailure("LIVE_SESSION_MODE_INVALID")
-    if (args.mode == "live" and
-            (args.final_cloud_exchange_epoch < int(time.time()) or
-             args.final_cloud_exchange_epoch > args.deadline_epoch)):
-        raise CoordinatorFailure("FINAL_CLOUD_EXCHANGE_WINDOW_INVALID")
-    if args.deadline_epoch <= int(time.time()):
-        raise CoordinatorFailure("DEADLINE_INVALID")
-    if args.lambda_call_ceiling < args.expected_requests:
-        raise CoordinatorFailure("LAMBDA_CEILING_TOO_LOW")
-    if args.cockroach_operation_ceiling < args.expected_requests * 9:
-        raise CoordinatorFailure("COCKROACH_CEILING_TOO_LOW")
-
-    bridge = args.bridge_root.resolve()
-    requests = bridge / "requests"
-    results = bridge / "results"
-    for path in (requests, results):
-        path.mkdir(parents=True, exist_ok=True)
-    evidence = args.evidence_root.resolve()
-    evidence.mkdir(parents=True, exist_ok=False)
-    custody = None
-    if args.custody_root is not None:
-        custody = hardening.CheckpointCustody(
-            args.custody_root, args.campaign_id)
-    if args.mode == "live":
-        assert args.final_cloud_exchange_epoch is not None
-        if args.aws_login_auto_refresh:
-            provider_receipt = cloud_adapter.prove_aws_login_provider(args.config)
-            hardening.write_atomic(
-                evidence / "aws-login-provider.json", provider_receipt)
-            session_receipt = hardening.login_refresh_pending_receipt(
-                final_exchange_deadline_epoch=args.final_cloud_exchange_epoch,
-                margin_seconds=args.session_margin_seconds,
-                provider_receipt_hash=provider_receipt["receipt_hash"],
-            )
-        else:
-            assert args.aws_session_expiry_epoch is not None
-            provider_receipt = None
-            session_receipt = hardening.validate_session_window(
-                expires_epoch=args.aws_session_expiry_epoch,
-                final_exchange_epoch=args.final_cloud_exchange_epoch,
-                margin_seconds=args.session_margin_seconds,
-            )
-        hardening.write_atomic(evidence / "aws-session-window.json", session_receipt)
-    log = ChainLog(evidence / "coordinator.ndjson", args.campaign_id)
-    processed: set[str] = set()
-    expected_sequence = 1
-    parent_hash = protocol.GENESIS_HASH
-    lambda_calls = 0
-    cockroach_operations = 0
-    last_exchange_epoch: int | None = None
-    stopped = False
-
-    def stop(_signum: int, _frame: Any) -> None:
-        nonlocal stopped
-        stopped = True
-
-    signal.signal(signal.SIGTERM, stop)
-    signal.signal(signal.SIGINT, stop)
-    log.emit("COORDINATOR_START", {
-        "mode": args.mode,
-        "expected_requests": args.expected_requests,
-        "lambda_call_ceiling": args.lambda_call_ceiling,
-        "cockroach_operation_ceiling": args.cockroach_operation_ceiling,
-        "deadline_epoch": args.deadline_epoch,
-    })
-    last_heartbeat = 0.0
-    try:
-        while expected_sequence <= args.expected_requests:
-            if stopped:
-                raise CoordinatorFailure("COORDINATOR_STOPPED")
-            if int(time.time()) >= args.deadline_epoch:
-                raise CoordinatorFailure("COORDINATOR_DEADLINE")
-            now = time.monotonic()
-            if now - last_heartbeat >= args.heartbeat_seconds:
-                log.emit("HEARTBEAT", {
-                    "next_sequence": expected_sequence,
-                    "processed": len(processed),
-                    "lambda_calls": lambda_calls,
-                    "cockroach_operations": cockroach_operations,
-                })
-                last_heartbeat = now
-            verify_request_directory(requests, expected_sequence, processed)
-            request_path = requests / f"request-{expected_sequence:04d}.json"
-            if not request_path.exists():
-                time.sleep(0.1)
-                continue
-            raw = request_path.read_bytes()
-            request = protocol.decode_request(raw)
-            if request["campaign_id"] != args.campaign_id:
-                raise CoordinatorFailure("CAMPAIGN_MISMATCH")
-            if request["sequence"] != expected_sequence:
-                raise CoordinatorFailure("OUT_OF_ORDER_REQUEST")
-            if request["parent_hash"] != parent_hash:
-                raise CoordinatorFailure("PARENT_HASH_MISMATCH")
-            if request["request_hash"] in processed:
-                raise CoordinatorFailure("DUPLICATE_REQUEST")
-            log.emit("REQUEST_ACCEPTED", {
-                "sequence": expected_sequence,
-                "request_hash": request["request_hash"],
-                "operation": request["operation"],
-            })
-            if args.mode == "offline-refusal":
-                log.emit("COORDINATOR_OFFLINE_REFUSAL", {
-                    "sequence": expected_sequence,
-                    "request_hash": request["request_hash"],
-                    "stable_reason_code": "COORDINATOR_UNAVAILABLE",
-                })
-                return 73
-            call_root = evidence / f"call-{expected_sequence:04d}"
-            if args.mode == "live":
-                metrics, hashes = cloud_adapter.run_live(request, args.config, call_root)
-            else:
-                metrics, hashes = cloud_adapter.run_fixture(request)
-            lambda_calls += int(metrics["lambda_invocations"])
-            cockroach_operations += int(metrics["cockroach_operations"])
-            if lambda_calls > args.lambda_call_ceiling:
-                raise CoordinatorFailure("LAMBDA_CALL_CEILING")
-            if cockroach_operations > args.cockroach_operation_ceiling:
-                raise CoordinatorFailure("COCKROACH_OPERATION_CEILING")
-            result = protocol.make_result(request, metrics, hashes)
-            result_path = results / f"result-{expected_sequence:04d}.json"
-            write_atomic(result_path, result)
-            if custody is not None:
-                custody_receipt = custody.capture(request, result)
-                log.emit("CHECKPOINT_CUSTODY_COMMITTED", {
-                    "sequence": expected_sequence,
-                    "receipt_hash": custody_receipt["receipt_hash"],
-                })
-            log.emit("RESULT_COMMITTED", {
-                "sequence": expected_sequence,
-                "request_hash": request["request_hash"],
-                "result_hash": result["result_hash"],
-                "lambda_calls": lambda_calls,
-                "cockroach_operations": cockroach_operations,
-            })
-            last_exchange_epoch = int(time.time())
-            processed.add(request["request_hash"])
-            parent_hash = request["request_hash"]
-            expected_sequence += 1
-        if args.mode == "live" and args.aws_login_auto_refresh:
-            assert provider_receipt is not None
-            assert last_exchange_epoch is not None
-            required_probe_epoch = last_exchange_epoch + args.session_margin_seconds
-            while int(time.time()) < required_probe_epoch:
-                if stopped:
-                    raise CoordinatorFailure("COORDINATOR_STOPPED")
-                if int(time.time()) >= args.deadline_epoch:
-                    raise CoordinatorFailure("AWS_MARGIN_PROBE_DEADLINE")
-                now = time.monotonic()
-                if now - last_heartbeat >= args.heartbeat_seconds:
-                    log.emit("HEARTBEAT", {
-                        "next_sequence": expected_sequence,
-                        "processed": len(processed),
-                        "lambda_calls": lambda_calls,
-                        "cockroach_operations": cockroach_operations,
-                        "awaiting_aws_margin_probe": True,
-                        "remaining_margin_seconds": max(
-                            0, required_probe_epoch - int(time.time())),
-                    })
-                    last_heartbeat = now
-                time.sleep(0.2)
-            identity_probe = cloud_adapter.probe_aws_identity(args.config)
-            postcheck = hardening.login_refresh_postcheck_receipt(
-                provider_receipt_hash=provider_receipt["receipt_hash"],
-                last_exchange_epoch=last_exchange_epoch,
-                probe_epoch=int(time.time()),
-                margin_seconds=args.session_margin_seconds,
-                identity_output_sha256=identity_probe["identity_output_sha256"],
-                latency_ms=identity_probe["latency_ms"],
-            )
-            if postcheck["status"] != "PASS":
-                raise CoordinatorFailure("AWS_LOGIN_POSTCHECK_BLOCKED")
-            hardening.write_atomic(
-                evidence / "aws-session-margin-postcheck.json", postcheck)
-            log.emit("AWS_SESSION_MARGIN_VERIFIED", {
-                "postcheck_receipt_hash": postcheck["receipt_hash"],
-                "margin_seconds": args.session_margin_seconds,
-            })
-        if args.completion_marker is not None:
-            marker = args.completion_marker.resolve()
-            while not marker.exists():
-                if stopped:
-                    raise CoordinatorFailure("COORDINATOR_STOPPED")
-                if int(time.time()) >= args.deadline_epoch:
-                    raise CoordinatorFailure("COMPLETION_MARKER_DEADLINE")
-                now = time.monotonic()
-                if now - last_heartbeat >= args.heartbeat_seconds:
-                    log.emit("HEARTBEAT", {
-                        "next_sequence": expected_sequence,
-                        "processed": len(processed),
-                        "lambda_calls": lambda_calls,
-                        "cockroach_operations": cockroach_operations,
-                        "awaiting_completion_marker": True,
-                    })
-                    last_heartbeat = now
-                time.sleep(0.2)
-        log.emit("COORDINATOR_GREEN", {
-            "processed": len(processed),
-            "lambda_calls": lambda_calls,
-            "cockroach_operations": cockroach_operations,
-        })
-        return 0
-    except Exception as exc:
-        log.emit("COORDINATOR_BLOCKED", {
-            "type": type(exc).__name__,
-            "error_hash": protocol.sha256(str(exc).encode("utf-8")),
-        })
-        return 1
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
-
 ```
