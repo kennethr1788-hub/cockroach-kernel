@@ -1,6 +1,6 @@
 # Hidden Campaign Actor Route Amendment R2
 
-- `STATUS`: `PROPOSED_REPAIR_PENDING_INDEPENDENT_REVIEW`
+- `STATUS`: `AUTHORIZED_REPAIR_PENDING_FRESH_SAME_HASH_REVIEW`
 - `PRESERVES_R1_BLOCKER`: `YES`
 - `ACTOR_ROUTE`: `local Ollama 0.30.11`
 - `MODEL`: `qwen2.5-coder:7b`
@@ -15,7 +15,7 @@
 - `KEEP_ALIVE`: `0; unload after request`
 - `RUN_COUNT`: `unchanged 18 valid sessions`
 - `RETRY_LAW`: `unchanged`
-- `OPERATOR_AUTHORIZATION`: `Kenneth authorized the hidden campaign generally before this route repair; the R2 route is local, zero-cost, and no-egress, but was not named verbatim in his authorization text`
+- `OPERATOR_AUTHORIZATION`: `Explicit route/model/digest/run-count/privacy/cost/seed authorization recorded in FRESH_CONTEXT_BLACK_BOX_HIDDEN_CAMPAIGN_AUTHORIZATION_R2.md`
 - `HIDDEN_SEED_CREATED`: `NO`
 - `HIDDEN_EXECUTIONS`: `0`
 

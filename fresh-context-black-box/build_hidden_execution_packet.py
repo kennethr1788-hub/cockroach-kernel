@@ -10,8 +10,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 FILES = (
     "FRESH_CONTEXT_BLACK_BOX_HIDDEN_CAMPAIGN_AUTHORIZATION_R1.md",
+    "FRESH_CONTEXT_BLACK_BOX_HIDDEN_CAMPAIGN_AUTHORIZATION_R2.md",
     "FRESH_CONTEXT_BLACK_BOX_HIDDEN_EXECUTION_GLM_RAW_R1.txt",
     "FRESH_CONTEXT_BLACK_BOX_HIDDEN_EXECUTION_GLM_RECEIPT_R1.md",
+    "FRESH_CONTEXT_BLACK_BOX_HIDDEN_EXECUTION_GLM_RAW_R2.txt",
+    "FRESH_CONTEXT_BLACK_BOX_HIDDEN_EXECUTION_GLM_RECEIPT_R2.md",
     "FRESH_CONTEXT_BLACK_BOX_HIDDEN_ROUTE_AMENDMENT_R2.md",
     "FRESH_CONTEXT_BLACK_BOX_HIDDEN_ROUTE_PREFLIGHT_R2.md",
     "FRESH_CONTEXT_BLACK_BOX_PLAN_R3.md",
@@ -29,13 +32,15 @@ def sha256(raw: bytes) -> str:
 
 def build(commit: str) -> bytes:
     header = (
-        "# Hidden Black-Box Campaign Execution Preflight Packet R2\n\n"
+        "# Hidden Black-Box Campaign Execution Preflight Packet R3\n\n"
         "- TARGET: authorize seed commitment then exactly 18 fresh synthetic local actor invocations\n"
         f"- CONTROLLER_COMMIT: {commit}\n"
         "- PRODUCT_CANDIDATE: 1c483b1930e629c9ecb6d73418b9554897dc08ad\n"
         "- R3_PREFLIGHT_PACKET_SHA256: 2a273eabffa107e0056c512dcc10b6f34398220fe97c949924552e9843bfb8f0\n"
         "- R1_EXECUTION_PACKET_SHA256: ae17bfd313163575a315a60a8048e16ff35345dcf5f018a3c50842c50871877e\n"
         "- R1_JUDGE_RESULT: BLOCKED and preserved\n"
+        "- R2_JUDGE_RESULT: BLOCKED and preserved\n"
+        "- R2_ROUTE_AUTHORIZATION: explicit Kenneth confirmation embedded\n"
         "- ACTOR_ROUTE: local Ollama / qwen2.5-coder:7b / exact digest verified\n"
         "- EXTERNAL_EGRESS: none\n"
         "- HIDDEN_SEED_CREATED: NO\n"

@@ -1,6 +1,6 @@
 # Human Action Required — Hidden Campaign Local Actor Route R2
 
-- `STATUS`: `HUMAN_ACTION_REQUIRED`
+- `STATUS`: `CLOSED_BY_EXPLICIT_OPERATOR_CONFIRMATION_2026-07-28T08:02:23Z`
 - `LAST_GREEN_GATE`: `BLACK_BOX_R3_PREFLIGHT_GREEN`
 - `BLOCKED_PACKET_SHA256`: `9e9b54982ccfd18ea9ac9d0372bcce0536162baadd7e75386b144d75ee31f214`
 - `JUDGE`: `GLM 5.2 / RECUSAL CLEAR / BLOCKED`
@@ -23,3 +23,7 @@ confirmation is:
 After that confirmation, the safe resume action is to append the exact operator
 text and UTC time to an R3 authorization receipt, rebuild the complete packet,
 obtain a fresh direct GLM same-hash verdict, and execute only if GREEN.
+
+The exact confirmation was received and is preserved in
+`FRESH_CONTEXT_BLACK_BOX_HIDDEN_CAMPAIGN_AUTHORIZATION_R2.md`. This historical
+action record remains for custody; it no longer represents an open human gate.

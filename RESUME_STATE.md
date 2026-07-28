@@ -1,9 +1,9 @@
 # Resume State
 
-- `CURRENT_PHASE`: `BLACK_BOX_R3_HIDDEN_CAMPAIGN_R2_HUMAN_ROUTE_AUTHORIZATION_BLOCKED`
+- `CURRENT_PHASE`: `BLACK_BOX_R3_HIDDEN_CAMPAIGN_R3_AUTHORIZED_PENDING_SAME_HASH_REVIEW`
 - `LAST_GREEN_GATE`: `HARDENING_6_RUN1_GREEN`
-- `NEXT_ALLOWED_ACTION`: Kenneth explicitly authorizes the local Ollama qwen2.5-coder:7b route using the exact statement in FRESH_CONTEXT_BLACK_BOX_HIDDEN_ROUTE_AUTHORIZATION_REQUIRED_R2.md; then rebuild and independently review one fresh same-hash packet
-- `FORBIDDEN_ACTIONS`: Generate a hidden seed; execute any hidden session; reinterpret the blocked judge result; use RunPod or paid runtime; begin Gate 7; mutate product candidate 1c483b1930e629c9ecb6d73418b9554897dc08ad; publish a black-box claim; public actions; release; submission; HOME/live-memory mutation; credential exposure
+- `NEXT_ALLOWED_ACTION`: Rebuild the byte-complete authorization-amended R3 packet and require fresh direct GLM same-hash GREEN; only then create the seed and execute exactly 18 hidden local actor invocations
+- `FORBIDDEN_ACTIONS`: Generate a hidden seed or execute any hidden session before fresh R3 same-hash GLM GREEN; reinterpret prior blocked results; use RunPod or paid runtime; begin Gate 7; mutate product candidate 1c483b1930e629c9ecb6d73418b9554897dc08ad; publish a black-box claim; public actions; release; submission; HOME/live-memory mutation; credential exposure
 - `CURRENT_COMMIT`: `9a1e7875856a459f73c3f9837203b62ca24d7462`
 - `CURRENT_COMMIT_AT_P9_PACKET_FREEZE`: `61d77d1704a3f074427f9f82b300abaaa201f79c`
 - `P9_IMPLEMENTATION_COMMIT`: `cbd58b3af9e1ce5c4ddf8885866b88e7e7c1ca0f`
@@ -13,8 +13,8 @@
 - `S3_PREFLIGHT_R4_REPAIR_COMMIT`: `06b54e8f61bf0fa227af3de2377a462e369d7d74`
 - `S3_PREFLIGHT_R6_REPAIR_COMMIT`: `8b1d5bd1038588527bd994eb8fcb5467cac47eac`
 - `S3_PREFLIGHT_R8_REPAIR_COMMIT`: `95408fb9386ced25b468c0957e86e8f73cb123e9`
-- `PENDING_BLOCKERS`: Explicit human authorization is missing for local Ollama qwen2.5-coder:7b actor route; direct GLM 5.2 blocked packet 9e9b54982ccfd18ea9ac9d0372bcce0536162baadd7e75386b144d75ee31f214
-- `REQUIRED_JUDGE_STATE`: After explicit route authorization, rebuild the packet and require fresh direct GLM same-hash GREEN before seed creation; current R2 verdict is BLOCKED with RECUSAL CLEAR
+- `PENDING_BLOCKERS`: None at the human route gate; fresh R3 same-hash independent preflight remains required before seed creation
+- `REQUIRED_JUDGE_STATE`: Fresh direct GLM verdict over the authorization-amended R3 packet must be GREEN with RECUSAL CLEAR before seed creation
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
 - `P9_FINAL_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; RECUSAL_CLEAR`
