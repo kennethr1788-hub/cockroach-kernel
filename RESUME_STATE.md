@@ -1,8 +1,8 @@
 # Resume State
 
-- `CURRENT_PHASE`: `HARDENING_GATE7_BLOCKED_AFTER_ATTEMPT_A02`
+- `CURRENT_PHASE`: `HARDENING_GATE7_BUNDLE_REPAIR_AUTHORIZED_IN_PROGRESS`
 - `LAST_GREEN_GATE`: `GATE7C_SAME_HASH_GREEN`
-- `NEXT_ALLOWED_ACTION`: With fresh operator authorization, repair only the Gate 7 transfer harness by adding `hardening-gate5/heldout_contract.py`, add an extracted-bundle campaign-ready smoke, rebuild and rescan, freeze a new packet, and obtain fresh same-hash GLM/AGY GREEN before any new worker
+- `NEXT_ALLOWED_ACTION`: Repair only the Gate 7 transfer harness by adding `hardening-gate5/heldout_contract.py`, run the extracted-bundle campaign-ready smoke, rebuild and rescan, freeze a new packet, and obtain fresh same-hash GLM/AGY GREEN before one replacement worker
 - `FORBIDDEN_ACTIONS`: Create another worker under packet `1f154522ef5c1e31661782b9ced4dce373c54d710e789d650eeb2adc40155843`; patch an accepted worker payload; create a hidden seed; begin measured execution; mutate the frozen product candidate; begin Gate 8, S3-R2, release, publication, video, or submission; mutate HOME/live memory; expose credentials
 - `CURRENT_COMMIT`: `777e3588bc4b07f0a3ea78c7c5831aa087f6869b` (final Gate 7C packet checkpoint; judge receipt follows)
 - `GATE7_EXECUTION_PROMPT_SHA256`: `936c9ae62191e5d8daa0cbd7ef4287d77777e6c761694d6d6d8789842dcb454f`

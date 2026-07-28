@@ -25,6 +25,7 @@ LINUX_ARCHIVE_SHA256 = "3eca6d7bc6fefa3ba0847e89733fc69f61226c80b8fab0af6578e1be
 EXACT_FILES = (
     "cockroach_kernel/__init__.py",
     "cockroach_kernel/recovery_surface.py",
+    "hardening-gate5/heldout_contract.py",
     "hardening-gate6/seccomp_exec.py",
     "hardening-gate7/expanded_contract.py",
     "hardening-gate7/generate_expanded_inputs.py",

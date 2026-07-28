@@ -20,25 +20,29 @@ FILES = (
     PROMPT,
     PLAN,
     BASE / "HARDENING_GATE7_EXPANDED_STATUS_R1.md",
+    BASE / "HARDENING_GATE7_BUNDLE_REPAIR_AUTHORIZATION_RECEIPT_R1.md",
+    BASE / "HARDENING_GATE7_ATTEMPT_A02_RECEIPT_R1.md",
     BASE / "HARDENING_GATE7_CANDIDATE_CONTINUITY_RECEIPT_R1.md",
     BASE / "HARDENING_GATE7_CONTINUITY_JUDGE_RECEIPT_R1.md",
     BASE / "HARDENING_GATE7_EXPANDED_EXECUTION_WIRING_R1.md",
     BASE / "HARDENING_GATE7_EXPANDED_THRESHOLDS_R1.json",
     BASE / "HARDENING_GATE7_EXPANDED_RUNPOD_SCHEDULE_R1.json",
-    BASE / "HARDENING_GATE7_EXPANDED_SOURCE_BINDINGS_R1.json",
-    BASE / "HARDENING_GATE7_EXPANDED_LOCAL_PREFLIGHT_RECEIPT_R1.json",
-    BASE / ".hardening-runtime/gate7-r2/preflight-r4/unit-tests-receipt.json",
-    BASE / ".hardening-runtime/gate7-r2/preflight-r4/public-canary-aggregate.json",
-    BASE / ".hardening-runtime/gate7-r2/preflight-r4/memory-profile.json",
-    BASE / ".hardening-runtime/gate7-r2/preflight-r4/bulk-sql-public/manifest.json",
-    BASE / ".hardening-runtime/gate7-r2/preflight-r4/bundle/PAYLOAD_TREE.json",
-    BASE / ".hardening-runtime/gate7-r2/preflight-r4/bundle/TRANSFER_MANIFEST.json",
-    BASE / ".hardening-runtime/gate7-r2/preflight-r4/gitleaks-receipt.json",
-    BASE / ".hardening-runtime/gate7-r2/preflight-r4/detect-secrets-receipt.json",
-    BASE / ".hardening-runtime/gate7-r2/preflight-r4/lifecycle-guard-receipt.json",
-    BASE / ".hardening-runtime/gate7-r2/preflight-r4/coordinator-guard-receipt.json",
-    BASE / ".hardening-runtime/gate7-r2/preflight-r4/runpod-inventory-receipt.json",
-    BASE / ".hardening-runtime/gate7-r2/preflight-r4/live-readiness-redacted.json",
+    BASE / "HARDENING_GATE7_EXPANDED_SOURCE_BINDINGS_R2.json",
+    BASE / "HARDENING_GATE7_EXPANDED_LOCAL_PREFLIGHT_RECEIPT_R2.json",
+    BASE / ".hardening-runtime/gate7-r2/preflight-r5/unit-tests-receipt.json",
+    BASE / ".hardening-runtime/gate7-r2/preflight-r5/public-canary-aggregate.json",
+    BASE / ".hardening-runtime/gate7-r2/preflight-r5/memory-profile.json",
+    BASE / ".hardening-runtime/gate7-r2/preflight-r5/bulk-sql-public/manifest.json",
+    BASE / ".hardening-runtime/gate7-r2/preflight-r5/bundle/PAYLOAD_TREE.json",
+    BASE / ".hardening-runtime/gate7-r2/preflight-r5/bundle/TRANSFER_MANIFEST.json",
+    BASE / ".hardening-runtime/gate7-r2/preflight-r5/extracted-bundle-smoke-receipt.json",
+    BASE / ".hardening-runtime/gate7-r2/preflight-r5/gitleaks-receipt.json",
+    BASE / ".hardening-runtime/gate7-r2/preflight-r5/detect-secrets-receipt.json",
+    BASE / ".hardening-runtime/gate7-r2/preflight-r5/lifecycle-guard-receipt.json",
+    BASE / ".hardening-runtime/gate7-r2/preflight-r5/coordinator-guard-receipt.json",
+    BASE / ".hardening-runtime/gate7-r2/preflight-r5/runpod-inventory-receipt.json",
+    BASE / ".hardening-runtime/gate7-r2/preflight-r5/live-readiness-redacted.json",
+    BASE / "hardening-gate5/heldout_contract.py",
     BASE / "hardening-gate7/expanded_contract.py",
     BASE / "hardening-gate7/generate_expanded_inputs.py",
     BASE / "hardening-gate7/run_expanded_case.py",
@@ -54,7 +58,7 @@ FILES = (
     BASE / "s3-soak/coordinator_guard.py",
 )
 
-HEADER = """# Hardening Gate 7 Expanded Preflight Packet R1
+HEADER = """# Hardening Gate 7 Expanded Preflight Packet R2
 
 ## Decision requested
 
@@ -85,12 +89,14 @@ duplicated here. Their omission changes no source binding or execution rule.
 ## Mechanical state
 
 - Product candidate: `1c483b1930e629c9ecb6d73418b9554897dc08ad`
-- Gate 7B orchestration commit: `{commit}`
+- Gate 7B repair orchestration commit: `{commit}`
 - Hidden seed: absent
 - RunPod worker: absent
 - Active RunPod inventory: `[]`
 - Public canary: 84/84 GREEN, explicitly non-measured
-- AWS: stale session; human refresh required before CAMPAIGN_READY
+- Extracted-bundle canaries: PROMOTE and INVALID GREEN, explicitly non-measured
+- A01 and A02: deleted; active inventory empty; no hidden seed or measured row
+- AWS: live readiness must be GREEN before CAMPAIGN_READY
 - Required preflight: GLM GREEN and AGY GREEN, same packet hash, recusal clear
 - Stop boundary: Gate 7 only
 

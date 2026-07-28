@@ -20,6 +20,7 @@ CANDIDATE = "1c483b1930e629c9ecb6d73418b9554897dc08ad"
 PUBLIC_SEED_HEX = "0123456789abcdef" * 4
 
 HARNESS_FILES = (
+    "hardening-gate5/heldout_contract.py",
     "hardening-gate7/expanded_contract.py",
     "hardening-gate7/generate_expanded_inputs.py",
     "hardening-gate7/run_expanded_campaign.py",
@@ -230,6 +231,63 @@ def main() -> int:
     scan_root.mkdir()
     run(["/usr/bin/tar", "-xzf", str(bundle_root / "gate7-worker-bundle.tgz"),
          "-C", str(scan_root)], timeout=300)
+    with tempfile.TemporaryDirectory(prefix="ck-g7-extracted-smoke-") as temporary:
+        smoke_root = Path(temporary)
+        extracted = scan_root / "bundle"
+        seed = smoke_root / "public-seed.hex"
+        atomic_write(seed, (PUBLIC_SEED_HEX + "\n").encode("ascii"))
+        generated = smoke_root / "generated"
+        run([
+            sys.executable,
+            str(extracted / "hardening-gate7/generate_expanded_inputs.py"),
+            "--seed-file", str(seed),
+            "--campaign-id", "ck-g7-extracted-bundle-smoke-r1",
+            "--output-root", str(generated),
+        ], timeout=120)
+        observations: dict[str, dict[str, Any]] = {}
+        for order, slot_id in enumerate(("B-1-2", "D-FILE-LP1"), start=1):
+            observation = smoke_root / f"{slot_id}.json"
+            run([
+                sys.executable,
+                str(extracted / "hardening-gate7/run_expanded_case.py"),
+                "--case", str(generated / "inputs" / f"{slot_id}.json"),
+                "--trial-root", str(smoke_root / f"trial-{order}"),
+                "--output", str(observation),
+                "--packet-sha256", "2" * 64,
+                "--execution-order", str(order),
+                "--source-bindings-sha256", source["source_bindings_sha256"],
+            ], timeout=120)
+            observations[slot_id] = json.loads(observation.read_bytes())["observation"]
+        expected = {
+            "B-1-2": ("PROMOTE", "MAX_PROVEN_PREFIX"),
+            "D-FILE-LP1": ("INVALID", "AGGREGATE_LIMIT_EXCEEDED"),
+        }
+        for slot_id, pair in expected.items():
+            observed = observations[slot_id]
+            if (observed["observed_verdict"], observed["observed_reason"]) != pair:
+                raise FreezeError("EXTRACTED_BUNDLE_CANARY_MISMATCH:" + slot_id)
+        smoke_body = {
+            "version": "hardening-gate7-extracted-bundle-smoke-v1",
+            "archive_sha256": digest((bundle_root / "gate7-worker-bundle.tgz").read_bytes()),
+            "required_dependency": "hardening-gate5/heldout_contract.py",
+            "required_dependency_sha256": digest(
+                (extracted / "hardening-gate5/heldout_contract.py").read_bytes()
+            ),
+            "generator_from_extracted_bundle": True,
+            "known_canaries_measured": False,
+            "results": {
+                slot_id: {
+                    "verdict": observations[slot_id]["observed_verdict"],
+                    "reason": observations[slot_id]["observed_reason"],
+                }
+                for slot_id in sorted(observations)
+            },
+        }
+        smoke_receipt = dict(
+            smoke_body,
+            receipt_sha256=digest(canonical(smoke_body)),
+        )
+        atomic_write(output / "extracted-bundle-smoke-receipt.json", canonical(smoke_receipt))
     gitleaks = run([
         str(Path("/Users/kennethruedas/.local/bin/gitleaks")), "detect",
         "--source", str(scan_root), "--no-git", "--redact", "--exit-code", "1",
@@ -288,6 +346,7 @@ def main() -> int:
             "mutation_after_refusal_or_invalid"
         ],
         "transfer_scan_green": True,
+        "extracted_bundle_canaries_green": True,
         "lifecycle_guard_green": True,
         "coordinator_guard_green": True,
         "cockroach_readiness": readiness_record.get("cockroach_reachable"),

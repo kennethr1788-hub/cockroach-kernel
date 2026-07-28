@@ -59,6 +59,9 @@ class ExpandedGate7Tests(unittest.TestCase):
         paths = bundle.collect()
         rows = bundle.scan(paths)
         self.assertGreaterEqual(len(rows), 80)
+        self.assertIn(
+            Path("hardening-gate5/heldout_contract.py"), paths,
+        )
         self.assertEqual(sum(".s3-runtime" in row["path"] for row in rows), 0)
         self.assertEqual(sum(".hardening-runtime" in row["path"] for row in rows), 0)
 
