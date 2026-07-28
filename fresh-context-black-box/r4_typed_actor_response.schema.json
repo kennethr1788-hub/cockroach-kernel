@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "action": {
+      "enum": ["RUN_RECOVER", "STOP"]
+    },
+    "custody_root": {
+      "maxLength": 1024,
+      "type": "string"
+    },
+    "output_root": {
+      "maxLength": 1024,
+      "type": "string"
+    },
+    "rationale": {
+      "maxLength": 512,
+      "type": "string"
+    },
+    "representation_root": {
+      "maxLength": 1024,
+      "type": "string"
+    },
+    "request_path": {
+      "maxLength": 1024,
+      "type": "string"
+    },
+    "sandbox_root": {
+      "maxLength": 1024,
+      "type": "string"
+    },
+    "workspace_root": {
+      "maxLength": 1024,
+      "type": "string"
+    }
+  },
+  "required": [
+    "action",
+    "request_path",
+    "sandbox_root",
+    "workspace_root",
+    "representation_root",
+    "custody_root",
+    "output_root",
+    "rationale"
+  ],
+  "type": "object"
+}
