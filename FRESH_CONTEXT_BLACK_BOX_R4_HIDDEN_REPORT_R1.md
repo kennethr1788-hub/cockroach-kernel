@@ -1,6 +1,6 @@
 # R4 Hidden Black-Box Campaign R1 Report
 
-- `LOCAL_RESULT`: `GREEN_PENDING_INDEPENDENT_FINAL_AUDIT`
+- `RESULT`: `BLACK_BOX_R4_HIDDEN_R1_GREEN`
 - `CAMPAIGN_ID`: `bb-r4-0d77b0fc92ea`
 - `PRODUCT_CANDIDATE`: `1c483b1930e629c9ecb6d73418b9554897dc08ad`
 - `PREFLIGHT_PACKET_SHA256`: `4954d5eba05584b9faecc6db8c284de0222a3c4a10bfc9a1df53de760426ea54`
@@ -19,6 +19,8 @@
 - `RUNTIME_TEARDOWN_VERIFIED`: `true`
 - `SEED_COMMITMENT_REVEAL_MATCH`: `true`
 - `RERUN_AUTHORIZED`: `false`
+- `FINAL_JUDGE_PACKET_SHA256`: `0b3c9728d588f112bde35d7fa02404c90184f989856f553f41d927ece25aeae9`
+- `FINAL_JUDGE`: `glm-5.2 / GREEN / RECUSAL_CLEAR`
 
 ## Class results
 
@@ -51,6 +53,9 @@ authority fields, and teardown fields. Result:
 
 Post-run checks found zero active campaign runtime roots, zero loaded Ollama
 models, zero detected secrets in the evidence, and no private HOME path.
+
+Independent GLM 5.2 returned GREEN on the exact final packet hash with no
+blockers and with the known limits preserved.
 
 ## Scope limit
 

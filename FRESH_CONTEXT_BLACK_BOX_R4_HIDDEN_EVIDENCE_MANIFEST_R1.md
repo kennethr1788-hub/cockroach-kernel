@@ -63,3 +63,14 @@
 - Evidence secret findings: `0`
 - Private HOME paths in evidence: `0`
 - Evidence size: `164 KiB`
+
+## Final independent audit
+
+- Final judge packet SHA-256:
+  `0b3c9728d588f112bde35d7fa02404c90184f989856f553f41d927ece25aeae9`
+- Final GLM 5.2 receipt SHA-256:
+  `ea3801a9363b62d7895179f317704a21697d6e3fe825d696432fa0a6452b23ab`
+- Verdict: `GREEN`
+- Recusal: `CLEAR`
+- Scope: `narrow one-shot 18-session synthetic campaign only`
+- Rerun authorized: `false`

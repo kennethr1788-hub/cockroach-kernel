@@ -1,10 +1,10 @@
 # Resume State
 
-- `CURRENT_PHASE`: `BLACK_BOX_R4_HIDDEN_R1_LOCAL_GREEN_PENDING_FINAL_JUDGE`
+- `CURRENT_PHASE`: `BLACK_BOX_R4_HIDDEN_R1_COMPLETE_STOPPED`
 - `LAST_GREEN_GATE`: `HARDENING_6_RUN1_GREEN`
-- `NEXT_ALLOWED_ACTION`: Freeze the completed R4 hidden R1 evidence packet, obtain one exact-packet independent GLM final audit, and stop
+- `NEXT_ALLOWED_ACTION`: No further black-box execution is authorized; preserve R3 failure and the narrow R4 hidden GREEN evidence, then require a new plan and explicit authority for any downstream phase
 - `FORBIDDEN_ACTIONS`: Rerun or alter R3/R4 public evidence; create an R4 hidden seed before independent preflight GREEN; run more than one R4 hidden campaign; use RunPod or paid runtime; begin Gate 7; public actions; release; submission; HOME/live-memory mutation; credential exposure
-- `CURRENT_COMMIT`: `c598ad0594fc687aa29b2a189119219548ef0be3` (R4 R2 evidence-freeze commit; final judge receipt follows)
+- `CURRENT_COMMIT`: `21856f8c0c8e85e60249af1eadcbc82ea2956223` (R4 hidden R1 evidence-freeze commit; final judge receipt follows)
 - `CURRENT_COMMIT_AT_P9_PACKET_FREEZE`: `61d77d1704a3f074427f9f82b300abaaa201f79c`
 - `P9_IMPLEMENTATION_COMMIT`: `cbd58b3af9e1ce5c4ddf8885866b88e7e7c1ca0f`
 - `S3_PREFLIGHT_IMPLEMENTATION_COMMIT`: `9f9e1675b9d12e70e5531a196e33e28c76b9b68a`
@@ -13,8 +13,8 @@
 - `S3_PREFLIGHT_R4_REPAIR_COMMIT`: `06b54e8f61bf0fa227af3de2377a462e369d7d74`
 - `S3_PREFLIGHT_R6_REPAIR_COMMIT`: `8b1d5bd1038588527bd994eb8fcb5467cac47eac`
 - `S3_PREFLIGHT_R8_REPAIR_COMMIT`: `95408fb9386ced25b468c0957e86e8f73cb123e9`
-- `PENDING_BLOCKERS`: R3 remains permanently NOT_GREEN; R4 hidden R1 local evidence is GREEN but not independently accepted until final exact-packet GLM review
-- `REQUIRED_JUDGE_STATE`: Final GLM evidence audit required over the exact R4 hidden R1 packet; no rerun is authorized
+- `PENDING_BLOCKERS`: R3 remains permanently NOT_GREEN; R4 hidden R1 is narrow synthetic evidence and not broad external validation
+- `REQUIRED_JUDGE_STATE`: R4 hidden R1 final GLM 5.2 GREEN satisfied on exact packet; no rerun or downstream phase is authorized by this result
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
 - `P9_FINAL_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; RECUSAL_CLEAR`
@@ -23,7 +23,7 @@
 - `P9_JUDGE_EVIDENCE`: `evidence/p9-final-judges-r1/`
 - `RUNPOD_ATTEMPTS`: `8`
 - `RUNPOD_EXPOSURE`: `PRIOR_RECORDED_$1.189989_PLUS_GATE6_R3_THREE_ATTEMPTS_BILLING_PENDING_BOUNDED_MAX_$0.0393356667`
-- `LATEST_CHECKPOINT`: `FRESH_CONTEXT_BLACK_BOX_R4_HIDDEN_PLAN_R1.md`
+- `LATEST_CHECKPOINT`: `FRESH_CONTEXT_BLACK_BOX_R4_HIDDEN_REPORT_R1.md`
 - `BLACK_BOX_R3_STATUS`: `BLACK_BOX_R3_PREFLIGHT_GREEN`
 - `BLACK_BOX_R3_PRODUCT_CANDIDATE`: `1c483b1930e629c9ecb6d73418b9554897dc08ad`
 - `BLACK_BOX_R3_PLAN_SHA256`: `92f17ed947e874538b991f6281a3e4b67818a5a28820f07f7a12fbf3f5269adf`
@@ -42,6 +42,8 @@
 - `BLACK_BOX_R4_HIDDEN_R1_PREFLIGHT_JUDGE_STATE`: `GLM_5_2_GREEN; RECUSAL_CLEAR; SEED_CREATION_AND_18_LOCAL_SESSIONS_AUTHORIZED`
 - `BLACK_BOX_R4_HIDDEN_R1_CAMPAIGN_ID`: `bb-r4-0d77b0fc92ea`
 - `BLACK_BOX_R4_HIDDEN_R1_LOCAL_RESULT`: `GREEN; 18_OF_18_PASS; THREE_PASSES_PER_CLASS; ZERO_SAFETY_OR_INFRASTRUCTURE_FAILURES; TEARDOWN_GREEN; RERUN_FORBIDDEN`
+- `BLACK_BOX_R4_HIDDEN_R1_FINAL_PACKET_SHA256`: `0b3c9728d588f112bde35d7fa02404c90184f989856f553f41d927ece25aeae9`
+- `BLACK_BOX_R4_HIDDEN_R1_FINAL_JUDGE_STATE`: `GLM_5_2_GREEN; RECUSAL_CLEAR; NARROW_CLAIM_ONLY; RERUN_FORBIDDEN`
 - `BLACK_BOX_R3_HIDDEN_R2_PACKET_SHA256`: `9e9b54982ccfd18ea9ac9d0372bcce0536162baadd7e75386b144d75ee31f214`
 - `BLACK_BOX_R3_HIDDEN_R2_JUDGE_STATE`: `GLM_5_2_BLOCKED; RECUSAL_CLEAR; EXPLICIT_LOCAL_ACTOR_ROUTE_AUTHORIZATION_REQUIRED`
 - `BLACK_BOX_R3_HIDDEN_R3_PACKET_SHA256`: `654dc5086aedafa9a174ba1c4538990604a471e4ad0a8030236dfff9f2e6f44a`
