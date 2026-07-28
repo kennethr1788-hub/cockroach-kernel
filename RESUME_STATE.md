@@ -1,10 +1,10 @@
 # Resume State
 
-- `CURRENT_PHASE`: `HARDENING_GATE7_RUN2_GATE7C_PREFLIGHT`
-- `LAST_GREEN_GATE`: `GATE7A_CONTINUITY_GREEN`
-- `NEXT_ALLOWED_ACTION`: Freeze the byte-complete sanitized Gate 7C packet and obtain same-hash GLM and AGY GREEN; only then refresh project-local AWS login and begin bounded RunPod readiness
-- `FORBIDDEN_ACTIONS`: Create the hidden seed; create a RunPod worker before Gate 7C same-hash GLM and AGY GREEN; mutate the frozen product candidate; begin Gate 8, S3-R2, release, publication, video, or submission; mutate HOME/live memory; expose credentials
-- `CURRENT_COMMIT`: `d06f53d434957cd23c811a51ab026736e6bfa590` (Gate 7C lane-schema repair checkpoint)
+- `CURRENT_PHASE`: `HARDENING_GATE7_RUN2_AWS_HUMAN_LOGIN_GATE`
+- `LAST_GREEN_GATE`: `GATE7C_SAME_HASH_GREEN`
+- `NEXT_ALLOWED_ACTION`: Kenneth refreshes the project-local AWS login; then rerun live readiness and begin the bounded RunPod readiness envelope only if GREEN
+- `FORBIDDEN_ACTIONS`: Create the hidden seed before CAMPAIGN_READY; create a RunPod worker before AWS readiness is GREEN; mutate the frozen product candidate; begin Gate 8, S3-R2, release, publication, video, or submission; mutate HOME/live memory; expose credentials
+- `CURRENT_COMMIT`: `777e3588bc4b07f0a3ea78c7c5831aa087f6869b` (final Gate 7C packet checkpoint; judge receipt follows)
 - `GATE7_EXECUTION_PROMPT_SHA256`: `936c9ae62191e5d8daa0cbd7ef4287d77777e6c761694d6d6d8789842dcb454f`
 - `GATE7_EXPANDED_PLAN_SHA256`: `0f58b51c07d25d4643b98524e53f171d6e9c0d667c46e0718b07f40f27c1d7e7`
 - `GATE7_PRODUCT_CANDIDATE`: `1c483b1930e629c9ecb6d73418b9554897dc08ad`
@@ -13,7 +13,8 @@
 - `GATE7B_STATE`: `LOCAL_GREEN; 84_OF_84_PUBLIC_CANARY_GREEN_NON_MEASURED; HIDDEN_SEED_ABSENT; RUNPOD_ABSENT; AWS_LOGIN_PENDING`
 - `GATE7B_PREFLIGHT_RECEIPT_SHA256`: `c708b5c6eeaf32b23a26f0af1faf86a42dc778d7de422d2df5a05a6e613256f2`
 - `GATE7B_SOURCE_BINDINGS_SHA256`: `e250304d3f48096cd094ebeda259161b650d23eb3434ab1f6417d1d6695da067`
-- `GATE7C_STATE`: `PENDING_SAME_HASH_GLM_AND_AGY_PREFLIGHT`
+- `GATE7C_PACKET_SHA256`: `1f154522ef5c1e31661782b9ced4dce373c54d710e789d650eeb2adc40155843`
+- `GATE7C_STATE`: `GLM_5_2_GREEN; AGY_GREEN; SAME_HASH; RECUSAL_CLEAR`
 - `GATE7_AWS_READINESS`: `HUMAN_ACTION_REQUIRED_BEFORE_CAMPAIGN_READY`
 - `CURRENT_COMMIT_AT_P9_PACKET_FREEZE`: `61d77d1704a3f074427f9f82b300abaaa201f79c`
 - `P9_IMPLEMENTATION_COMMIT`: `cbd58b3af9e1ce5c4ddf8885866b88e7e7c1ca0f`
@@ -23,8 +24,8 @@
 - `S3_PREFLIGHT_R4_REPAIR_COMMIT`: `06b54e8f61bf0fa227af3de2377a462e369d7d74`
 - `S3_PREFLIGHT_R6_REPAIR_COMMIT`: `8b1d5bd1038588527bd994eb8fcb5467cac47eac`
 - `S3_PREFLIGHT_R8_REPAIR_COMMIT`: `95408fb9386ced25b468c0957e86e8f73cb123e9`
-- `PENDING_BLOCKERS`: R3 remains permanently NOT_GREEN; R4 hidden R1 is narrow synthetic evidence and not broad external validation
-- `REQUIRED_JUDGE_STATE`: R4 hidden R1 final GLM 5.2 GREEN satisfied on exact packet; no rerun or downstream phase is authorized by this result
+- `PENDING_BLOCKERS`: Project-local AWS session is stale; Kenneth must complete interactive AWS login before provider readiness or RunPod creation
+- `REQUIRED_JUDGE_STATE`: Gate 7C GLM 5.2 and AGY same-hash GREEN satisfied; final measured-campaign GLM and AGY review remains required after execution
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
 - `P9_FINAL_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; RECUSAL_CLEAR`
