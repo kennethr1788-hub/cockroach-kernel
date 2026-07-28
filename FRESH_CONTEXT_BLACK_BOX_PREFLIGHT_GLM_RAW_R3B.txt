@@ -1,0 +1,13 @@
+glm-zai: served by glm-5.2
+```text
+VERDICT: GREEN
+SERVED_MODEL: glm-5.2
+PACKET_SHA256: 2a273eabffa107e0056c512dcc10b6f34398220fe97c949924552e9843bfb8f0
+RECUSAL: CLEAR
+BLOCKERS:
+- none
+NON_BLOCKING_LIMITATIONS:
+- macOS Seatbelt behavior and process attribution edge cases noted for direct proof during hidden campaign
+NEXT_ACTION:
+- obtain separate hidden-campaign authorization
+```

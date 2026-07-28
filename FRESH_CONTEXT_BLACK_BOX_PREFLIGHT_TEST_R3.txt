@@ -1,0 +1,10 @@
+test_candidate_bindings_are_current (fresh-context-black-box.test_r3_preflight.R3PreflightUnitTests.test_candidate_bindings_are_current) ... ok
+test_clean_ledger_and_all_required_faults (fresh-context-black-box.test_r3_preflight.R3PreflightUnitTests.test_clean_ledger_and_all_required_faults) ... ok
+test_profile_is_deny_default_and_network_denied (fresh-context-black-box.test_r3_preflight.R3PreflightUnitTests.test_profile_is_deny_default_and_network_denied) ... ok
+test_residue_mutations_and_clean_control (fresh-context-black-box.test_r3_preflight.R3PreflightUnitTests.test_residue_mutations_and_clean_control) ... ok
+test_scorer_rejects_all_faults_and_allows_public_discovery (fresh-context-black-box.test_r3_preflight.R3PreflightUnitTests.test_scorer_rejects_all_faults_and_allows_public_discovery) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.007s
+
+OK
