@@ -10,6 +10,8 @@
 - `MEASURED_EXECUTIONS`: `0`
 - `RUNPOD_RUNNING_INVENTORY`: `[]`
 - `GATE7`: `FORBIDDEN`
+- `JUDGE_AMENDMENT_COMMIT`: `c9873c0fcc356316742ffc7a5c5bd1bbbbeed55a`
+- `RUNPOD_SCHEDULE_SHA256`: `c5311d2e31a2d455b66611fc3277b18628d064abcb449468466ead7f8cede425`
 
 Provider creation remains forbidden until a fresh packet containing the judge
 substitution authorization, amendment, historical recusal, isolation source,
