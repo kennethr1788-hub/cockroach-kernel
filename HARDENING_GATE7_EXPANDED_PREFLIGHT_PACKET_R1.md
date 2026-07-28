@@ -29,7 +29,7 @@ duplicated here. Their omission changes no source binding or execution rule.
 ## Mechanical state
 
 - Product candidate: `1c483b1930e629c9ecb6d73418b9554897dc08ad`
-- Gate 7B orchestration commit: `57f1666fa53ca62ad9ac1b9fe7347b8b0277e3d9`
+- Gate 7B orchestration commit: `c316380e589b8dc2caf5d81468591a4809151f41`
 - Hidden seed: absent
 - RunPod worker: absent
 - Active RunPod inventory: `[]`
@@ -51,11 +51,28 @@ judge.
 
 ## Required output
 
-Return only:
+Return exactly one lane-specific block. Never emit, simulate, or predict the
+other lane's verdict.
+
+GLM returns only:
 
 PACKET_SHA256: <exact supplied hash>
-JUDGE: GLM | AGY
+JUDGE: GLM
 VERDICT: GREEN | NOT_GREEN | BLOCKED | INSUFFICIENT_EVIDENCE | RECUSAL_REQUIRED
+BLOCKERS:
+- ...
+NON_BLOCKING_RISKS:
+- ...
+EVIDENCE_GAPS:
+- ...
+RECUSAL_CHECK: clear | recusal_required
+REQUIRED_RERUNS:
+- ...
+
+AGY returns only:
+
+PACKET_SHA256: <exact supplied hash>
+AGY_VERDICT: GREEN | NOT_GREEN | BLOCKED | INSUFFICIENT_EVIDENCE | RECUSAL_REQUIRED
 BLOCKERS:
 - ...
 NON_BLOCKING_RISKS:
@@ -1084,8 +1101,8 @@ release, or submission in the same execution authority.
 
 ## FILE: HARDENING_GATE7_EXPANDED_STATUS_R1.md
 
-BYTE_COUNT: 1823
-SHA256_SANITIZED: 889ba96c0c7979a3fd2c8ab64e25472c60ec06cd909f162c3bdaef10335fa2ae
+BYTE_COUNT: 1932
+SHA256_SANITIZED: 74a225956e772d7dec29b8e2bd63f2a8c67e01d896273c51b759ee7bac45bd5e
 
 <<<BEGIN_EXACT_SANITIZED_BYTES>>>
 # Hardening Gate 7 Expanded Status R1
@@ -1094,10 +1111,10 @@ SHA256_SANITIZED: 889ba96c0c7979a3fd2c8ab64e25472c60ec06cd909f162c3bdaef10335fa2
 - `LAST_GREEN_GATE`: `GATE7A_CONTINUITY_GREEN`
 - `PRODUCT_CANDIDATE`: `1c483b1930e629c9ecb6d73418b9554897dc08ad`
 - `GATE7B_HARNESS_COMMIT`: `8c66c3c6a5121bae6fc3a4d0240a39883e983027`
-- `GATE7B_SOURCE_BINDING_COMMIT`: `dda203824b03f780d2650f8b033734b2b2608490`
+- `GATE7B_SOURCE_BINDING_COMMIT`: `d06f53d434957cd23c811a51ab026736e6bfa590`
 - `GATE7B_PRIOR_EVIDENCE_COMMIT`: `1b0b706be514f41b0ffb05349ec52bac7c60bfb5`
-- `GATE7B_PREFLIGHT_RECEIPT_SHA256`: `05aae03f10de70f4cc221356001a530b73f5ae9836e7db7c587722338c4fc999`
-- `GATE7B_SOURCE_BINDINGS_SHA256`: `7206c577b6ecb46b4d3dda33e731b9e06fec282bc49bfcc6c6d0587f96d9c159`
+- `GATE7B_PREFLIGHT_RECEIPT_SHA256`: `c708b5c6eeaf32b23a26f0af1faf86a42dc778d7de422d2df5a05a6e613256f2`
+- `GATE7B_SOURCE_BINDINGS_SHA256`: `e250304d3f48096cd094ebeda259161b650d23eb3434ab1f6417d1d6695da067`
 - `SCORED_EXECUTIONS_PLANNED`: `84`
 - `PUBLIC_CANARY`: `84_OF_84_GREEN_NON_MEASURED`
 - `FALSE_PROMOTIONS`: `0`
@@ -1111,6 +1128,7 @@ SHA256_SANITIZED: 889ba96c0c7979a3fd2c8ab64e25472c60ec06cd909f162c3bdaef10335fa2
 - `RUNPOD_AUTHORIZATION`: `PRESENT_BUT_NOT_YET_ACTIONABLE`
 - `REQUIRED_NEXT_GATE`: `SAME_HASH_GLM_AND_AGY_PREFLIGHT_GREEN`
 - `PRIOR_GATE7C_PACKET`: `SUPERSEDED; AGY_WRAPPER_SIZE_REJECTION_BEFORE_MODEL_INVOCATION`
+- `PRIOR_GATE7C_JUDGE_ATTEMPT`: `SUPERSEDED; GLM_IDENTITY_VIOLATION_REPAIRED; AGY_SCHEMA_REJECTION_REPAIRED`
 - `FORBIDDEN`: `HIDDEN_SEED, RUNPOD_CREATE, MEASURED_EXECUTION, GATE8, S3_R2, RELEASE`
 
 The AWS login is deliberately not bypassed and is not classified as a product
@@ -1600,10 +1618,10 @@ SHA256_SANITIZED: fc63b6208282243ef110a92629a857f74b34bee883c03c242d5ace8f71f40d
 ## FILE: HARDENING_GATE7_EXPANDED_SOURCE_BINDINGS_R1.json
 
 BYTE_COUNT: 5239
-SHA256_SANITIZED: f39f0068753020a5f3544cf9840fba9bf4f3a85d3444d374cdf76db67ad33ef1
+SHA256_SANITIZED: 4c186f89859b2ce5a3a52adb1e5afb3d61fc5fd1c76f3955598090d9305a433b
 
 <<<BEGIN_EXACT_SANITIZED_BYTES>>>
-{"candidate_commit":"1c483b1930e629c9ecb6d73418b9554897dc08ad","harness_files":[{"bytes":10220,"path":"hardening-gate7/expanded_contract.py","sha256":"ec9dc2ad6e88ce68b14ab76986e5e2732e2523277e2ddbacdb7accb04b2dfb21"},{"bytes":11243,"path":"hardening-gate7/generate_expanded_inputs.py","sha256":"929907ea6feade92a529ceaa4509f44e9434acf0ff5a723591a9e16603d8403c"},{"bytes":9841,"path":"hardening-gate7/run_expanded_campaign.py","sha256":"df38e8b40dc2665a205eb6e7e3e887d8b55195beebc7d276769086dceb8ea993"},{"bytes":7149,"path":"hardening-gate7/run_expanded_case.py","sha256":"6d074e1a39903df961f1c4198f45bbf96a481eb4d2d438ebd6f8634ae27f6048"},{"bytes":14815,"path":"hardening-gate7/score_expanded_campaign.py","sha256":"b2ea30337e7d77def6b7656f7b62b7eb4dab77a3d280f89ea2e91ccf699e0241"},{"bytes":21881,"path":"hardening-gate7/surface_cases.py","sha256":"d7d21dec5daf51b03c35672689e5ec36512181f2315300b2c7007a50bbb9e05c"},{"bytes":4598,"path":"hardening-gate7/prepare_hidden_campaign.py","sha256":"17f1a70d3565643170c497345210e466e72511b0e77981779c84bd8ceb5908f7"},{"bytes":17888,"path":"hardening-gate7/live_bulk_controller.py","sha256":"b4220d94a6f4a716453450288c33a16a6f7f26bf5e009a1e33ad17a768016be9"},{"bytes":5065,"path":"hardening-gate7/preflight_live_check.py","sha256":"9c05507981339df4ac84db570c7dd7b040faf20f03f882645b873e99a7f5c4c3"},{"bytes":6666,"path":"hardening-gate7/build_expanded_bundle.py","sha256":"f4253a336a8a579f9c8a3e63ca2fddc081ecb963c813c002734d64632179d51b"},{"bytes":12745,"path":"hardening-gate7/freeze_expanded_preflight.py","sha256":"7d6a1d3111440ba93828598666bfea54486eaeda830ff27858ccfed224ef62f5"},{"bytes":7128,"path":"hardening-gate7/build_expanded_preflight_packet.py","sha256":"90cf932a415629c3b73f935c02b86b1aeb376ed8c5fc74a4828f2ed3a8fb673e"},{"bytes":4884,"path":"hardening-gate7/profile_memory.py","sha256":"a6d021e5ba4633e682a0e842ab95d64c341475aa81a8c781d063df3262212fc1"},{"bytes":3749,"path":"hardening-gate7/make_vectors.py","sha256":"6550ac2957c0e9eedf0f19ae271a4629d6f4e4c30ec9f78ab389be7eee29d6f6"},{"bytes":10155,"path":"hardening-gate7/run_campaign.py","sha256":"3fd21973fa611cac9da782eed89bf2c113b5c3f65dbb53726cc7b021fbf761d2"},{"bytes":5115,"path":"hardening-gate7/run_trial.py","sha256":"1a167aafd2b54299d798ed83e02d94cc6fceddcecfc92f635b2ccc3676c09881"},{"bytes":11860,"path":"hardening-gate7/test_expanded_gate7.py","sha256":"a184212a71539241db7d57d837fe4fa875cc3d8ac65f07595063649d56f82675"},{"bytes":3641,"path":"hardening-gate7/test_gate7.py","sha256":"bc23a82bbd3fa755b5380b535d0183bddf5b46843ba16f9b5ef2723ebb2a6db8"},{"bytes":9354,"path":"hardening-gate6/seccomp_exec.py","sha256":"64a4c1d7e68238dbeb4959a8bc52cba0b0aaa5499131a145e0b31d5cb8c52ab3"},{"bytes":7950,"path":"s2-soak/lifecycle_guard.py","sha256":"4644aa756f47c3d53b82c239657ce22605d4a9caab3e6a8651c4f459d95c6f0c"},{"bytes":40888,"path":"s2-soak/run_soak.py","sha256":"b4b788b59f7ab95358251623ef89088c4c31c218a431f6d240b7980f9f81d01c"},{"bytes":7732,"path":"s3-soak/protocol.py","sha256":"20bfeac7bf3923394fa193343c904b67bde3efee62561b530fad6ff96d41178c"},{"bytes":18711,"path":"s3-soak/worker.py","sha256":"0d533e83ae7df392e3150f592998f8b56590c34c5d788c5889e50d1746449a31"},{"bytes":11901,"path":"s3-soak/host_coordinator.py","sha256":"a8e66b7dde462fb0866eac8bd5f09612e3cd34b2159e3e4923bd79fd358d6619"},{"bytes":14263,"path":"s3-soak/cloud_adapter.py","sha256":"98ecbc1e8950c554a1b9ababf9bb36193bfd79bdb4d5f774439aee237b755b2a"},{"bytes":8205,"path":"s3-soak/remote_bridge.py","sha256":"f96168781fe453eae52db953ebafdb7a710b8ffc0894629b9405f0816ac07685"},{"bytes":13411,"path":"s3-soak/coordinator_guard.py","sha256":"f488607329bf8f20f18f275ad983a3847e54ea2b1754a7bfc38370a209a3ef37"},{"bytes":1553,"path":"HARDENING_GATE7_EXPANDED_THRESHOLDS_R1.json","sha256":"3b048cc3ed8411158cad56914f87f906748364f58baba1267cb59902c529165a"},{"bytes":887,"path":"HARDENING_GATE7_EXPANDED_RUNPOD_SCHEDULE_R1.json","sha256":"fc63b6208282243ef110a92629a857f74b34bee883c03c242d5ace8f71f40d4a"},{"bytes":9410,"path":"HARDENING_GATE7_EXPANDED_EXECUTION_WIRING_R1.md","sha256":"9637cfea04b2f476bafdddd50b76200e78c99f95f0bdb74582bd7ad64530ab7a"}],"orchestration_head":"dda203824b03f780d2650f8b033734b2b2608490","preflight_contract_sha256":"bf54eff86e806ae258f8d5373b5a39d112075f1bc22b0fe0b76b899e5a4c0926","product_files":[{"bytes":29813,"path":"cockroach_kernel/recovery_surface.py","sha256":"bf13e0cdac3a846c48308ad79c89772e1b533a73dec340f13e25180500f69586"},{"bytes":3786,"path":"p4-verifier/verifier.py","sha256":"a7ee1fc513da7d4f0633bfabdd4e5f3ee4947b829b292416d6aad7d87d767c40"},{"bytes":3850,"path":"p7-recovery/fresh_context.py","sha256":"4fbe7ff002bcb26ceb649295a4a4e94d79f7aecbab10eff1e7a75d1c63c577f7"},{"bytes":27591,"path":"p7-recovery/records.py","sha256":"97971f48852e94ada7ecabb7dd0390442b4bde11f38fbdb069b10d396355fd34"},{"bytes":25347,"path":"p9-cloud/live_completion.py","sha256":"29d31dd0ca23755233e0bf1c00413e43708ada02efe3ace9da10afb04348b09b"},{"bytes":11609,"path":"p9-cloud/records.py","sha256":"d8eeb6d9836fcf1d0462cc1edc530dbfd8d3e9dc6d74cb56d8c37df0f68bc3aa"}],"source_bindings_sha256":"7206c577b6ecb46b4d3dda33e731b9e06fec282bc49bfcc6c6d0587f96d9c159","version":"hardening-gate7-expanded-source-bindings-v1"}
+{"candidate_commit":"1c483b1930e629c9ecb6d73418b9554897dc08ad","harness_files":[{"bytes":10220,"path":"hardening-gate7/expanded_contract.py","sha256":"ec9dc2ad6e88ce68b14ab76986e5e2732e2523277e2ddbacdb7accb04b2dfb21"},{"bytes":11243,"path":"hardening-gate7/generate_expanded_inputs.py","sha256":"929907ea6feade92a529ceaa4509f44e9434acf0ff5a723591a9e16603d8403c"},{"bytes":9841,"path":"hardening-gate7/run_expanded_campaign.py","sha256":"df38e8b40dc2665a205eb6e7e3e887d8b55195beebc7d276769086dceb8ea993"},{"bytes":7149,"path":"hardening-gate7/run_expanded_case.py","sha256":"6d074e1a39903df961f1c4198f45bbf96a481eb4d2d438ebd6f8634ae27f6048"},{"bytes":14815,"path":"hardening-gate7/score_expanded_campaign.py","sha256":"b2ea30337e7d77def6b7656f7b62b7eb4dab77a3d280f89ea2e91ccf699e0241"},{"bytes":21881,"path":"hardening-gate7/surface_cases.py","sha256":"d7d21dec5daf51b03c35672689e5ec36512181f2315300b2c7007a50bbb9e05c"},{"bytes":4598,"path":"hardening-gate7/prepare_hidden_campaign.py","sha256":"17f1a70d3565643170c497345210e466e72511b0e77981779c84bd8ceb5908f7"},{"bytes":17888,"path":"hardening-gate7/live_bulk_controller.py","sha256":"b4220d94a6f4a716453450288c33a16a6f7f26bf5e009a1e33ad17a768016be9"},{"bytes":5065,"path":"hardening-gate7/preflight_live_check.py","sha256":"9c05507981339df4ac84db570c7dd7b040faf20f03f882645b873e99a7f5c4c3"},{"bytes":6666,"path":"hardening-gate7/build_expanded_bundle.py","sha256":"f4253a336a8a579f9c8a3e63ca2fddc081ecb963c813c002734d64632179d51b"},{"bytes":12745,"path":"hardening-gate7/freeze_expanded_preflight.py","sha256":"7d6a1d3111440ba93828598666bfea54486eaeda830ff27858ccfed224ef62f5"},{"bytes":7494,"path":"hardening-gate7/build_expanded_preflight_packet.py","sha256":"20a963bb5d1a57f039462ce0172fd2cd65d14c533f8d8189f88368099a5a926f"},{"bytes":4884,"path":"hardening-gate7/profile_memory.py","sha256":"a6d021e5ba4633e682a0e842ab95d64c341475aa81a8c781d063df3262212fc1"},{"bytes":3749,"path":"hardening-gate7/make_vectors.py","sha256":"6550ac2957c0e9eedf0f19ae271a4629d6f4e4c30ec9f78ab389be7eee29d6f6"},{"bytes":10155,"path":"hardening-gate7/run_campaign.py","sha256":"3fd21973fa611cac9da782eed89bf2c113b5c3f65dbb53726cc7b021fbf761d2"},{"bytes":5115,"path":"hardening-gate7/run_trial.py","sha256":"1a167aafd2b54299d798ed83e02d94cc6fceddcecfc92f635b2ccc3676c09881"},{"bytes":11860,"path":"hardening-gate7/test_expanded_gate7.py","sha256":"a184212a71539241db7d57d837fe4fa875cc3d8ac65f07595063649d56f82675"},{"bytes":3641,"path":"hardening-gate7/test_gate7.py","sha256":"bc23a82bbd3fa755b5380b535d0183bddf5b46843ba16f9b5ef2723ebb2a6db8"},{"bytes":9354,"path":"hardening-gate6/seccomp_exec.py","sha256":"64a4c1d7e68238dbeb4959a8bc52cba0b0aaa5499131a145e0b31d5cb8c52ab3"},{"bytes":7950,"path":"s2-soak/lifecycle_guard.py","sha256":"4644aa756f47c3d53b82c239657ce22605d4a9caab3e6a8651c4f459d95c6f0c"},{"bytes":40888,"path":"s2-soak/run_soak.py","sha256":"b4b788b59f7ab95358251623ef89088c4c31c218a431f6d240b7980f9f81d01c"},{"bytes":7732,"path":"s3-soak/protocol.py","sha256":"20bfeac7bf3923394fa193343c904b67bde3efee62561b530fad6ff96d41178c"},{"bytes":18711,"path":"s3-soak/worker.py","sha256":"0d533e83ae7df392e3150f592998f8b56590c34c5d788c5889e50d1746449a31"},{"bytes":11901,"path":"s3-soak/host_coordinator.py","sha256":"a8e66b7dde462fb0866eac8bd5f09612e3cd34b2159e3e4923bd79fd358d6619"},{"bytes":14263,"path":"s3-soak/cloud_adapter.py","sha256":"98ecbc1e8950c554a1b9ababf9bb36193bfd79bdb4d5f774439aee237b755b2a"},{"bytes":8205,"path":"s3-soak/remote_bridge.py","sha256":"f96168781fe453eae52db953ebafdb7a710b8ffc0894629b9405f0816ac07685"},{"bytes":13411,"path":"s3-soak/coordinator_guard.py","sha256":"f488607329bf8f20f18f275ad983a3847e54ea2b1754a7bfc38370a209a3ef37"},{"bytes":1553,"path":"HARDENING_GATE7_EXPANDED_THRESHOLDS_R1.json","sha256":"3b048cc3ed8411158cad56914f87f906748364f58baba1267cb59902c529165a"},{"bytes":887,"path":"HARDENING_GATE7_EXPANDED_RUNPOD_SCHEDULE_R1.json","sha256":"fc63b6208282243ef110a92629a857f74b34bee883c03c242d5ace8f71f40d4a"},{"bytes":9410,"path":"HARDENING_GATE7_EXPANDED_EXECUTION_WIRING_R1.md","sha256":"9637cfea04b2f476bafdddd50b76200e78c99f95f0bdb74582bd7ad64530ab7a"}],"orchestration_head":"d06f53d434957cd23c811a51ab026736e6bfa590","preflight_contract_sha256":"bf54eff86e806ae258f8d5373b5a39d112075f1bc22b0fe0b76b899e5a4c0926","product_files":[{"bytes":29813,"path":"cockroach_kernel/recovery_surface.py","sha256":"bf13e0cdac3a846c48308ad79c89772e1b533a73dec340f13e25180500f69586"},{"bytes":3786,"path":"p4-verifier/verifier.py","sha256":"a7ee1fc513da7d4f0633bfabdd4e5f3ee4947b829b292416d6aad7d87d767c40"},{"bytes":3850,"path":"p7-recovery/fresh_context.py","sha256":"4fbe7ff002bcb26ceb649295a4a4e94d79f7aecbab10eff1e7a75d1c63c577f7"},{"bytes":27591,"path":"p7-recovery/records.py","sha256":"97971f48852e94ada7ecabb7dd0390442b4bde11f38fbdb069b10d396355fd34"},{"bytes":25347,"path":"p9-cloud/live_completion.py","sha256":"29d31dd0ca23755233e0bf1c00413e43708ada02efe3ace9da10afb04348b09b"},{"bytes":11609,"path":"p9-cloud/records.py","sha256":"d8eeb6d9836fcf1d0462cc1edc530dbfd8d3e9dc6d74cb56d8c37df0f68bc3aa"}],"source_bindings_sha256":"e250304d3f48096cd094ebeda259161b650d23eb3434ab1f6417d1d6695da067","version":"hardening-gate7-expanded-source-bindings-v1"}
 <<<END_EXACT_SANITIZED_BYTES>>>
 
 
@@ -1612,52 +1630,52 @@ SHA256_SANITIZED: f39f0068753020a5f3544cf9840fba9bf4f3a85d3444d374cdf76db67ad33e
 ## FILE: HARDENING_GATE7_EXPANDED_LOCAL_PREFLIGHT_RECEIPT_R1.json
 
 BYTE_COUNT: 2745
-SHA256_SANITIZED: 04932b4d1fee2c3ebe29907dcb8a2b65b117922c7f0625ceb93d344c195b3941
+SHA256_SANITIZED: ce190ed69191c4efc987b65ad820484005635a0c7fe15472db46e63d72fc013d
 
 <<<BEGIN_EXACT_SANITIZED_BYTES>>>
-{"active_runpod_inventory":[],"aws_login_required_before_campaign_ready":true,"aws_readiness":"HUMAN_ACTION_REQUIRED","candidate_commit":"1c483b1930e629c9ecb6d73418b9554897dc08ad","cockroach_readiness":true,"coordinator_guard_green":true,"files":{"bulk-sql-public/cleanup.sql":"c9952119270909edeb41999a9e07e219e77a47928bb05c200a29d43af86fd8aa","bulk-sql-public/insert-events.sql":"ea1609afe974624653434886a959180250fcd97bb9845b3e2c9709268ece85ec","bulk-sql-public/insert-receipts.sql":"ad9ae77130339da3502b0f7650c883bc7935dc85ce8b5697724abfa69330aa2e","bulk-sql-public/insert-tasks.sql":"1f52a6ac659bc2345c605f015e068e0e2358ad1da81bde78c165d7eeb99c5a58","bulk-sql-public/insert-vectors.sql":"28dde76d12c820476399155021e21593b45cb19d23ffa11f0405088ec6f93306","bulk-sql-public/manifest.json":"329262534762cc65c751edd3c41abe2d220c2a62a296502fcb620a5cab3a080a","bulk-sql-public/query-specs.json":"2f2709262355bcbd53bc3e5b585fba01e8cbd8673f110158bc81fdb3e5f804d2","bundle-build-receipt.json":"67602f41064649752ba7815b8513535ae81b2eed17c181d9d31c10f6f71572ae","bundle/PAYLOAD_TREE.json":"8c7e913cc84e2a776571d55981edfa5032c44de594fe8d2266d109f38504e3d4","bundle/TRANSFER_MANIFEST.json":"3288ee6f058ea2eb5daf3a2989d895ba37c10d7f7ddb0e6f6fa911b329800f95","coordinator-guard-receipt.json":"e07bf5e38afe31d3e9119a07f15c11fa06ce928e57152794688f7dae22217eea","detect-secrets-receipt.json":"bb3ccdacf88bbf96daff9486b671ed46334f13fa3f03dcfd65457735786f2193","gitleaks-receipt.json":"6f7e352e2081fefc7def85fa3687f95116141cf4b1199a904cdf470ce6a37f4a","lifecycle-guard-receipt.json":"ce0c818b92327895e3fe5949560b0b4bf8000b085c409dc5120fefbac2c30576","live-readiness-redacted.json":"ba2af5d113c22534a3cea485ea5a06a79a4f0ca98a6816bcf1f221bb376f0889","memory-profile.json":"9894c0a3ae132468be204edac2d0b620bd6da69b24631ac7c6e7aa502bf47c4e","public-canary-aggregate.json":"510fdf0b16c2f05b96cbb9d0a26179c888db025479f276e7b789d8a277982dbe","runpod-inventory-receipt.json":"c0170fd1ccaf462a52676dbf21976a63bc7cdda69e1ced6975282166442d7bfa","unit-tests-receipt.json":"ab44ee34c34e27bbf670d761c132bc58704c41c0d2e3981c254932d2ffa08735"},"hidden_seed_exists":false,"lifecycle_guard_green":true,"orchestration_head":"dda203824b03f780d2650f8b033734b2b2608490","preflight_contract_sha256":"bf54eff86e806ae258f8d5373b5a39d112075f1bc22b0fe0b76b899e5a4c0926","public_canary_false_promotions":0,"public_canary_mutation_after_refusal_or_invalid":0,"public_canary_passes":84,"receipt_sha256":"05aae03f10de70f4cc221356001a530b73f5ae9836e7db7c587722338c4fc999","runpod_created":false,"source_bindings_sha256":"7206c577b6ecb46b4d3dda33e731b9e06fec282bc49bfcc6c6d0587f96d9c159","transfer_scan_green":true,"unit_tests_green":true,"version":"hardening-gate7-expanded-local-preflight-v1"}
+{"active_runpod_inventory":[],"aws_login_required_before_campaign_ready":true,"aws_readiness":"HUMAN_ACTION_REQUIRED","candidate_commit":"1c483b1930e629c9ecb6d73418b9554897dc08ad","cockroach_readiness":true,"coordinator_guard_green":true,"files":{"bulk-sql-public/cleanup.sql":"c9952119270909edeb41999a9e07e219e77a47928bb05c200a29d43af86fd8aa","bulk-sql-public/insert-events.sql":"ea1609afe974624653434886a959180250fcd97bb9845b3e2c9709268ece85ec","bulk-sql-public/insert-receipts.sql":"ad9ae77130339da3502b0f7650c883bc7935dc85ce8b5697724abfa69330aa2e","bulk-sql-public/insert-tasks.sql":"1f52a6ac659bc2345c605f015e068e0e2358ad1da81bde78c165d7eeb99c5a58","bulk-sql-public/insert-vectors.sql":"28dde76d12c820476399155021e21593b45cb19d23ffa11f0405088ec6f93306","bulk-sql-public/manifest.json":"329262534762cc65c751edd3c41abe2d220c2a62a296502fcb620a5cab3a080a","bulk-sql-public/query-specs.json":"2f2709262355bcbd53bc3e5b585fba01e8cbd8673f110158bc81fdb3e5f804d2","bundle-build-receipt.json":"f8ecd13283b3dfc9e85037a0c026631e1476331d7eeb84386fe41fafc2b3aea8","bundle/PAYLOAD_TREE.json":"8c7e913cc84e2a776571d55981edfa5032c44de594fe8d2266d109f38504e3d4","bundle/TRANSFER_MANIFEST.json":"3288ee6f058ea2eb5daf3a2989d895ba37c10d7f7ddb0e6f6fa911b329800f95","coordinator-guard-receipt.json":"44e5fffa217ed16f0dea8d4fb9a507107f86bca0060a4e9377f45637cea9d39d","detect-secrets-receipt.json":"46ad6f5bd67ac2d8f2c22487362ebaf1b90728b9240a0f06bd2a83e905e0d0ab","gitleaks-receipt.json":"c6c350e8230d84a9d7f84606b382c449247c44355629e076fd9234c0a433b802","lifecycle-guard-receipt.json":"ca62ce16648dad7c04f1a31a447859f57f33e86f77724411c871408e0566c765","live-readiness-redacted.json":"3d183f118cb52802bd862106c8f79fa8ac17741bb51c68418078220a5f0517ae","memory-profile.json":"645c33003445927c8836d6f155901edfa528a2e000ce8d5e6827e8fc9ff040e4","public-canary-aggregate.json":"739d1d77ae8f71882f1cb080b9babd3402226bf7461fe9e694c653cdecb9ef11","runpod-inventory-receipt.json":"c0170fd1ccaf462a52676dbf21976a63bc7cdda69e1ced6975282166442d7bfa","unit-tests-receipt.json":"d2d923b5acdc392023bb520a5856e6af3d71d888d0dab560b999c7ffef0852e9"},"hidden_seed_exists":false,"lifecycle_guard_green":true,"orchestration_head":"d06f53d434957cd23c811a51ab026736e6bfa590","preflight_contract_sha256":"bf54eff86e806ae258f8d5373b5a39d112075f1bc22b0fe0b76b899e5a4c0926","public_canary_false_promotions":0,"public_canary_mutation_after_refusal_or_invalid":0,"public_canary_passes":84,"receipt_sha256":"c708b5c6eeaf32b23a26f0af1faf86a42dc778d7de422d2df5a05a6e613256f2","runpod_created":false,"source_bindings_sha256":"e250304d3f48096cd094ebeda259161b650d23eb3434ab1f6417d1d6695da067","transfer_scan_green":true,"unit_tests_green":true,"version":"hardening-gate7-expanded-local-preflight-v1"}
 <<<END_EXACT_SANITIZED_BYTES>>>
 
 
 ---
 
-## FILE: .hardening-runtime/gate7-r2/preflight-r3/unit-tests-receipt.json
+## FILE: .hardening-runtime/gate7-r2/preflight-r4/unit-tests-receipt.json
 
 BYTE_COUNT: 250
-SHA256_SANITIZED: ab44ee34c34e27bbf670d761c132bc58704c41c0d2e3981c254932d2ffa08735
+SHA256_SANITIZED: d2d923b5acdc392023bb520a5856e6af3d71d888d0dab560b999c7ffef0852e9
 
 <<<BEGIN_EXACT_SANITIZED_BYTES>>>
-{"command":["/Library/Developer/CommandLineTools/usr/bin/python3","-m","unittest","discover","-s","hardening-gate7","-p","test*.py","-v"],"exit":0,"output_bytes":1328,"output_sha256":"0290d9059045064c56e9413803ee78e86ba3c64ec420c506b37a6f5df332b152"}
+{"command":["/Library/Developer/CommandLineTools/usr/bin/python3","-m","unittest","discover","-s","hardening-gate7","-p","test*.py","-v"],"exit":0,"output_bytes":1328,"output_sha256":"7b9b1cbb8c34a5e08c07063b01a17813ca542e6545b12ba458a8be251a815454"}
 <<<END_EXACT_SANITIZED_BYTES>>>
 
 
 ---
 
-## FILE: .hardening-runtime/gate7-r2/preflight-r3/public-canary-aggregate.json
+## FILE: .hardening-runtime/gate7-r2/preflight-r4/public-canary-aggregate.json
 
 BYTE_COUNT: 2581
-SHA256_SANITIZED: 510fdf0b16c2f05b96cbb9d0a26179c888db025479f276e7b789d8a277982dbe
+SHA256_SANITIZED: 739d1d77ae8f71882f1cb080b9babd3402226bf7461fe9e694c653cdecb9ef11
 
 <<<BEGIN_EXACT_SANITIZED_BYTES>>>
-{"aggregate_sha256":"07a334532292617069b1370421328b6fdeaeb5cf7d78bb25972e292c97ce877f","all_case_slots_unique":true,"behavior_failure_count":0,"by_block":{"A_ORIGINAL_CONTROL":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":7},"A_ORIGINAL_DETERMINISM":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":15},"A_ORIGINAL_FAILURE":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":21},"B_TOPOLOGY_WORKFLOW":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":20},"C_COMPOUND":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":9},"D_EXACT_BOUNDARY":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":6},"E_TEMPORAL_CUSTODY":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":6}},"by_topology":{"NONE":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":43},"T1_SMALL_SINGLE_PACKAGE":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":11},"T2_MEDIUM_SERVICE":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":18},"T3_MONOREPO":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":6},"T4_MIXED_LANGUAGE":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":6}},"by_workflow":{"NONE":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":64},"W1_CONFLICTING_EDITS":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":4},"W2_PARTIAL_DELETION":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":4},"W3_STALE_EVIDENCE":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":4},"W4_MISSING_HISTORY":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":4},"W5_OVERSIZED_STATE":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":4}},"campaign_id":"ck-g7-public-preflight-r1","candidate_commit":"1c483b1930e629c9ecb6d73418b9554897dc08ad","cleanup_green_count":84,"correct_stable_reason_count":84,"expected_promotion_count":23,"false_promotions":0,"green":true,"input_manifest_sha256":"23247bfa4b274d0d35995372d05c6627a21fa702ccf953fcf51077f650a412fe","latency_ns":{"max":50903375,"p50":1276333,"p95":43540625,"p99":50903375},"limitations":["COMMON_SYNTHETIC_GENERATOR","COMMON_PRODUCT_IMPLEMENTATION","NOT_STATISTICALLY_INDEPENDENT","NOT_ARBITRARY_UNDELETE","NOT_PUBLIC_USER_EVIDENCE"],"mutation_after_refusal_or_invalid":0,"oracle_manifest_sha256":"960f1a9ffb18122f58ad7556daee511a10489ab81dccc9c9963e2e9926efc275","original_43_semantics_preserved":true,"packet_sha256":"2222222222222222222222222222222222222222222222222222222222222222","pass_count":84,"post_reveal_tuning_events":0,"promoted_acceptance_count":23,"promoted_manifest_exact_match_count":23,"raw_manifest_sha256":"770d79bbad3b9f1a484368b1211b68389ffbfa1b3711198a96d669f5677ce4d1","representative_determinism":{"INVALID":true,"PROMOTE":true,"REFUSE":true},"require_isolation":false,"residue_count":0,"safety_failure_count":0,"scored_execution_count":84,"version":"hardening-gate7-expanded-aggregate-v1"}
+{"aggregate_sha256":"10f639831b60381a5297890c61254baddcd0f5db3899362175b39843417e414c","all_case_slots_unique":true,"behavior_failure_count":0,"by_block":{"A_ORIGINAL_CONTROL":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":7},"A_ORIGINAL_DETERMINISM":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":15},"A_ORIGINAL_FAILURE":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":21},"B_TOPOLOGY_WORKFLOW":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":20},"C_COMPOUND":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":9},"D_EXACT_BOUNDARY":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":6},"E_TEMPORAL_CUSTODY":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":6}},"by_topology":{"NONE":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":43},"T1_SMALL_SINGLE_PACKAGE":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":11},"T2_MEDIUM_SERVICE":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":18},"T3_MONOREPO":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":6},"T4_MIXED_LANGUAGE":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":6}},"by_workflow":{"NONE":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":64},"W1_CONFLICTING_EDITS":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":4},"W2_PARTIAL_DELETION":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":4},"W3_STALE_EVIDENCE":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":4},"W4_MISSING_HISTORY":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":4},"W5_OVERSIZED_STATE":{"FAIL_BEHAVIOR":0,"FAIL_SAFETY":0,"PASS":4}},"campaign_id":"ck-g7-public-preflight-r1","candidate_commit":"1c483b1930e629c9ecb6d73418b9554897dc08ad","cleanup_green_count":84,"correct_stable_reason_count":84,"expected_promotion_count":23,"false_promotions":0,"green":true,"input_manifest_sha256":"23247bfa4b274d0d35995372d05c6627a21fa702ccf953fcf51077f650a412fe","latency_ns":{"max":53292958,"p50":1282459,"p95":36926458,"p99":53292958},"limitations":["COMMON_SYNTHETIC_GENERATOR","COMMON_PRODUCT_IMPLEMENTATION","NOT_STATISTICALLY_INDEPENDENT","NOT_ARBITRARY_UNDELETE","NOT_PUBLIC_USER_EVIDENCE"],"mutation_after_refusal_or_invalid":0,"oracle_manifest_sha256":"960f1a9ffb18122f58ad7556daee511a10489ab81dccc9c9963e2e9926efc275","original_43_semantics_preserved":true,"packet_sha256":"2222222222222222222222222222222222222222222222222222222222222222","pass_count":84,"post_reveal_tuning_events":0,"promoted_acceptance_count":23,"promoted_manifest_exact_match_count":23,"raw_manifest_sha256":"5cdb4b364fdc024b5846d6e227ade94cf696a9f906bdd0382ba83c15ffa1e066","representative_determinism":{"INVALID":true,"PROMOTE":true,"REFUSE":true},"require_isolation":false,"residue_count":0,"safety_failure_count":0,"scored_execution_count":84,"version":"hardening-gate7-expanded-aggregate-v1"}
 <<<END_EXACT_SANITIZED_BYTES>>>
 
 
 ---
 
-## FILE: .hardening-runtime/gate7-r2/preflight-r3/memory-profile.json
+## FILE: .hardening-runtime/gate7-r2/preflight-r4/memory-profile.json
 
 BYTE_COUNT: 607
-SHA256_SANITIZED: 9894c0a3ae132468be204edac2d0b620bd6da69b24631ac7c6e7aa502bf47c4e
+SHA256_SANITIZED: 645c33003445927c8836d6f155901edfa528a2e000ce8d5e6827e8fc9ff040e4
 
 <<<BEGIN_EXACT_SANITIZED_BYTES>>>
-{"canonical_input_bytes":{"events":2520000,"receipts":512000,"tasks":196890,"vectors":8559026},"canonical_input_bytes_total":11787916,"concurrency":4,"counts":{"end_to_end_aws_calls":12,"events":20000,"receipts":4000,"tasks":2000,"vector_queries":200,"vectors":20000},"generation_elapsed_ms":1319,"platform":"Darwin","profile_sha256":"936ed2cd085698915be4d4a181c3d3a1c80e86b290267594b7cf76f31f9987a6","python":"3.9.6","row_stream_sha256":"d074a9ba0ade649bd44897c1b48bf05f6e08a59db0fb4aa7fd51271f844c2e2d","scope":"OFFLINE_INPUT_SIZING_NOT_DATABASE_PERFORMANCE","version":"hardening-gate7-memory-profile-v1"}
+{"canonical_input_bytes":{"events":2520000,"receipts":512000,"tasks":196890,"vectors":8559026},"canonical_input_bytes_total":11787916,"concurrency":4,"counts":{"end_to_end_aws_calls":12,"events":20000,"receipts":4000,"tasks":2000,"vector_queries":200,"vectors":20000},"generation_elapsed_ms":1310,"platform":"Darwin","profile_sha256":"91694ec706512727296f9cacfc0d86629e1b1b190add81607b767c7ebecc36ac","python":"3.9.6","row_stream_sha256":"d074a9ba0ade649bd44897c1b48bf05f6e08a59db0fb4aa7fd51271f844c2e2d","scope":"OFFLINE_INPUT_SIZING_NOT_DATABASE_PERFORMANCE","version":"hardening-gate7-memory-profile-v1"}
 <<<END_EXACT_SANITIZED_BYTES>>>
 
 
 ---
 
-## FILE: .hardening-runtime/gate7-r2/preflight-r3/bulk-sql-public/manifest.json
+## FILE: .hardening-runtime/gate7-r2/preflight-r4/bulk-sql-public/manifest.json
 
 BYTE_COUNT: 1059
 SHA256_SANITIZED: 329262534762cc65c751edd3c41abe2d220c2a62a296502fcb620a5cab3a080a
@@ -1669,7 +1687,7 @@ SHA256_SANITIZED: 329262534762cc65c751edd3c41abe2d220c2a62a296502fcb620a5cab3a08
 
 ---
 
-## FILE: .hardening-runtime/gate7-r2/preflight-r3/bundle/PAYLOAD_TREE.json
+## FILE: .hardening-runtime/gate7-r2/preflight-r4/bundle/PAYLOAD_TREE.json
 
 BYTE_COUNT: 12487
 SHA256_SANITIZED: 8c7e913cc84e2a776571d55981edfa5032c44de594fe8d2266d109f38504e3d4
@@ -1681,7 +1699,7 @@ SHA256_SANITIZED: 8c7e913cc84e2a776571d55981edfa5032c44de594fe8d2266d109f38504e3
 
 ---
 
-## FILE: .hardening-runtime/gate7-r2/preflight-r3/bundle/TRANSFER_MANIFEST.json
+## FILE: .hardening-runtime/gate7-r2/preflight-r4/bundle/TRANSFER_MANIFEST.json
 
 BYTE_COUNT: 675
 SHA256_SANITIZED: 3288ee6f058ea2eb5daf3a2989d895ba37c10d7f7ddb0e6f6fa911b329800f95
@@ -1693,55 +1711,55 @@ SHA256_SANITIZED: 3288ee6f058ea2eb5daf3a2989d895ba37c10d7f7ddb0e6f6fa911b329800f
 
 ---
 
-## FILE: .hardening-runtime/gate7-r2/preflight-r3/gitleaks-receipt.json
+## FILE: .hardening-runtime/gate7-r2/preflight-r4/gitleaks-receipt.json
 
 BYTE_COUNT: 327
-SHA256_SANITIZED: f4169be70d288810cd0b9a932d54b4e6a94b738a42f1c3f6412b0bd820c93037
+SHA256_SANITIZED: 95eac068e60df223fb457fbb45e2a46adff8edb39bbb759eff620d35b203244a
 
 <<<BEGIN_EXACT_SANITIZED_BYTES>>>
-{"command":["<LOCAL_ROOT>/.local/bin/gitleaks","detect","--source","<LOCAL_ROOT>/sandbox/cockroach-kernel-build-20260725/.hardening-runtime/gate7-r2/preflight-r3/bundle-scan","--no-git","--redact","--exit-code","1"],"exit":0,"output_bytes":145,"output_sha256":"a68c9e3f553248ba5651c543cfd7e4c4fac4b8d966bf535ef67b04d9ef29b866"}
+{"command":["<LOCAL_ROOT>/.local/bin/gitleaks","detect","--source","<LOCAL_ROOT>/sandbox/cockroach-kernel-build-20260725/.hardening-runtime/gate7-r2/preflight-r4/bundle-scan","--no-git","--redact","--exit-code","1"],"exit":0,"output_bytes":145,"output_sha256":"22a6009d420989497a84706a634c2c792a1cc203af408e24b5cbb4aed2512379"}
 <<<END_EXACT_SANITIZED_BYTES>>>
 
 
 ---
 
-## FILE: .hardening-runtime/gate7-r2/preflight-r3/detect-secrets-receipt.json
+## FILE: .hardening-runtime/gate7-r2/preflight-r4/detect-secrets-receipt.json
 
 BYTE_COUNT: 303
-SHA256_SANITIZED: 73afad85c8051f1971c6d9518a12ea00681553fe3dc834009368edd85c35157b
+SHA256_SANITIZED: 222822546ef0a5608795a26f7ef42b8426aeb04913d6b73b727750d6ac1e73bb
 
 <<<BEGIN_EXACT_SANITIZED_BYTES>>>
-{"command":["<LOCAL_ROOT>/.local/bin/detect-secrets","scan","<LOCAL_ROOT>/sandbox/cockroach-kernel-build-20260725/.hardening-runtime/gate7-r2/preflight-r3/bundle-scan/bundle","--all-files"],"exit":0,"output_bytes":17471,"output_sha256":"e4ad1b37bca54d1cca4a2a47737404ec58b42ac13756ade79cc9337c38ad036f"}
+{"command":["<LOCAL_ROOT>/.local/bin/detect-secrets","scan","<LOCAL_ROOT>/sandbox/cockroach-kernel-build-20260725/.hardening-runtime/gate7-r2/preflight-r4/bundle-scan/bundle","--all-files"],"exit":0,"output_bytes":17471,"output_sha256":"9c1eb6294b865e4c4b8d1e7c57920e7562de0bd81aab66987e52dc4308bb0b26"}
 <<<END_EXACT_SANITIZED_BYTES>>>
 
 
 ---
 
-## FILE: .hardening-runtime/gate7-r2/preflight-r3/lifecycle-guard-receipt.json
+## FILE: .hardening-runtime/gate7-r2/preflight-r4/lifecycle-guard-receipt.json
 
 BYTE_COUNT: 203
-SHA256_SANITIZED: ce0c818b92327895e3fe5949560b0b4bf8000b085c409dc5120fefbac2c30576
+SHA256_SANITIZED: ca62ce16648dad7c04f1a31a447859f57f33e86f77724411c871408e0566c765
 
 <<<BEGIN_EXACT_SANITIZED_BYTES>>>
-{"command":["/Library/Developer/CommandLineTools/usr/bin/python3","s2-soak/prove_guard.py"],"exit":0,"output_bytes":207,"output_sha256":"9e22a4ae74b56a754a710fc6cac792cdab5ccf79fc498ff7534f301731d370ac"}
+{"command":["/Library/Developer/CommandLineTools/usr/bin/python3","s2-soak/prove_guard.py"],"exit":0,"output_bytes":207,"output_sha256":"701e7b28eaa173207eed147ea8a23c830aff516cee70a6bdac354f4daa87e0f9"}
 <<<END_EXACT_SANITIZED_BYTES>>>
 
 
 ---
 
-## FILE: .hardening-runtime/gate7-r2/preflight-r3/coordinator-guard-receipt.json
+## FILE: .hardening-runtime/gate7-r2/preflight-r4/coordinator-guard-receipt.json
 
 BYTE_COUNT: 215
-SHA256_SANITIZED: e07bf5e38afe31d3e9119a07f15c11fa06ce928e57152794688f7dae22217eea
+SHA256_SANITIZED: 44e5fffa217ed16f0dea8d4fb9a507107f86bca0060a4e9377f45637cea9d39d
 
 <<<BEGIN_EXACT_SANITIZED_BYTES>>>
-{"command":["/Library/Developer/CommandLineTools/usr/bin/python3","s3-soak/prove_coordinator_guard.py"],"exit":0,"output_bytes":749,"output_sha256":"37f45c578465da10bc11e5396c6e8d563c04aaaef084184feb7b1142999a4296"}
+{"command":["/Library/Developer/CommandLineTools/usr/bin/python3","s3-soak/prove_coordinator_guard.py"],"exit":0,"output_bytes":749,"output_sha256":"d2315ed31fdb7d8a96e70182e606c60f3051ff4df20f8de2009a8dffc8b0280e"}
 <<<END_EXACT_SANITIZED_BYTES>>>
 
 
 ---
 
-## FILE: .hardening-runtime/gate7-r2/preflight-r3/runpod-inventory-receipt.json
+## FILE: .hardening-runtime/gate7-r2/preflight-r4/runpod-inventory-receipt.json
 
 BYTE_COUNT: 180
 SHA256_SANITIZED: c0170fd1ccaf462a52676dbf21976a63bc7cdda69e1ced6975282166442d7bfa
@@ -1753,13 +1771,13 @@ SHA256_SANITIZED: c0170fd1ccaf462a52676dbf21976a63bc7cdda69e1ced6975282166442d7b
 
 ---
 
-## FILE: .hardening-runtime/gate7-r2/preflight-r3/live-readiness-redacted.json
+## FILE: .hardening-runtime/gate7-r2/preflight-r4/live-readiness-redacted.json
 
 BYTE_COUNT: 683
-SHA256_SANITIZED: ba2af5d113c22534a3cea485ea5a06a79a4f0ca98a6816bcf1f221bb376f0889
+SHA256_SANITIZED: 3d183f118cb52802bd862106c8f79fa8ac17741bb51c68418078220a5f0517ae
 
 <<<BEGIN_EXACT_SANITIZED_BYTES>>>
-{"aws_authenticated":false,"aws_failure_class":"UNKNOWN_EXTERNAL_COMMAND","aws_failure_output_sha256":"8918626fb25f7587c2e58f09168f9aa6e1e61f22fb29027d059b0c1049515316","aws_latency_ms":443,"aws_profile":"ck-s3","aws_region":"us-west-2","aws_return_code":255,"cockroach_latency_ms":2905,"cockroach_output_sha256":"804a35024e7d9edb6254a882cb1410d10f023851994a74d71a06ee61c99eeab6","cockroach_reachable":true,"credential_bytes_recorded":false,"next_action":"PROJECT_LOCAL_AWS_LOGIN_BEFORE_CAMPAIGN_READY","read_only":true,"receipt_sha256":"d95ccb2dc7a855c2eae9a6d217cb6e206481f18a9992ac593fa63ecd85f23d02","status":"HUMAN_ACTION_REQUIRED","version":"hardening-gate7-live-readiness-v1"}
+{"aws_authenticated":false,"aws_failure_class":"UNKNOWN_EXTERNAL_COMMAND","aws_failure_output_sha256":"8918626fb25f7587c2e58f09168f9aa6e1e61f22fb29027d059b0c1049515316","aws_latency_ms":424,"aws_profile":"ck-s3","aws_region":"us-west-2","aws_return_code":255,"cockroach_latency_ms":3062,"cockroach_output_sha256":"804a35024e7d9edb6254a882cb1410d10f023851994a74d71a06ee61c99eeab6","cockroach_reachable":true,"credential_bytes_recorded":false,"next_action":"PROJECT_LOCAL_AWS_LOGIN_BEFORE_CAMPAIGN_READY","read_only":true,"receipt_sha256":"ffb4e34ff7a3273a31925a35b3d9a7c9d9ab4f8a06dbb063fc50d4c868e66813","status":"HUMAN_ACTION_REQUIRED","version":"hardening-gate7-live-readiness-v1"}
 <<<END_EXACT_SANITIZED_BYTES>>>
 
 
