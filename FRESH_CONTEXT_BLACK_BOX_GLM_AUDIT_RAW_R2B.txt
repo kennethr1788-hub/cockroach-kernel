@@ -1,0 +1,20 @@
+glm-zai: served by glm-5.2
+```text
+VERDICT: GREEN
+SERVED_MODEL: glm-5.2
+RECUSAL: CLEAR
+R1_CONCERN_1_SANDBOX_RESIDUE: RESOLVED
+R1_CONCERN_2_SOURCE_INSPECTION: RESOLVED
+BLOCKERS:
+- none
+NON_BLOCKING_RISKS:
+- While the plan contractually mandates strict OS-level enforcement and telemetry hash-chains, the actual fidelity of these mechanisms relies on correct implementation which will only be verified at the preflight stage.
+EVIDENCE_REQUIRED_BEFORE_EXECUTION:
+- Preflight evidence of OS-level sandbox deny canaries successfully blocking sentinel access.
+- Preflight residue scanner mutation test results demonstrating detection of fd, socket, and cross-session artifacts.
+- Preflight scorer calibration logs proving deterministic classification of actor commands vs product runtime reads.
+CLAIM_BOUNDARY_ASSESSMENT:
+- The plan explicitly restricts claims to a private, blinded evaluation of 18 synthetic scenarios across 6 classes. It accurately acknowledges that this does not replace Gate 7, public testing, scale validation, or human review, and narrowly limits the claim to fresh-context usability and safe behavior.
+RECOMMENDED_MINIMAL_CORRECTIONS:
+- none
+```
