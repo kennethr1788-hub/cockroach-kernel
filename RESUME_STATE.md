@@ -4,7 +4,7 @@
 - `LAST_GREEN_GATE`: `HARDENING_5_EVIDENCE_CANDIDATE_R2_GREEN`
 - `NEXT_ALLOWED_ACTION`: Freeze the attestation-binding fix and attempt-01 teardown evidence into a new packet; replacement creation requires fresh GLM 5.2 plus AGY same-hash GREEN
 - `FORBIDDEN_ACTIONS`: Begin Gate 7; create a replacement Gate 6 worker before the R3 packet and both same-hash reviews are GREEN; upload the benchmark payload before a capability canary passes; relabel seccomp as a namespace; relabel Gate 5 smoke as Gate 6 evidence; claim any Gate 6 measured row before execution; change candidate 8718fbe; claim Gate 6 or S3 GREEN; public actions; release; submission; HOME/live-memory mutation; credential exposure; any worker credential transfer
-- `CURRENT_COMMIT`: `0e5badb13fe6be6802d3531af90f21df86fcee68`
+- `CURRENT_COMMIT`: `1087abd4563d16917f452ea88f52dca2f7bbe95c`
 - `CURRENT_COMMIT_AT_P9_PACKET_FREEZE`: `61d77d1704a3f074427f9f82b300abaaa201f79c`
 - `P9_IMPLEMENTATION_COMMIT`: `cbd58b3af9e1ce5c4ddf8885866b88e7e7c1ca0f`
 - `S3_PREFLIGHT_IMPLEMENTATION_COMMIT`: `9f9e1675b9d12e70e5531a196e33e28c76b9b68a`
@@ -49,6 +49,7 @@
 - `HARDENING_GATE6_R3_AGY_R2_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; RECUSAL_CLEAR; EXACT_SAME_HASH`
 - `HARDENING_GATE6_R3_AGY_R3_PREFLIGHT_PACKET_SHA256`: `feae49cac213118fb78fcfdb7d72c2d1df7f75293916a6db8d9274212b78187b`
 - `HARDENING_GATE6_R3_AGY_R3_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; RECUSAL_CLEAR; EXACT_SAME_HASH`
+- `HARDENING_GATE6_R3_AGY_R4_PREFLIGHT_PACKET_SHA256`: `e2044a8a3e24515a6114d85ef4eb57dca991a9bb8dc5c6a4332937ea91965bcb`
 - `HARDENING_PLAN_SHA256`: `1ce953127138a35bd9588d686bbefefc0b012e8f2188a8fea736842030d57310`
 - `HARDENING_GATE0_PACKET_SHA256`: `cdc0e17c9ba6fa58c1304d6bf96e22ebdea1dcfb43084505a9aa706886425823`
 - `HARDENING_GATE0_JUDGE_STATE`: `GLM_4_7_GREEN`
