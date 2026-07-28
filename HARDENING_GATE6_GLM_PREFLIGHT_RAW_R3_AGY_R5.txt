@@ -1,0 +1,17 @@
+PACKET_SHA256: 0e047e3abfd69cc5660c88a283eb8595e869dee575eadaa34409b74dfec5f468
+GLM_VERDICT: GREEN
+BLOCKERS:
+- none
+NON_BLOCKING_RISKS:
+- Local preflight host is macOS arm64 and cannot execute the Linux x86_64 seccomp filter; live kernel proof is correctly deferred to the mandatory remote capability canary before payload upload.
+- The seccomp launcher itself is invoked as `/usr/bin/python3` while the measured tool path is bound to its resolved target `/usr/bin/python3.10`; this is acceptable because the launcher is execution infrastructure, not a measured product tool, and the symlink resolves to the same byte-identical binary.
+- Exact provider charges for deleted attempts 01 and 02 remain PENDING; exposure is bounded by rate, lifetime, and the $25.00 aggregate ceiling, and unknown prelaunch price remains forbidden.
+- This preflight GREEN authorizes only attempt 03 (pre-payload isolation canary) and conditional subsequent measured campaign; it does not predict product performance or final-review outcome.
+- R5 is a rolling revision over prior R3-AGY-R4 GREEN on a different hash; only the resolved-Python provenance path and measured `--python` argument changed, which is consistent with the supersession trail.
+EVIDENCE_GAPS:
+- No measured 54-row evidence exists yet; intentional for preflight, but final-review evidence remains to be produced after canary GREEN, payload upload, measured campaign, retrieval, and teardown.
+- No live Linux kernel seccomp proof is present in this packet; deferred to remote canary per the frozen contract.
+- Final same-hash GLM 5.2 plus AGY review over a separately frozen final packet is still required after teardown and is not waived by this preflight.
+RECUSAL_CHECK: clear
+REQUIRED_RERUNS:
+- none
