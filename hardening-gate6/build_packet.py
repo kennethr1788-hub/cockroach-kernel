@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 
 
-HEADER = """# Hardening Gate 6 — Same-Hash Preflight Judge Packet R2
+HEADER = """# Hardening Gate 6 — Same-Hash Preflight Judge Packet {packet_revision}
 
 ## Judge contract
 
@@ -56,6 +56,7 @@ def atomic_write(path: Path, raw: bytes) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("output", type=Path)
+    parser.add_argument("--packet-revision", required=True)
     parser.add_argument("--orchestration-commit", required=True)
     parser.add_argument("--candidate-commit", required=True)
     parser.add_argument("files", nargs="+", type=Path)
@@ -66,7 +67,10 @@ def main() -> int:
     ):
         if len(value) != 40 or any(character not in "0123456789abcdef" for character in value):
             raise SystemExit(f"invalid {label}: {value!r}")
-    header = HEADER.replace("{orchestration_commit}", args.orchestration_commit)
+    if not args.packet_revision.startswith("R") or not args.packet_revision[1:].isdigit():
+        raise SystemExit(f"invalid packet revision: {args.packet_revision!r}")
+    header = HEADER.replace("{packet_revision}", args.packet_revision)
+    header = header.replace("{orchestration_commit}", args.orchestration_commit)
     header = header.replace("{candidate_commit}", args.candidate_commit)
     sections = [header.rstrip(), ""]
     for path in args.files:
