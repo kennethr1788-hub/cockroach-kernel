@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "action": {
+      "enum": ["RUN_RECOVER", "STOP"]
+    },
+    "invocation_id": {
+      "maxLength": 64,
+      "minLength": 8,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "type": "string"
+    },
+    "rationale": {
+      "maxLength": 512,
+      "type": "string"
+    }
+  },
+  "required": ["action", "invocation_id", "rationale"],
+  "type": "object"
+}
