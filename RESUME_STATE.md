@@ -1,10 +1,10 @@
 # Resume State
 
-- `CURRENT_PHASE`: `HARDENING_7_RUN2_FINAL_REVIEW_PENDING`
+- `CURRENT_PHASE`: `HARDENING_7_RUN2_BLOCKED`
 - `LAST_GREEN_GATE`: `GATE7C_SAME_HASH_GREEN`
-- `NEXT_ALLOWED_ACTION`: Commit the frozen closeout packet, run final independent GLM and AGY same-hash review, then record the blocked checkpoint and stop
+- `NEXT_ALLOWED_ACTION`: Stop; obtain fresh operator authorization to repair the bulk vector stage and durable logging, include and extracted-bundle-test the manifest helper, freeze a new packet, and run an entirely new measured campaign
 - `FORBIDDEN_ACTIONS`: Rerun or resume the measured bulk, hidden, or live worker tracks; create another RunPod worker; patch the accepted payload; mutate the frozen product candidate; begin Gate 8, S3-R2, release, publication, video, or submission; mutate HOME/live memory; expose credentials
-- `CURRENT_COMMIT`: `e3c6084ed6709f44c7b0098d9a1699cae698c53a` (bulk blocker checkpoint; final packet commit pending)
+- `CURRENT_COMMIT`: `98b2d220e03030fa14b912523023fb5852b2d3f4` (final packet schema checkpoint; blocked receipt commit follows)
 - `GATE7_EXECUTION_PROMPT_SHA256`: `936c9ae62191e5d8daa0cbd7ef4287d77777e6c761694d6d6d8789842dcb454f`
 - `GATE7_EXPANDED_PLAN_SHA256`: `0f58b51c07d25d4643b98524e53f171d6e9c0d667c46e0718b07f40f27c1d7e7`
 - `GATE7_PRODUCT_CANDIDATE`: `1c483b1930e629c9ecb6d73418b9554897dc08ad`
@@ -25,7 +25,7 @@
 - `S3_PREFLIGHT_R6_REPAIR_COMMIT`: `8b1d5bd1038588527bd994eb8fcb5467cac47eac`
 - `S3_PREFLIGHT_R8_REPAIR_COMMIT`: `95408fb9386ced25b468c0957e86e8f73cb123e9`
 - `PENDING_BLOCKERS`: `BULK_RESULT_MISSING_AFTER_PARTIAL_INSERT`; `PACKAGED_EVIDENCE_MANIFEST_HELPER_MISSING`; hidden campaign is 84/84 PASS, one-hour worker is GREEN, AWS margin probe is PASS, custody verification and teardown are GREEN, but both blockers remain load-bearing
-- `REQUIRED_JUDGE_STATE`: Final GLM and AGY review over exact packet SHA-256 `a27866a084b09d5d4a1e3aaa7202040897150348344e98f3d57fd92e8d1c24fd`; an honest terminal verdict is NOT_GREEN or BLOCKED under the conjunctive gate
+- `REQUIRED_JUDGE_STATE`: COMPLETE; GLM 5.2 NOT_GREEN and AGY Gemini 3.1 Pro High BLOCKED over exact packet SHA-256 `a27866a084b09d5d4a1e3aaa7202040897150348344e98f3d57fd92e8d1c24fd`; same hash and recusal clear
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
 - `P9_FINAL_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; RECUSAL_CLEAR`

@@ -1,6 +1,6 @@
 # Hardening Gate 7 Expanded Status R1
 
-- `STATUS`: `HARDENING_7_RUN2_FINAL_REVIEW_PENDING`
+- `STATUS`: `HARDENING_7_RUN2_BLOCKED`
 - `LAST_GREEN_GATE`: `GATE7C_SAME_HASH_GREEN`
 - `PRODUCT_CANDIDATE`: `1c483b1930e629c9ecb6d73418b9554897dc08ad`
 - `GATE7B_HARNESS_COMMIT`: `8c66c3c6a5121bae6fc3a4d0240a39883e983027`
@@ -33,7 +33,8 @@
 - `BULK_RESULT`: `BLOCKED; PARTIAL_INSERT_2000_TASKS_20000_EVENTS_4000_RECEIPTS_0_VECTORS; CANONICAL_RESULT_MISSING; CLEANUP_0_0_0_0`
 - `PACKAGED_MANIFEST_HELPER`: `BLOCKED; REQUIRED_HELPER_ABSENT; DETERMINISTIC_CUSTODY_FALLBACK_USED_AND_EXPLICITLY_LABELED`
 - `FINAL_PACKET_SHA256`: `a27866a084b09d5d4a1e3aaa7202040897150348344e98f3d57fd92e8d1c24fd`
-- `REQUIRED_NEXT_GATE`: `FINAL_SAME_HASH_GLM_AND_AGY_REVIEW; THEN_FREEZE_BLOCKED_CHECKPOINT`
+- `FINAL_JUDGE_STATE`: `GLM_5_2_NOT_GREEN; AGY_GEMINI_3_1_PRO_HIGH_BLOCKED; SAME_HASH; RECUSAL_CLEAR`
+- `REQUIRED_NEXT_GATE`: `FRESH_OPERATOR_AUTHORIZATION_FOR_REPAIRED_NEW_CANDIDATE_AND_ENTIRELY_NEW_MEASURED_CAMPAIGN`
 - `PRIOR_GATE7C_PACKET`: `SUPERSEDED; AGY_WRAPPER_SIZE_REJECTION_BEFORE_MODEL_INVOCATION`
 - `PRIOR_GATE7C_JUDGE_ATTEMPT`: `SUPERSEDED; GLM_IDENTITY_VIOLATION_REPAIRED; AGY_SCHEMA_REJECTION_REPAIRED`
 - `FORBIDDEN`: `ANY_MEASURED_RERUN_OR_RESUME, ANY_REPLACEMENT_WORKER, PRODUCT_MUTATION, GATE8, S3_R2, RELEASE, SUBMISSION`
@@ -64,11 +65,11 @@ safety replay, Lambda call, and CockroachDB operation, the post-final-exchange
 AWS identity probe passed, and retrieved custody manifests verified every
 file. Those are valid sub-results.
 
-Gate 7 is nevertheless blocked under its conjunctive acceptance law. The
+Gate 7 is blocked under its conjunctive acceptance law. The
 required 46,000-row bulk controller exited after partially inserting tasks,
 events, and receipts but before vectors or a canonical result receipt. The
 required packaged evidence-manifest helper was also absent. Synthetic bulk
 residue was cleaned to zero, the worker teardown is GREEN, and neither failed
-condition was rerun or patched. Final independent same-hash review is pending;
-it may recognize the valid sub-results but cannot convert either blocker to
-GREEN.
+condition was rerun or patched. Final independent same-hash review recognized
+the valid sub-results but returned GLM `NOT_GREEN` and AGY `BLOCKED`; neither
+blocker can be converted to GREEN.

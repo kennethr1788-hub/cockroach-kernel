@@ -117,3 +117,7 @@ Gate 8, S3-R2, release, and submission remain forbidden. A future repair would
 require fresh operator authorization because hidden generation and measured
 execution already occurred and the current prompt forbids a measured rerun.
 
+Final independent review confirmed the terminal outcome over packet SHA-256
+`a27866a084b09d5d4a1e3aaa7202040897150348344e98f3d57fd92e8d1c24fd`:
+exact-model GLM 5.2 returned `NOT_GREEN`, AGY Gemini 3.1 Pro High returned
+`BLOCKED`, and both were recusal-clear on the same hash.
