@@ -27,18 +27,18 @@ FILES = (
     BASE / "HARDENING_GATE7_EXPANDED_RUNPOD_SCHEDULE_R1.json",
     BASE / "HARDENING_GATE7_EXPANDED_SOURCE_BINDINGS_R1.json",
     BASE / "HARDENING_GATE7_EXPANDED_LOCAL_PREFLIGHT_RECEIPT_R1.json",
-    BASE / ".hardening-runtime/gate7-r2/preflight-r3/unit-tests-receipt.json",
-    BASE / ".hardening-runtime/gate7-r2/preflight-r3/public-canary-aggregate.json",
-    BASE / ".hardening-runtime/gate7-r2/preflight-r3/memory-profile.json",
-    BASE / ".hardening-runtime/gate7-r2/preflight-r3/bulk-sql-public/manifest.json",
-    BASE / ".hardening-runtime/gate7-r2/preflight-r3/bundle/PAYLOAD_TREE.json",
-    BASE / ".hardening-runtime/gate7-r2/preflight-r3/bundle/TRANSFER_MANIFEST.json",
-    BASE / ".hardening-runtime/gate7-r2/preflight-r3/gitleaks-receipt.json",
-    BASE / ".hardening-runtime/gate7-r2/preflight-r3/detect-secrets-receipt.json",
-    BASE / ".hardening-runtime/gate7-r2/preflight-r3/lifecycle-guard-receipt.json",
-    BASE / ".hardening-runtime/gate7-r2/preflight-r3/coordinator-guard-receipt.json",
-    BASE / ".hardening-runtime/gate7-r2/preflight-r3/runpod-inventory-receipt.json",
-    BASE / ".hardening-runtime/gate7-r2/preflight-r3/live-readiness-redacted.json",
+    BASE / ".hardening-runtime/gate7-r2/preflight-r4/unit-tests-receipt.json",
+    BASE / ".hardening-runtime/gate7-r2/preflight-r4/public-canary-aggregate.json",
+    BASE / ".hardening-runtime/gate7-r2/preflight-r4/memory-profile.json",
+    BASE / ".hardening-runtime/gate7-r2/preflight-r4/bulk-sql-public/manifest.json",
+    BASE / ".hardening-runtime/gate7-r2/preflight-r4/bundle/PAYLOAD_TREE.json",
+    BASE / ".hardening-runtime/gate7-r2/preflight-r4/bundle/TRANSFER_MANIFEST.json",
+    BASE / ".hardening-runtime/gate7-r2/preflight-r4/gitleaks-receipt.json",
+    BASE / ".hardening-runtime/gate7-r2/preflight-r4/detect-secrets-receipt.json",
+    BASE / ".hardening-runtime/gate7-r2/preflight-r4/lifecycle-guard-receipt.json",
+    BASE / ".hardening-runtime/gate7-r2/preflight-r4/coordinator-guard-receipt.json",
+    BASE / ".hardening-runtime/gate7-r2/preflight-r4/runpod-inventory-receipt.json",
+    BASE / ".hardening-runtime/gate7-r2/preflight-r4/live-readiness-redacted.json",
     BASE / "hardening-gate7/expanded_contract.py",
     BASE / "hardening-gate7/generate_expanded_inputs.py",
     BASE / "hardening-gate7/run_expanded_case.py",
@@ -107,11 +107,28 @@ judge.
 
 ## Required output
 
-Return only:
+Return exactly one lane-specific block. Never emit, simulate, or predict the
+other lane's verdict.
+
+GLM returns only:
 
 PACKET_SHA256: <exact supplied hash>
-JUDGE: GLM | AGY
+JUDGE: GLM
 VERDICT: GREEN | NOT_GREEN | BLOCKED | INSUFFICIENT_EVIDENCE | RECUSAL_REQUIRED
+BLOCKERS:
+- ...
+NON_BLOCKING_RISKS:
+- ...
+EVIDENCE_GAPS:
+- ...
+RECUSAL_CHECK: clear | recusal_required
+REQUIRED_RERUNS:
+- ...
+
+AGY returns only:
+
+PACKET_SHA256: <exact supplied hash>
+AGY_VERDICT: GREEN | NOT_GREEN | BLOCKED | INSUFFICIENT_EVIDENCE | RECUSAL_REQUIRED
 BLOCKERS:
 - ...
 NON_BLOCKING_RISKS:
