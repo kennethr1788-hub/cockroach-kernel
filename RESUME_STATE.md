@@ -1,9 +1,9 @@
 # Resume State
 
-- `CURRENT_PHASE`: `HARDENING_GATE7_RUN2_AWS_HUMAN_LOGIN_GATE`
+- `CURRENT_PHASE`: `HARDENING_GATE7_RUN2_PROVIDER_READINESS_ATTEMPT_A01`
 - `LAST_GREEN_GATE`: `GATE7C_SAME_HASH_GREEN`
-- `NEXT_ALLOWED_ACTION`: Kenneth refreshes the project-local AWS login; then rerun live readiness and begin the bounded RunPod readiness envelope only if GREEN
-- `FORBIDDEN_ACTIONS`: Create the hidden seed before CAMPAIGN_READY; create a RunPod worker before AWS readiness is GREEN; mutate the frozen product candidate; begin Gate 8, S3-R2, release, publication, video, or submission; mutate HOME/live memory; expose credentials
+- `NEXT_ALLOWED_ACTION`: Create and verify exactly one policy-compliant attempt A01 worker from the frozen request; delete on any mismatch before upload
+- `FORBIDDEN_ACTIONS`: Create the hidden seed before CAMPAIGN_READY; upload before returned worker verification; create a concurrent worker; mutate the frozen product candidate; begin Gate 8, S3-R2, release, publication, video, or submission; mutate HOME/live memory; expose credentials
 - `CURRENT_COMMIT`: `777e3588bc4b07f0a3ea78c7c5831aa087f6869b` (final Gate 7C packet checkpoint; judge receipt follows)
 - `GATE7_EXECUTION_PROMPT_SHA256`: `936c9ae62191e5d8daa0cbd7ef4287d77777e6c761694d6d6d8789842dcb454f`
 - `GATE7_EXPANDED_PLAN_SHA256`: `0f58b51c07d25d4643b98524e53f171d6e9c0d667c46e0718b07f40f27c1d7e7`
@@ -15,7 +15,7 @@
 - `GATE7B_SOURCE_BINDINGS_SHA256`: `e250304d3f48096cd094ebeda259161b650d23eb3434ab1f6417d1d6695da067`
 - `GATE7C_PACKET_SHA256`: `1f154522ef5c1e31661782b9ced4dce373c54d710e789d650eeb2adc40155843`
 - `GATE7C_STATE`: `GLM_5_2_GREEN; AGY_GREEN; SAME_HASH; RECUSAL_CLEAR`
-- `GATE7_AWS_READINESS`: `HUMAN_ACTION_REQUIRED_BEFORE_CAMPAIGN_READY`
+- `GATE7_AWS_READINESS`: `GREEN; RECEIPT_SHA256_7d770fe7beb85a4164fb70c72dc74e8a0fb21d3cfcc190178b3f5c503e246987`
 - `CURRENT_COMMIT_AT_P9_PACKET_FREEZE`: `61d77d1704a3f074427f9f82b300abaaa201f79c`
 - `P9_IMPLEMENTATION_COMMIT`: `cbd58b3af9e1ce5c4ddf8885866b88e7e7c1ca0f`
 - `S3_PREFLIGHT_IMPLEMENTATION_COMMIT`: `9f9e1675b9d12e70e5531a196e33e28c76b9b68a`
