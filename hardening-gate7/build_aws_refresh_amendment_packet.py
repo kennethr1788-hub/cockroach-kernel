@@ -14,14 +14,13 @@ CANDIDATE = "1c483b1930e629c9ecb6d73418b9554897dc08ad"
 FILES = (
     BASE / "HARDENING_GATE7_AWS_LOGIN_REFRESH_AMENDMENT_R1.md",
     BASE / "HARDENING_GATE7_AWS_LOGIN_REFRESH_TEST_RECEIPT_R1.md",
+    BASE / "HARDENING_GATE7_AWS_LOGIN_REFRESH_CLOUD_ADAPTER_REVIEW_R1.md",
     BASE / "HARDENING_GATE7_A03_CAMPAIGN_READY_PRECHECK_RECEIPT_R1.md",
     BASE / "HARDENING_GATE7_REPAIRED_PREFLIGHT_JUDGE_RECEIPT_R2.md",
     BASE / ".hardening-runtime/gate7-r2/aws-login-provider-proof-a03.json",
     BASE / ".hardening-runtime/gate7-r2/live-readiness-after-refresh-a03.json",
     BASE / "s3-soak/hardening.py",
-    BASE / "s3-soak/cloud_adapter.py",
     BASE / "s3-soak/host_coordinator.py",
-    BASE / "s3-soak/test_hardening.py",
 )
 
 
