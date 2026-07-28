@@ -1,0 +1,11 @@
+test_frozen_candidate_has_no_hidden_scenario_binding (fresh-context-black-box.test_surface_probe.SurfaceProbeTests.test_frozen_candidate_has_no_hidden_scenario_binding) ... ok
+test_hash_constants_match_frozen_candidate_files (fresh-context-black-box.test_surface_probe.SurfaceProbeTests.test_hash_constants_match_frozen_candidate_files) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.143s
+
+OK
+
+The standalone probe exited `2` as specified for `SURFACE_BLOCKED`; both CLI
+demo invocations inside the probe exited `0`. This is an expected fail-closed
+preflight result, not a test-runner crash.

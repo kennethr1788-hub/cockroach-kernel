@@ -1,0 +1,16 @@
+glm-zai: served by glm-5.2
+```text
+VERDICT: GREEN
+SERVED_MODEL: glm-5.2
+RECUSAL: CLEAR
+PROPOSED_BLOCKER: CONFIRMED
+HIDDEN_EXECUTIONS_ALLOWED: NO
+BLOCKERS:
+- FROZEN_CLI_NOT_SCENARIO_DRIVEN: The frozen CLI's public surface only exposes 'demo' and 'inspect'. It lacks any flags to bind a workspace, scenario, or recovery input. The dynamic probe proves it ignores declared workspaces and outputs identical hardcoded data, making the R2 black-box evaluation construct-invalid.
+NON_BLOCKING_RISKS:
+- none
+REQUIRED_RESUME_CONDITION:
+- A separately authorized product revision must expose a safe, documented, scenario-driven public interface that preserves deterministic authority and existing safety boundaries. This requires a new frozen candidate, a new black-box plan revision, new preflight hashes, and a new independent review.
+CLAIM_ASSESSMENT:
+- The proposed blocker is highly accurate and adequately proven. Static inspection of the CLI arguments and dynamic testing confirm that the candidate cannot ingest workspace or scenario inputs, producing identical canned outputs regardless of the environment. Proceeding with the R2 plan would measure an LLM's ability to trigger a static replay rather than evaluate recovery capabilities against hidden scenarios.
+```
