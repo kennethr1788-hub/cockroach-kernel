@@ -1,13 +1,13 @@
 # Hardening Gate 6 R3 — AGY Substitution Status
 
-- `STATUS`: `R5_PREFLIGHT_GREEN_ATTEMPT03_AUTHORIZED`
+- `STATUS`: `ATTEMPT03_MEASURED_GREEN_TEARDOWN_GREEN_FINAL_REVIEW_PENDING`
 - `LAST_GREEN_GATE`: `HARDENING_5_EVIDENCE_CANDIDATE_R2_GREEN`
 - `CANDIDATE_COMMIT`: `8718fbecc2b145ff36ce8c3ed655e92b5906aeab`
 - `REQUIRED_PREFLIGHT`: `GLM 5.2 AND AGY GREEN ON THE SAME HASH`
 - `REQUIRED_FINAL`: `GLM 5.2 AND AGY GREEN ON THE SAME HASH`
 - `CLAUDE`: `RECUSAL_REQUIRED_PRESERVED`
-- `R3_RUNPOD_ATTEMPTS`: `2; BOTH_DELETED_BEFORE_MEASURED_ROW_1`
-- `MEASURED_EXECUTIONS`: `0`
+- `R3_RUNPOD_ATTEMPTS`: `3; ALL_DELETED; ATTEMPT03_COMPLETED_MEASUREMENT`
+- `MEASURED_EXECUTIONS`: `54`
 - `RUNPOD_RUNNING_INVENTORY`: `[]`
 - `GATE7`: `FORBIDDEN`
 - `JUDGE_AMENDMENT_COMMIT`: `c9873c0fcc356316742ffc7a5c5bd1bbbbeed55a`
@@ -30,7 +30,14 @@
 - `R5_PREFLIGHT_PACKET_SHA256`: `0e047e3abfd69cc5660c88a283eb8595e869dee575eadaa34409b74dfec5f468`
 - `R5_GLM`: `GREEN; glm-5.2; RECUSAL_CLEAR; EXACT_HASH`
 - `R5_AGY`: `GREEN; Gemini 3.1 Pro High; RECUSAL_CLEAR; EXACT_HASH`
+- `R3_ATTEMPT03`: `CAPABILITY_CANARY_GREEN; SMOKE_GREEN; 54_MEASURED_EXECUTIONS_GREEN; TEARDOWN_GREEN`
+- `R3_ATTEMPT03_POD`: `18hf13p5qu4pov_DELETED`
+- `R3_ATTEMPT03_AGGREGATE_SHA256`: `25fa143dfd7b489ac2a5d79cba974ce944d12609d8f7e6f1c6a42e87fe53325f`
+- `R3_ATTEMPT03_EVIDENCE_INDEX_SHA256`: `6ebb1cf552466cfa3410e9a2973d3aa69e38eec2485f5b8009f705852b638ac7`
+- `R3_ATTEMPT03_COST`: `EXACT_PROVIDER_CHARGE_PENDING; BOUNDED_ACTIVE_RATE_MAX_$0.0196956667`
+- `FINAL_REVIEW`: `GLM_5_2_AND_AGY_REQUIRED_ON_ONE_EXACT_PACKET_HASH`
 
-Provider creation remains forbidden until a fresh packet containing the judge
-substitution authorization, amendment, historical recusal, isolation source,
-and full evidence contract receives both required independent GREEN verdicts.
+No replacement worker is authorized or needed. The measured evidence candidate
+is frozen and the worker is deleted. Gate 6 can close only after a final packet
+containing the complete evidence bindings receives both required independent
+GREEN verdicts. Gate 7 remains forbidden.

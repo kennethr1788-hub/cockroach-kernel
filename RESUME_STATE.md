@@ -1,10 +1,10 @@
 # Resume State
 
-- `CURRENT_PHASE`: `HARDENING_RUN_GATE_6_RUN1_R3_AGY_PREFLIGHT`
+- `CURRENT_PHASE`: `HARDENING_RUN_GATE_6_RUN1_R3_FINAL_REVIEW`
 - `LAST_GREEN_GATE`: `HARDENING_5_EVIDENCE_CANDIDATE_R2_GREEN`
-- `NEXT_ALLOWED_ACTION`: Create attempt 03 under R5 same-hash preflight GREEN; require capability canary GREEN before payload upload
-- `FORBIDDEN_ACTIONS`: Begin Gate 7; create a replacement Gate 6 worker before the R3 packet and both same-hash reviews are GREEN; upload the benchmark payload before a capability canary passes; relabel seccomp as a namespace; relabel Gate 5 smoke as Gate 6 evidence; claim any Gate 6 measured row before execution; change candidate 8718fbe; claim Gate 6 or S3 GREEN; public actions; release; submission; HOME/live-memory mutation; credential exposure; any worker credential transfer
-- `CURRENT_COMMIT`: `24d60964073bf0ab77185bbb005d9307dd3b6168`
+- `NEXT_ALLOWED_ACTION`: Freeze the complete attempt-03 evidence packet and obtain GLM 5.2 plus AGY GREEN on one exact packet hash
+- `FORBIDDEN_ACTIONS`: Begin Gate 7; create another Gate 6 worker; change candidate 8718fbe; relabel seccomp as a network namespace; relabel synthetic evidence as live AWS or population evidence; fabricate an exact provider charge; claim Gate 6 GREEN before both final judges are GREEN on one exact hash; public actions; release; submission; HOME/live-memory mutation; credential exposure; any worker credential transfer
+- `CURRENT_COMMIT`: `cad50b958a3a78ff830b7e6983259776cb748a20`
 - `CURRENT_COMMIT_AT_P9_PACKET_FREEZE`: `61d77d1704a3f074427f9f82b300abaaa201f79c`
 - `P9_IMPLEMENTATION_COMMIT`: `cbd58b3af9e1ce5c4ddf8885866b88e7e7c1ca0f`
 - `S3_PREFLIGHT_IMPLEMENTATION_COMMIT`: `9f9e1675b9d12e70e5531a196e33e28c76b9b68a`
@@ -13,7 +13,7 @@
 - `S3_PREFLIGHT_R4_REPAIR_COMMIT`: `06b54e8f61bf0fa227af3de2377a462e369d7d74`
 - `S3_PREFLIGHT_R6_REPAIR_COMMIT`: `8b1d5bd1038588527bd994eb8fcb5467cac47eac`
 - `S3_PREFLIGHT_R8_REPAIR_COMMIT`: `95408fb9386ced25b468c0957e86e8f73cb123e9`
-- `PENDING_BLOCKERS`: Live capability canary, 54 measured rows, evidence retrieval, exact-ID teardown, and final same-hash review remain open
+- `PENDING_BLOCKERS`: Final same-hash GLM 5.2 and AGY review remains open; exact provider charge is pending and preserved as non-blocking under current operator authorization
 - `REQUIRED_JUDGE_STATE`: GLM 5.2 and AGY Gemini 3.1 Pro High GREEN with recusal clear over one fresh exact packet before worker creation; the same two lanes GREEN again on one final packet after teardown
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
@@ -21,8 +21,8 @@
 - `P9_LIVE_EVIDENCE`: `evidence/p9-completion-live-r1/`
 - `P9_MCP_EVIDENCE`: `evidence/p9-mcp-linked-r2/`
 - `P9_JUDGE_EVIDENCE`: `evidence/p9-final-judges-r1/`
-- `RUNPOD_ATTEMPTS`: `5`
-- `RUNPOD_EXPOSURE`: `PRIOR_RECORDED_$1.189989_PLUS_GATE6_BILLING_PENDING_MAX_$0.0060`
+- `RUNPOD_ATTEMPTS`: `8`
+- `RUNPOD_EXPOSURE`: `PRIOR_RECORDED_$1.189989_PLUS_GATE6_R3_THREE_ATTEMPTS_BILLING_PENDING_BOUNDED_MAX_$0.0393356667`
 - `LATEST_CHECKPOINT`: `HARDENING_GATE6_BLOCKED_CHECKPOINT_R2.md`
 - `HARDENING_GATE6_STATUS`: `R1_BLOCKED_HISTORICAL; R2_BLOCKED_TEARDOWN_GREEN`
 - `HARDENING_GATE6_BLOCKER`: `UNPRIVILEGED_NETWORK_NAMESPACE_UNAVAILABLE`
@@ -30,7 +30,7 @@
 - `HARDENING_GATE6_FINAL_PACKET_SHA256`: `6f3b1d8a3c10244d88feb99a8a39c9ce13ae836abf9c0117617d7adfcac12ede`
 - `HARDENING_GATE6_PREFLIGHT_JUDGE_STATE`: `GLM 5.2 GREEN; CLAUDE OPUS 4.8 GREEN; RECUSAL CLEAR`
 - `HARDENING_GATE6_FINAL_JUDGE_STATE`: `GLM 5.2 BLOCKED; CLAUDE OPUS 4.8 BLOCKED; RECUSAL CLEAR; TEARDOWN GREEN`
-- `HARDENING_GATE6_MEASURED_EXECUTIONS`: `0`
+- `HARDENING_GATE6_MEASURED_EXECUTIONS`: `54`
 - `HARDENING_GATE6_RUNPOD_ATTEMPTS`: `1`
 - `HARDENING_GATE6_POD_IDS`: `2sh4lx37f6r73g_DELETED`
 - `HARDENING_GATE6_RUNPOD_INVENTORY`: `[]`
@@ -40,7 +40,7 @@
 - `HARDENING_GATE6_R3_ISOLATION`: `UNPRIVILEGED_NO_NEW_PRIVS_INHERITED_SECCOMP_BPF; NETWORK_NAMESPACE_NOT_CLAIMED`
 - `HARDENING_GATE6_R3_PREFLIGHT_PACKET_SHA256`: `R1_49068ab24f16b51120b447514bd928e527d02428a8343ae10443f8a83041613b_SUPERSEDED; R2_7993cdbf3d76469ba268cb6c4a26742d4726ecfef0b41c1a9e5072a56188650d_CURRENT`
 - `HARDENING_GATE6_R3_JUDGE_STATE`: `R1_BOTH_GREEN_SUPERSEDED; R2_GLM_5_2_GREEN_AND_CLAUDE_OPUS_4_8_RECUSAL_REQUIRED; PREFLIGHT_BLOCKED`
-- `HARDENING_GATE6_R3_RUNPOD_INVENTORY`: `[]; ATTEMPT01_e5bvtk4s4y7yc0_DELETED; ATTEMPT02_iyr2mi9jf9p6p7_DELETED`
+- `HARDENING_GATE6_R3_RUNPOD_INVENTORY`: `[]; ATTEMPT01_e5bvtk4s4y7yc0_DELETED; ATTEMPT02_iyr2mi9jf9p6p7_DELETED; ATTEMPT03_18hf13p5qu4pov_DELETED`
 - `HARDENING_GATE6_R3_JUDGE_SUBSTITUTION`: `KENNETH_AUTHORIZED_AGY_FOR_RECUSED_CLAUDE; CLAUDE_RECUSAL_PRESERVED`
 - `HARDENING_GATE6_R3_AGY_AMENDMENT_COMMIT`: `c9873c0fcc356316742ffc7a5c5bd1bbbbeed55a`
 - `HARDENING_GATE6_R3_AGY_PREFLIGHT_PACKET_SHA256`: `bce79ec92f76469cbd11efb0a4fd6221ab3da7e3135b2370907800426b40e7be`

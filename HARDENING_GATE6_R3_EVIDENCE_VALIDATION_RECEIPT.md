@@ -1,0 +1,35 @@
+# Hardening Gate 6 R3 — Attempt 03 Evidence Validation Receipt
+
+- `STATUS`: `GREEN_CANDIDATE_PENDING_INDEPENDENT_FINAL_REVIEW`
+- `CANDIDATE_COMMIT`: `8718fbecc2b145ff36ce8c3ed655e92b5906aeab`
+- `CAMPAIGN_ID`: `ck-gate6-20260727-run1-r3`
+- `MEASURED_EXECUTIONS`: `54`
+- `UNIQUE_COMBINATIONS`: `54`
+- `PAIR_COUNT`: `18`
+- `CANONICAL_RECEIPTS_VALID`: `54`
+- `CHECKPOINT_CHAIN_VALID`: `54_OF_54`
+- `MANIFEST_FILE_BINDINGS_VALID`: `56_OF_56`
+- `MEASURED_EXIT_STATUS`: `0`
+- `MEASURED_STDERR_BYTES`: `0`
+- `CLEANUP_PASS`: `54_OF_54`
+- `RESIDUE_BYTES`: `0`
+- `UNSAFE_ACCEPTANCE_COUNT`: `0`
+- `ORIGINAL_WORKSPACE_MUTATION_COUNT`: `0`
+- `REMOTE_EVIDENCE_ARCHIVE_SHA256`: `1ed09238a554b6ddb333d8adfafd554a55205f9c45fa5b2487a03645367814e5`
+- `AGGREGATE_SHA256`: `25fa143dfd7b489ac2a5d79cba974ce944d12609d8f7e6f1c6a42e87fe53325f`
+- `FINAL_CHECKPOINT_SHA256`: `f0da23ae0aa4654a1365c396de742db0fca6ff231c4493e29c5bd75cddd3ef11`
+- `EVIDENCE_MANIFEST_SHA256`: `93e277003782becc12f049fbd0f8e3b66a90c5a8e9b19dfb67256a63c1d4aae0`
+- `ISOLATION_ATTESTATION_SHA256`: `8940387642d55e1fa43e70e193417cedf2ac94fb713abad7bc2141004e16744d`
+- `SMOKE_RECEIPT_SHA256`: `d44b8f71db206a197494a6df18d7e51a7730d50f9fccb0d2d2c0d06c52a07bc7`
+- `LIFECYCLE_FINAL_EVENT_SHA256`: `6aae4655b242e54e66b14dd15dd152a4197f3b9d4203bb847c0f147eb60de3c0`
+- `MEASURED_EVIDENCE_INDEX_FILE_SHA256`: `6ebb1cf552466cfa3410e9a2973d3aa69e38eec2485f5b8009f705852b638ac7`
+- `TRACKED_EVIDENCE_COPIES`: `{"HARDENING_GATE6_R3_AGGREGATE.json":{"bytes":24776,"sha256":"0d070d1a8196f50f6348a556b568f65d7203f0369eb1cdc128bf003818869d57"},"HARDENING_GATE6_R3_CHECKPOINTS.ndjson":{"bytes":21321,"sha256":"8daa424fbf7b39e39f2ab6910a61cf2685a81ef25f0ad04013ccf6860c1d2e74"},"HARDENING_GATE6_R3_ISOLATION.json":{"bytes":1085,"sha256":"7e8e1a83bb372e47278d4bed76d786bcd9f7b698ae7ab314202119761d3a9191"},"HARDENING_GATE6_R3_LIFECYCLE.ndjson":{"bytes":10697,"sha256":"ea88f74fc6a86b9e41fc9924d97a4b42b4899959f086868574b53199f44d300b"},"HARDENING_GATE6_R3_REMOTE_EVIDENCE_MANIFEST.json":{"bytes":8882,"sha256":"87d7ca7dd9efd34283411457aed6ac18cc4ea017b61ce8ecd80a446172325637"},"HARDENING_GATE6_R3_SMOKE_ISOLATION.json":{"bytes":1085,"sha256":"7e8e1a83bb372e47278d4bed76d786bcd9f7b698ae7ab314202119761d3a9191"},"HARDENING_GATE6_R3_SMOKE_RECEIPT.json":{"bytes":3416,"sha256":"8b69d16bdd645e825fcce1a8bda21cdd3a39f2af0c1a376715893efadfb4b39a"}}`
+- `FINAL_REVIEW`: `GLM_5_2_AND_AGY_REQUIRED_ON_ONE_EXACT_PACKET_HASH`
+
+The local validator recomputed every embedded receipt hash, every receipt file
+hash, all 54 checkpoint event links, the aggregate hash, the evidence-manifest
+hash, the isolation attestation hash, and the smoke receipt hash. It also bound
+each receipt to both the remote evidence manifest and its corresponding
+checkpoint. The final lifecycle event proves exact-ID absence and empty active
+campaign inventory. These results remain synthetic paired comparative evidence,
+not live AWS or population-scale evidence.
