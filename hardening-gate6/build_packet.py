@@ -66,10 +66,8 @@ def main() -> int:
     ):
         if len(value) != 40 or any(character not in "0123456789abcdef" for character in value):
             raise SystemExit(f"invalid {label}: {value!r}")
-    header = HEADER.format(
-        orchestration_commit=args.orchestration_commit,
-        candidate_commit=args.candidate_commit,
-    )
+    header = HEADER.replace("{orchestration_commit}", args.orchestration_commit)
+    header = header.replace("{candidate_commit}", args.candidate_commit)
     sections = [header.rstrip(), ""]
     for path in args.files:
         raw = path.read_text(encoding="utf-8")
