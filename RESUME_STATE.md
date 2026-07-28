@@ -1,9 +1,9 @@
 # Resume State
 
-- `CURRENT_PHASE`: `HARDENING_GATE7_RUN2_PROVIDER_READINESS_ATTEMPT_A02`
+- `CURRENT_PHASE`: `HARDENING_GATE7_BLOCKED_AFTER_ATTEMPT_A02`
 - `LAST_GREEN_GATE`: `GATE7C_SAME_HASH_GREEN`
-- `NEXT_ALLOWED_ACTION`: After the required backoff, create and verify exactly one policy-compliant attempt A02 worker; use one supervised transfer process and delete on any mismatch before payload acceptance
-- `FORBIDDEN_ACTIONS`: Create the hidden seed before CAMPAIGN_READY; upload before returned worker verification; create a concurrent worker; mutate the frozen product candidate; begin Gate 8, S3-R2, release, publication, video, or submission; mutate HOME/live memory; expose credentials
+- `NEXT_ALLOWED_ACTION`: With fresh operator authorization, repair only the Gate 7 transfer harness by adding `hardening-gate5/heldout_contract.py`, add an extracted-bundle campaign-ready smoke, rebuild and rescan, freeze a new packet, and obtain fresh same-hash GLM/AGY GREEN before any new worker
+- `FORBIDDEN_ACTIONS`: Create another worker under packet `1f154522ef5c1e31661782b9ced4dce373c54d710e789d650eeb2adc40155843`; patch an accepted worker payload; create a hidden seed; begin measured execution; mutate the frozen product candidate; begin Gate 8, S3-R2, release, publication, video, or submission; mutate HOME/live memory; expose credentials
 - `CURRENT_COMMIT`: `777e3588bc4b07f0a3ea78c7c5831aa087f6869b` (final Gate 7C packet checkpoint; judge receipt follows)
 - `GATE7_EXECUTION_PROMPT_SHA256`: `936c9ae62191e5d8daa0cbd7ef4287d77777e6c761694d6d6d8789842dcb454f`
 - `GATE7_EXPANDED_PLAN_SHA256`: `0f58b51c07d25d4643b98524e53f171d6e9c0d667c46e0718b07f40f27c1d7e7`
@@ -24,8 +24,8 @@
 - `S3_PREFLIGHT_R4_REPAIR_COMMIT`: `06b54e8f61bf0fa227af3de2377a462e369d7d74`
 - `S3_PREFLIGHT_R6_REPAIR_COMMIT`: `8b1d5bd1038588527bd994eb8fcb5467cac47eac`
 - `S3_PREFLIGHT_R8_REPAIR_COMMIT`: `95408fb9386ced25b468c0957e86e8f73cb123e9`
-- `PENDING_BLOCKERS`: Project-local AWS session is stale; Kenneth must complete interactive AWS login before provider readiness or RunPod creation
-- `REQUIRED_JUDGE_STATE`: Gate 7C GLM 5.2 and AGY same-hash GREEN satisfied; final measured-campaign GLM and AGY review remains required after execution
+- `PENDING_BLOCKERS`: Non-retryable Gate 7 harness defect: the frozen transfer bundle omitted `hardening-gate5/heldout_contract.py`; A02 was deleted before hidden generation or measurement
+- `REQUIRED_JUDGE_STATE`: Current Gate 7C results are historical after any bundle repair; fresh GLM 5.2 and AGY same-hash GREEN are required on the repaired packet before a new worker, followed by final measured-campaign GLM and AGY review
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
 - `P9_FINAL_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; RECUSAL_CLEAR`

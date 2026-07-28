@@ -1,6 +1,6 @@
 # Hardening Gate 7 Expanded Status R1
 
-- `STATUS`: `GATE7C_SAME_HASH_GREEN_AWS_LOGIN_PENDING`
+- `STATUS`: `HARDENING_7_BLOCKED_TRANSFER_BUNDLE_HARNESS_DEFECT`
 - `LAST_GREEN_GATE`: `GATE7C_SAME_HASH_GREEN`
 - `PRODUCT_CANDIDATE`: `1c483b1930e629c9ecb6d73418b9554897dc08ad`
 - `GATE7B_HARNESS_COMMIT`: `8c66c3c6a5121bae6fc3a4d0240a39883e983027`
@@ -13,24 +13,29 @@
 - `FALSE_PROMOTIONS`: `0`
 - `MUTATION_AFTER_REFUSE_OR_INVALID`: `0`
 - `HIDDEN_SEED_CREATED`: `NO`
-- `RUNPOD_CREATED`: `NO`
+- `RUNPOD_CREATED`: `A01_AND_A02_CREATED_THEN_DELETED`
 - `ACTIVE_RUNPOD_INVENTORY`: `[]`
 - `COCKROACH_READINESS`: `GREEN_READ_ONLY`
-- `AWS_READINESS`: `HUMAN_ACTION_REQUIRED_BEFORE_CAMPAIGN_READY`
-- `AWS_FAILURE_EVIDENCE`: `REDACTED_HASH_ONLY`
-- `RUNPOD_AUTHORIZATION`: `PRESENT; ACTIONABLE_AFTER_AWS_READINESS_GREEN`
+- `AWS_READINESS`: `GREEN_AT_A02_PREFLIGHT; MUST_BE_RENEWED_FOR_ANY_FUTURE_CAMPAIGN`
+- `AWS_FAILURE_EVIDENCE`: `NONE_CONTROLLING`
+- `RUNPOD_AUTHORIZATION`: `CONSUMED_AND_STOPPED_FAIL_CLOSED_ON_NON_RETRYABLE_HARNESS_DEFECT`
 - `GATE7C_PACKET_SHA256`: `1f154522ef5c1e31661782b9ced4dce373c54d710e789d650eeb2adc40155843`
 - `GATE7C_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; SAME_HASH; RECUSAL_CLEAR`
-- `REQUIRED_NEXT_GATE`: `PROJECT_LOCAL_AWS_LOGIN_AND_LIVE_READINESS_GREEN`
+- `REQUIRED_NEXT_GATE`: `NEW_BUNDLE_REVISION_WITH_MISSING_DEPENDENCY; EXTRACTED_BUNDLE_SMOKE; NEW_PACKET_HASH; FRESH_GLM_AGY_SAME_HASH_GREEN; FRESH_OPERATOR_AUTHORIZATION`
 - `PRIOR_GATE7C_PACKET`: `SUPERSEDED; AGY_WRAPPER_SIZE_REJECTION_BEFORE_MODEL_INVOCATION`
 - `PRIOR_GATE7C_JUDGE_ATTEMPT`: `SUPERSEDED; GLM_IDENTITY_VIOLATION_REPAIRED; AGY_SCHEMA_REJECTION_REPAIRED`
 - `FORBIDDEN`: `HIDDEN_SEED_BEFORE_CAMPAIGN_READY, RUNPOD_CREATE_BEFORE_AWS_READINESS_GREEN, MEASURED_EXECUTION_BEFORE_CAMPAIGN_READY, GATE8, S3_R2, RELEASE`
 
-The AWS login is deliberately not bypassed and is not classified as a product
-failure. Gate 7C may review the frozen design and local evidence while the
-session is stale. Before any worker can become `CAMPAIGN_READY`, Kenneth must
-refresh the project-local AWS login and the read-only readiness receipt must be
-regenerated as GREEN with at least a 15-minute post-exchange margin.
+Gate 7C remains GREEN only for packet
+`1f154522ef5c1e31661782b9ced4dce373c54d710e789d650eeb2adc40155843`.
+That packet cannot advance because the frozen transfer bundle omitted the
+required `hardening-gate5/heldout_contract.py` dependency. A02 exposed the
+defect before `CAMPAIGN_READY`; no hidden seed or measured execution occurred.
+A01 and A02 are both deleted, active inventory is empty, and A02's detached
+guard ended `TEARDOWN_GREEN`.
 
-Gate 7 is not GREEN. Gate 7C is GREEN, but public canary evidence remains
-preflight-only and cannot be reported as hidden measured evidence.
+Gate 7 is BLOCKED. The current packet and its judge results become historical
+if the bundle changes. A repair must preserve the product candidate, add only
+the required harness dependency and extracted-bundle smoke coverage, rebuild
+and rescan the archive, freeze a new packet hash, obtain fresh same-hash GLM
+and AGY GREEN, and receive fresh operator authorization before another worker.
