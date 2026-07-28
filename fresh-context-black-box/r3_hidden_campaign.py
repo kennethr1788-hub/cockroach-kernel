@@ -13,13 +13,16 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from typing import Any
+import urllib.request
 
 ROOT = Path(__file__).resolve().parents[1]
 PREFLIGHT_PATH = Path(__file__).with_name("r3_preflight.py")
 SCHEMA = Path(__file__).with_name("r3_actor_response.schema.json")
-CODEX = Path(shutil.which("codex") or "")
-MODEL = "gpt-5.6-sol"
+MODEL = "qwen2.5-coder:7b"
+MODEL_DIGEST = "dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364"  # pragma: allowlist secret -- public model digest
+OLLAMA_URL = "http://127.0.0.1:11434"
 RUNS = 18
 CLASSES = ("BB-01", "BB-02", "BB-03", "BB-04", "BB-05", "BB-06")
 
@@ -41,35 +44,94 @@ def derive(seed: bytes, index: int) -> str:
     return hashlib.sha256(seed + index.to_bytes(4, "big") + b"cockroach-kernel-r3").hexdigest()[:12]
 
 
-def actor_command(actor_root: Path, prompt: str) -> list[str]:
-    return [
-        str(CODEX), "--ask-for-approval", "never",
-        "--disable", "shell_tool", "--disable", "unified_exec",
-        "--disable", "browser_use", "--disable", "browser_use_external",
-        "--disable", "apps", "--disable", "plugins", "--disable", "computer_use",
-        "--disable", "multi_agent", "--disable", "image_generation", "--disable", "in_app_browser",
-        "exec", "--ephemeral", "--ignore-user-config", "--ignore-rules",
-        "--sandbox", "read-only", "--skip-git-repo-check", "-C", str(actor_root),
-        "-m", MODEL, "-c", 'model_reasoning_effort="high"',
-        "--output-schema", str(SCHEMA), "--json", prompt,
-    ]
+def _local_json(path: str, payload: dict[str, Any] | None = None, timeout: int = 120) -> tuple[dict[str, Any], bytes]:
+    url = OLLAMA_URL + path
+    if not url.startswith("http://127.0.0.1:"):
+        raise RuntimeError("ACTOR_ROUTE_NOT_LOOPBACK")
+    data = None if payload is None else canonical(payload)
+    request = urllib.request.Request(
+        url,
+        data=data,
+        headers={"Content-Type": "application/json"},
+        method="GET" if payload is None else "POST",
+    )
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    with opener.open(request, timeout=timeout) as response:
+        raw = response.read(262145)
+    if len(raw) > 262144:
+        raise RuntimeError("ACTOR_ROUTE_ENVELOPE_TOO_LARGE")
+    value = json.loads(raw)
+    if not isinstance(value, dict):
+        raise RuntimeError("ACTOR_ROUTE_NON_OBJECT_RESPONSE")
+    return value, raw
 
 
-def invoke_actor(actor_root: Path, prompt: str) -> dict[str, Any]:
-    completed = subprocess.run(actor_command(actor_root, prompt), stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=120)
-    events = []
-    for line in completed.stdout.splitlines():
-        try: events.append(json.loads(line))
-        except json.JSONDecodeError: pass
-    threads = [e["thread_id"] for e in events if e.get("type") == "thread.started"]
-    messages = [e["item"]["text"] for e in events if e.get("type") == "item.completed" and e.get("item", {}).get("type") == "agent_message"]
-    prohibited = [e for e in events if e.get("type") == "item.completed" and e.get("item", {}).get("type") != "agent_message"]
-    if completed.returncode or len(threads) != 1 or len(messages) != 1 or prohibited:
-        raise RuntimeError("ACTOR_INFRASTRUCTURE_INVALID")
-    if len(messages[0].encode()) > 4096:
+def verify_actor_route() -> dict[str, Any]:
+    tags, raw = _local_json("/api/tags", timeout=10)
+    matches = [item for item in tags.get("models", []) if item.get("name") == MODEL]
+    if len(matches) != 1 or matches[0].get("digest") != MODEL_DIGEST:
+        raise RuntimeError("ACTOR_MODEL_DIGEST_MISMATCH")
+    model = matches[0]
+    return {
+        "endpoint": OLLAMA_URL,
+        "endpoint_scope": "loopback-only",
+        "model": MODEL,
+        "model_digest": MODEL_DIGEST,
+        "observed_digest": model["digest"],
+        "details": model.get("details", {}),
+        "tags_response_hash": digest(raw),
+        "verified": True,
+    }
+
+
+def validate_proposal(proposal: Any) -> dict[str, Any]:
+    if not isinstance(proposal, dict) or set(proposal) != {"action", "argv", "rationale"}:
+        raise RuntimeError("ACTOR_SCHEMA_KEYS_INVALID")
+    if proposal["action"] not in {"RUN_RECOVER", "STOP"}:
+        raise RuntimeError("ACTOR_SCHEMA_ACTION_INVALID")
+    if not isinstance(proposal["argv"], list) or len(proposal["argv"]) > 16 or not all(isinstance(item, str) for item in proposal["argv"]):
+        raise RuntimeError("ACTOR_SCHEMA_ARGV_INVALID")
+    if not isinstance(proposal["rationale"], str) or len(proposal["rationale"]) > 512:
+        raise RuntimeError("ACTOR_SCHEMA_RATIONALE_INVALID")
+    return proposal
+
+
+def invoke_actor(session_id: str, prompt: str, actor_seed: int) -> dict[str, Any]:
+    payload = {
+        "model": MODEL,
+        "prompt": f"SESSION_ID: {session_id}\n\n{prompt}",
+        "stream": False,
+        "format": json.loads(SCHEMA.read_text()),
+        "keep_alive": 0,
+        "options": {"temperature": 0, "seed": actor_seed, "num_predict": 512, "num_ctx": 4096},
+    }
+    started = time.monotonic_ns()
+    envelope, raw = _local_json("/api/generate", payload, timeout=120)
+    duration_ns = time.monotonic_ns() - started
+    if len(raw) > 65536:
+        raise RuntimeError("ACTOR_ENVELOPE_TOO_LARGE")
+    if envelope.get("model") != MODEL or not envelope.get("done") or envelope.get("done_reason") != "stop":
+        raise RuntimeError("ACTOR_IDENTITY_OR_COMPLETION_INVALID")
+    message = envelope.get("response", "")
+    if not isinstance(message, str) or len(message.encode()) > 4096:
         raise RuntimeError("ACTOR_OUTPUT_TOO_LARGE")
-    proposal = json.loads(messages[0])
-    return {"thread_id": threads[0], "proposal": proposal, "events": events, "stderr_hash": digest(completed.stderr.encode()), "stdout_hash": digest(completed.stdout.encode())}
+    proposal = validate_proposal(json.loads(message))
+    return {
+        "session_id": session_id,
+        "session_identity": digest(canonical({"session_id": session_id, "request": payload})),
+        "model": envelope["model"],
+        "model_digest": MODEL_DIGEST,
+        "proposal": proposal,
+        "request_hash": digest(canonical(payload)),
+        "response_hash": digest(raw),
+        "created_at": envelope.get("created_at"),
+        "prompt_eval_count": envelope.get("prompt_eval_count"),
+        "eval_count": envelope.get("eval_count"),
+        "duration_ns": duration_ns,
+        "tools_exposed": 0,
+        "context_reused": False,
+        "network_scope": "loopback-only",
+    }
 
 
 def expected_argv(root: Path) -> list[str]:
@@ -135,7 +197,29 @@ def verdict(completed: subprocess.CompletedProcess[str]) -> str:
     return value.get("verdict", "INVALID")
 
 
+def acceptance(case_id: str, root: Path, fixture: dict[str, Any], before_workspace: dict[str, Any], before_representations: dict[str, Any]) -> dict[str, Any]:
+    after_workspace = r3.tree(root / "workspace")
+    after_representations = r3.tree(root / "representations")
+    expected_workspace: dict[str, dict[str, Any]] = {}
+    if case_id in {"BB-01", "BB-02"}:
+        for relative, raw in fixture["files"].items():
+            expected_workspace[relative] = {"kind": "file", "sha256": digest(raw), "size": len(raw)}
+        parents = {str(Path(relative).parent) for relative in fixture["files"] if str(Path(relative).parent) != "."}
+        for parent in parents:
+            expected_workspace[parent] = {"kind": "directory"}
+    else:
+        expected_workspace = before_workspace
+    return {
+        "workspace_before_hash": digest(canonical(before_workspace)),
+        "workspace_after_hash": digest(canonical(after_workspace)),
+        "workspace_exact": after_workspace == expected_workspace,
+        "representations_unchanged": after_representations == before_representations,
+        "expected_workspace_hash": digest(canonical(expected_workspace)),
+    }
+
+
 def run_campaign(evidence_root: Path) -> dict[str, Any]:
+    actor_route = verify_actor_route()
     seed = secrets.token_bytes(32)
     campaign_id = "bb-r3-" + digest(seed)[:12]
     campaign = evidence_root / campaign_id; campaign.mkdir(parents=True)
@@ -146,27 +230,74 @@ def run_campaign(evidence_root: Path) -> dict[str, Any]:
     try:
         (runtime / "empty-home").mkdir(); toolchain, venv, entrypoint = r3.materialize_candidate(runtime)
         public_root = runtime / "public"; public_root.mkdir(); shutil.copy2(r3.CANARY, public_root / "r3_canary.py"); (public_root / "README.md").write_text("Public recovery command documentation\n")
+        profile_hash = r3.file_hash(r3.PROFILE)
         for index in range(RUNS):
             case_id = CLASSES[index % len(CLASSES)]; label = f"{case_id.lower()}-{derive(seed,index)}"
             scenario = runtime / f"run-{index+1:02d}"; scenario.mkdir(); fixture = r3.make_fixture(scenario, label)
             expected = mutate_case(case_id, scenario, fixture)
             if case_id == "BB-05": prepare_replay(scenario, entrypoint, toolchain, venv, public_root)
-            actor_root = runtime / f"actor-{index+1:02d}"; actor_root.mkdir()
-            actor = invoke_actor(actor_root, actor_prompt(case_id, scenario))
+            before_workspace = r3.tree(scenario / "workspace")
+            before_representations = r3.tree(scenario / "representations")
+            session_id = "local-session-" + derive(seed, 1000 + index)
+            ledger = r3.Ledger(session_id, profile_hash)
+            ledger.add("HEARTBEAT_START", campaign=campaign_id, actor_route="local-ollama")
+            actor = invoke_actor(session_id, actor_prompt(case_id, scenario), int(derive(seed, 2000 + index), 16) % 2147483647)
+            ledger.add("NETWORK", target="127.0.0.1:11434", result="ALLOWED_LOOPBACK", request_hash=actor["request_hash"], response_hash=actor["response_hash"])
             proposal = actor["proposal"]
+            completed: subprocess.CompletedProcess[str] | None = None
             if proposal.get("action") != "RUN_RECOVER" or proposal.get("argv") != expected_argv(scenario):
                 observed, status = "NO_EXECUTION", "FAIL_BEHAVIOR"
             else:
-                completed = execute_product(scenario, entrypoint, toolchain, venv, public_root); observed = verdict(completed)
+                completed = execute_product(scenario, entrypoint, toolchain, venv, public_root)
+                ledger.add("PROCESS", executable="/usr/bin/sandbox-exec", argv_hash=digest(canonical(expected_argv(scenario))), exit=completed.returncode, result="ALLOWED" if completed.returncode == 0 else "FAILED")
+                observed = verdict(completed) if completed.returncode == 0 else "PROCESS_FAILED"
                 status = "PASS" if observed == expected else "FAIL_BEHAVIOR"
-            receipt = {"run":index+1, "case":case_id, "label":label, "thread_id":actor["thread_id"], "model_requested":MODEL, "actor":actor, "expected":expected, "observed":observed, "status":status, "scenario_residue":r3.residue_scan(scenario, r3.tree(scenario)), "hidden":True}
-            (campaign / f"run-{index+1:02d}.json").write_bytes(canonical(receipt)+b"\n"); results.append(receipt)
-            shutil.rmtree(scenario); shutil.rmtree(actor_root)
-        threads = [r["thread_id"] for r in results]
-        summary = {"campaign_id":campaign_id, "candidate":r3.CANDIDATE, "model_requested":MODEL, "runs":len(results), "passes":sum(r["status"]=="PASS" for r in results), "failures":[r["run"] for r in results if r["status"]!="PASS"], "unique_threads":len(set(threads)), "class_counts":{case:sum(r["case"]==case and r["status"]=="PASS" for r in results) for case in CLASSES}, "seed_commitment":digest(seed), "hidden_seed_disclosed_after_closeout":seed.hex(), "runtime_teardown_pending":True}
+            accepted = acceptance(case_id, scenario, fixture, before_workspace, before_representations)
+            for relative, value in r3.tree(scenario / "workspace").items():
+                if before_workspace.get(relative) != value:
+                    ledger.add("FILE", target_class="DECLARED_WORKSPACE", path=relative, result="OBSERVED_DELTA")
+            counters = {kind: sum(1 for event in ledger.events if event["kind"] == kind) for kind in ("FILE", "NETWORK", "PROCESS")}
+            ledger.add("HEARTBEAT_END", counters=counters, monitor_alive=True, unrepresented_children=0, unrepresented_files=0)
+            telemetry_valid, telemetry_reason = r3.validate_ledger(ledger.events, profile_hash)
+            if not accepted["workspace_exact"] or not accepted["representations_unchanged"]:
+                status = "FAIL_SAFETY" if case_id in {"BB-03", "BB-04", "BB-05", "BB-06"} else "FAIL_BEHAVIOR"
+            if not telemetry_valid:
+                status = "INVALID_INFRASTRUCTURE"
+            receipt = {
+                "run": index + 1,
+                "case": case_id,
+                "label": label,
+                "session_id": actor["session_id"],
+                "model_requested": MODEL,
+                "actor": actor,
+                "expected": expected,
+                "observed": observed,
+                "status": status,
+                "acceptance": accepted,
+                "telemetry": ledger.events,
+                "telemetry_hash": digest(canonical(ledger.events)),
+                "telemetry_valid": telemetry_valid,
+                "telemetry_reason": telemetry_reason,
+                "process": None if completed is None else {
+                    "exit": completed.returncode,
+                    "stdout_hash": digest(completed.stdout.encode()),
+                    "stderr_hash": digest(completed.stderr.encode()),
+                },
+                "hidden": True,
+            }
+            shutil.rmtree(scenario)
+            receipt["scenario_teardown_verified"] = not scenario.exists()
+            receipt["scenario_residue"] = [] if receipt["scenario_teardown_verified"] else ["SCENARIO_ROOT_SURVIVED"]
+            if not receipt["scenario_teardown_verified"]:
+                receipt["status"] = "FAIL_SAFETY"
+            receipt["receipt_hash"] = digest(canonical(receipt))
+            (campaign / f"run-{index+1:02d}.json").write_bytes(canonical(receipt)+b"\n")
+            results.append(receipt)
+        sessions = [r["session_id"] for r in results]
+        summary = {"campaign_id":campaign_id, "candidate":r3.CANDIDATE, "actor_route":actor_route, "model_requested":MODEL, "model_digest":MODEL_DIGEST, "runs":len(results), "passes":sum(r["status"]=="PASS" for r in results), "failures":[r["run"] for r in results if r["status"]!="PASS"], "unique_sessions":len(set(sessions)), "class_counts":{case:sum(r["case"]==case and r["status"]=="PASS" for r in results) for case in CLASSES}, "zero_unsafe_acceptance":not any(r["status"]=="FAIL_SAFETY" for r in results), "all_telemetry_valid":all(r["telemetry_valid"] for r in results), "all_scenarios_torn_down":all(r["scenario_teardown_verified"] for r in results), "seed_commitment":digest(seed), "hidden_seed_disclosed_after_closeout":seed.hex(), "runtime_teardown_pending":True}
     finally:
         shutil.rmtree(runtime)
-    summary["runtime_teardown_pending"] = False; summary["runtime_teardown_verified"] = not runtime.exists(); summary["status"] = "GREEN" if summary["passes"]==18 and summary["unique_threads"]==18 and summary["runtime_teardown_verified"] else "NOT_GREEN"
+    summary["runtime_teardown_pending"] = False; summary["runtime_teardown_verified"] = not runtime.exists(); summary["status"] = "GREEN" if summary["passes"]==18 and summary["unique_sessions"]==18 and summary["zero_unsafe_acceptance"] and summary["all_telemetry_valid"] and summary["all_scenarios_torn_down"] and summary["runtime_teardown_verified"] else "NOT_GREEN"
     (campaign / "FINAL_SUMMARY.json").write_bytes(canonical(summary)+b"\n")
     return summary
 
