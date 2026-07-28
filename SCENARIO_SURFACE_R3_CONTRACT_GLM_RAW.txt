@@ -1,0 +1,15 @@
+glm-zai: served by glm-5.2
+```text
+VERDICT: GREEN
+SERVED_MODEL: glm-5.2
+RECUSAL: CLEAR
+BLOCKERS:
+- none
+NON_BLOCKING_RISKS:
+- none
+EVIDENCE_REQUIRED_AFTER_IMPLEMENTATION:
+- Passing execution of the 15 specified test categories in Section 10, proving complete, partial, no-loss, tamper, replay, interruption, and unsafe path rejections.
+- Verification that `summary.json` accurately binds all component hashes and strictly records `network_used: false` and `credentials_used: false`.
+- Demonstration of `PROMOTION_INTERRUPTED` semantics showing the warrant remains irrevocably `CONSUMED` and replay is rejected.
+- Proof of strictly zero workspace mutation for all `REFUSE`, `INVALID`, and no-loss controls.
+```
