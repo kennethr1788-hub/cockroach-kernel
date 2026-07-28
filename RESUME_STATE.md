@@ -1,10 +1,18 @@
 # Resume State
 
-- `CURRENT_PHASE`: `BLACK_BOX_R4_HIDDEN_R1_COMPLETE_STOPPED`
-- `LAST_GREEN_GATE`: `HARDENING_6_RUN1_GREEN`
-- `NEXT_ALLOWED_ACTION`: No further black-box execution is authorized; preserve R3 failure and the narrow R4 hidden GREEN evidence, then require a new plan and explicit authority for any downstream phase
-- `FORBIDDEN_ACTIONS`: Rerun or alter R3/R4 public evidence; create an R4 hidden seed before independent preflight GREEN; run more than one R4 hidden campaign; use RunPod or paid runtime; begin Gate 7; public actions; release; submission; HOME/live-memory mutation; credential exposure
-- `CURRENT_COMMIT`: `21856f8c0c8e85e60249af1eadcbc82ea2956223` (R4 hidden R1 evidence-freeze commit; final judge receipt follows)
+- `CURRENT_PHASE`: `HARDENING_GATE7_RUN2_GATE7C_PREFLIGHT`
+- `LAST_GREEN_GATE`: `GATE7A_CONTINUITY_GREEN`
+- `NEXT_ALLOWED_ACTION`: Freeze the byte-complete sanitized Gate 7C packet and obtain same-hash GLM and AGY GREEN; only then refresh project-local AWS login and begin bounded RunPod readiness
+- `FORBIDDEN_ACTIONS`: Create the hidden seed; create a RunPod worker before Gate 7C same-hash GLM and AGY GREEN; mutate the frozen product candidate; begin Gate 8, S3-R2, release, publication, video, or submission; mutate HOME/live memory; expose credentials
+- `CURRENT_COMMIT`: `8c66c3c6a5121bae6fc3a4d0240a39883e983027` (Gate 7B expanded harness implementation checkpoint)
+- `GATE7_EXECUTION_PROMPT_SHA256`: `936c9ae62191e5d8daa0cbd7ef4287d77777e6c761694d6d6d8789842dcb454f`
+- `GATE7_EXPANDED_PLAN_SHA256`: `0f58b51c07d25d4643b98524e53f171d6e9c0d667c46e0718b07f40f27c1d7e7`
+- `GATE7_PRODUCT_CANDIDATE`: `1c483b1930e629c9ecb6d73418b9554897dc08ad`
+- `GATE7A_PACKET_SHA256`: `780351e14eb8d1325ef9ddb86c415cb32de57ceb75ea5b31e81ccc3e91034381`
+- `GATE7A_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GEMINI_3_1_PRO_HIGH_GREEN; SAME_HASH; RECUSAL_CLEAR`
+- `GATE7B_STATE`: `LOCAL_GREEN; 84_OF_84_PUBLIC_CANARY_GREEN_NON_MEASURED; HIDDEN_SEED_ABSENT; RUNPOD_ABSENT`
+- `GATE7C_STATE`: `PENDING_SAME_HASH_GLM_AND_AGY_PREFLIGHT`
+- `GATE7_AWS_READINESS`: `HUMAN_ACTION_REQUIRED_BEFORE_CAMPAIGN_READY`
 - `CURRENT_COMMIT_AT_P9_PACKET_FREEZE`: `61d77d1704a3f074427f9f82b300abaaa201f79c`
 - `P9_IMPLEMENTATION_COMMIT`: `cbd58b3af9e1ce5c4ddf8885866b88e7e7c1ca0f`
 - `S3_PREFLIGHT_IMPLEMENTATION_COMMIT`: `9f9e1675b9d12e70e5531a196e33e28c76b9b68a`

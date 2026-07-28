@@ -1,0 +1,28 @@
+# Hardening Gate 7 Expanded Status R1
+
+- `STATUS`: `GATE7B_LOCAL_GREEN_GATE7C_PENDING`
+- `LAST_GREEN_GATE`: `GATE7A_CONTINUITY_GREEN`
+- `PRODUCT_CANDIDATE`: `1c483b1930e629c9ecb6d73418b9554897dc08ad`
+- `GATE7B_ORCHESTRATION_COMMIT`: `8c66c3c`
+- `SCORED_EXECUTIONS_PLANNED`: `84`
+- `PUBLIC_CANARY`: `84_OF_84_GREEN_NON_MEASURED`
+- `FALSE_PROMOTIONS`: `0`
+- `MUTATION_AFTER_REFUSE_OR_INVALID`: `0`
+- `HIDDEN_SEED_CREATED`: `NO`
+- `RUNPOD_CREATED`: `NO`
+- `ACTIVE_RUNPOD_INVENTORY`: `[]`
+- `COCKROACH_READINESS`: `GREEN_READ_ONLY`
+- `AWS_READINESS`: `HUMAN_ACTION_REQUIRED_BEFORE_CAMPAIGN_READY`
+- `AWS_FAILURE_EVIDENCE`: `REDACTED_HASH_ONLY`
+- `RUNPOD_AUTHORIZATION`: `PRESENT_BUT_NOT_YET_ACTIONABLE`
+- `REQUIRED_NEXT_GATE`: `SAME_HASH_GLM_AND_AGY_PREFLIGHT_GREEN`
+- `FORBIDDEN`: `HIDDEN_SEED, RUNPOD_CREATE, MEASURED_EXECUTION, GATE8, S3_R2, RELEASE`
+
+The AWS login is deliberately not bypassed and is not classified as a product
+failure. Gate 7C may review the frozen design and local evidence while the
+session is stale. Before any worker can become `CAMPAIGN_READY`, Kenneth must
+refresh the project-local AWS login and the read-only readiness receipt must be
+regenerated as GREEN with at least a 15-minute post-exchange margin.
+
+Gate 7 is not GREEN. Public canary evidence is preflight-only and cannot be
+reported as hidden measured evidence.
