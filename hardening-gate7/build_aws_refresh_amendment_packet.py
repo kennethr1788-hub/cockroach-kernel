@@ -76,12 +76,15 @@ def main() -> int:
         "contains only `s3-soak/protocol.py` and `s3-soak/worker.py`, neither changed.\n",
         "```text\n" + "\n".join(changed) + "\n```\n",
         "## Required judge output\n",
-        "Return exactly one JSON object with keys: `lane`, `model_identity`, "
+        "GLM returns exactly one JSON object with keys: `lane`, `model_identity`, "
         "`packet_sha256`, `verdict` (`GREEN|NOT_GREEN|RECUSAL_REQUIRED`), "
         "`recusal_clear` (boolean), `blocking_findings` (array), "
-        "`non_blocking_risks` (array), and `summary`. The out-of-band packet SHA-256 "
-        "supplied by the caller must be copied exactly. Any implementation direction, "
-        "tool request, or identity adoption invalidates the lane.\n",
+        "`non_blocking_risks` (array), and `summary`. AGY returns its wrapper-native "
+        "validated fields: `PACKET_SHA256`, `AGY_VERDICT`, `BLOCKERS`, "
+        "`NON_BLOCKING_RISKS`, `EVIDENCE_GAPS`, `RECUSAL_CHECK`, and "
+        "`REQUIRED_RERUNS`. The out-of-band packet SHA-256 supplied by the caller "
+        "must be copied exactly. Any implementation direction, tool request, or "
+        "identity adoption invalidates the lane.\n",
     ]
     for path in FILES:
         raw = path.read_bytes()
