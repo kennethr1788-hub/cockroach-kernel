@@ -2,9 +2,9 @@
 
 - `CURRENT_PHASE`: `HARDENING_RUN_GATE_6_RUN1_R3_AGY_PREFLIGHT`
 - `LAST_GREEN_GATE`: `HARDENING_5_EVIDENCE_CANDIDATE_R2_GREEN`
-- `NEXT_ALLOWED_ACTION`: Create reviewed attempt 02, run pre-payload canary, then the corrected frozen campaign only after canary GREEN
+- `NEXT_ALLOWED_ACTION`: Freeze the resolved-Python-path fix and attempt-02 teardown evidence; attempt 03 requires fresh GLM 5.2 plus AGY same-hash GREEN
 - `FORBIDDEN_ACTIONS`: Begin Gate 7; create a replacement Gate 6 worker before the R3 packet and both same-hash reviews are GREEN; upload the benchmark payload before a capability canary passes; relabel seccomp as a namespace; relabel Gate 5 smoke as Gate 6 evidence; claim any Gate 6 measured row before execution; change candidate 8718fbe; claim Gate 6 or S3 GREEN; public actions; release; submission; HOME/live-memory mutation; credential exposure; any worker credential transfer
-- `CURRENT_COMMIT`: `1087abd4563d16917f452ea88f52dca2f7bbe95c`
+- `CURRENT_COMMIT`: `ad2538f06a2b08e4ae69943c74ca799d7cd538a8`
 - `CURRENT_COMMIT_AT_P9_PACKET_FREEZE`: `61d77d1704a3f074427f9f82b300abaaa201f79c`
 - `P9_IMPLEMENTATION_COMMIT`: `cbd58b3af9e1ce5c4ddf8885866b88e7e7c1ca0f`
 - `S3_PREFLIGHT_IMPLEMENTATION_COMMIT`: `9f9e1675b9d12e70e5531a196e33e28c76b9b68a`
@@ -13,7 +13,7 @@
 - `S3_PREFLIGHT_R4_REPAIR_COMMIT`: `06b54e8f61bf0fa227af3de2377a462e369d7d74`
 - `S3_PREFLIGHT_R6_REPAIR_COMMIT`: `8b1d5bd1038588527bd994eb8fcb5467cac47eac`
 - `S3_PREFLIGHT_R8_REPAIR_COMMIT`: `95408fb9386ced25b468c0957e86e8f73cb123e9`
-- `PENDING_BLOCKERS`: Replacement live execution, evidence retrieval, teardown, and final same-hash review remain open; no measured rows exist yet
+- `PENDING_BLOCKERS`: Python resolved-path fix requires fresh independent preflight; no measured rows exist; attempt 03 and final review remain open
 - `REQUIRED_JUDGE_STATE`: GLM 5.2 and AGY Gemini 3.1 Pro High GREEN with recusal clear over one fresh exact packet before worker creation; the same two lanes GREEN again on one final packet after teardown
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`

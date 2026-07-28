@@ -74,7 +74,7 @@ env -i PATH=/usr/bin:/bin:/usr/sbin:/sbin
   --tools bundle/HARDENING_GATE6_LINUX_TOOL_PROVENANCE_R3.json
   --git /usr/bin/git
   --restic /workspace/ck-gate6-20260727-run1-r3/bundle/runtime/restic
-  --python /usr/bin/python3
+  --python /usr/bin/python3.10
 ```
 
 Retrieve checkpoints during execution where practical. After completion,
