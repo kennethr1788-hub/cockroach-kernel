@@ -100,10 +100,10 @@ No worker may be created until every item below has direct evidence:
 - [x] The Gate 6 worker inventory is empty.
 - [x] The evidence-candidate commit is immutable and identified above.
 - [x] A post-candidate held-out generator exists.
-- [ ] A Gate 7 runner executes all 43 trials in fresh roots and processes.
-- [ ] Seven valid-control fixtures are frozen separately from failure vectors.
-- [ ] The interruption class proves consumed-or-invalid state and zero mutation.
-- [ ] The runner emits canonical per-trial receipts and a hash-bound aggregate.
+- [x] A Gate 7 runner executes all 43 trials in fresh roots and processes.
+- [x] Seven valid-control fixtures are frozen separately from failure vectors.
+- [x] The interruption class proves consumed-or-invalid state and zero mutation.
+- [x] The runner emits canonical per-trial receipts and a hash-bound aggregate.
 - [x] A local dry run passes with known preflight vectors only; held-out vectors
       remain ungenerated and unseen.
 - [ ] The live-memory workload is locally profiled and its exact count,
