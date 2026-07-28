@@ -4,7 +4,7 @@
 - `LAST_GREEN_GATE`: `GATE7A_CONTINUITY_GREEN`
 - `NEXT_ALLOWED_ACTION`: Freeze the byte-complete sanitized Gate 7C packet and obtain same-hash GLM and AGY GREEN; only then refresh project-local AWS login and begin bounded RunPod readiness
 - `FORBIDDEN_ACTIONS`: Create the hidden seed; create a RunPod worker before Gate 7C same-hash GLM and AGY GREEN; mutate the frozen product candidate; begin Gate 8, S3-R2, release, publication, video, or submission; mutate HOME/live memory; expose credentials
-- `CURRENT_COMMIT`: `c68e65c50904d54281dfe32779562354517dd940` (Gate 7B source-binding and packet-builder checkpoint)
+- `CURRENT_COMMIT`: `1b0b706be514f41b0ffb05349ec52bac7c60bfb5` (Gate 7B frozen local-preflight evidence checkpoint)
 - `GATE7_EXECUTION_PROMPT_SHA256`: `936c9ae62191e5d8daa0cbd7ef4287d77777e6c761694d6d6d8789842dcb454f`
 - `GATE7_EXPANDED_PLAN_SHA256`: `0f58b51c07d25d4643b98524e53f171d6e9c0d667c46e0718b07f40f27c1d7e7`
 - `GATE7_PRODUCT_CANDIDATE`: `1c483b1930e629c9ecb6d73418b9554897dc08ad`
