@@ -5,7 +5,7 @@ Return GREEN only if the correction preserves the frozen product candidate, 84-c
 ## Bindings
 - `PACKET_VERSION`: `gate7-aws-login-refresh-preflight-r1`
 - `PRODUCT_CANDIDATE`: `1c483b1930e629c9ecb6d73418b9554897dc08ad`
-- `ORCHESTRATION_HEAD`: `bfb10a0786bbef30c98e6787b66738021e090f96`
+- `ORCHESTRATION_HEAD`: `b434bbe6dba85edef56ef07b19224eed9c6f940f`
 - `PRIOR_PACKET_SHA256`: `4fd89d699dccd0d3e15451fab40435ad2e9b3f7300061ff8791913dc4b7ecf44`
 - `PRIOR_JUDGES`: `GLM_5_2_GREEN; AGY_GEMINI_3_1_PRO_HIGH_GREEN; SAME_HASH; RECUSAL_CLEAR`
 - `REMOTE_BUNDLE_SHA256`: `b95c6b8e20ec30473676b8f2dbe7e128fdb78bfd33a72105131c51bf45634eb0`
@@ -85,6 +85,7 @@ HARDENING_GATE7_ATTEMPT_A02_RECEIPT_R1.md
 HARDENING_GATE7_ATTEMPT_A02_REQUEST_R1.json
 HARDENING_GATE7_ATTEMPT_A03_REQUEST_R1.json
 HARDENING_GATE7_AWS_LOGIN_REFRESH_AMENDMENT_R1.md
+HARDENING_GATE7_AWS_LOGIN_REFRESH_PREFLIGHT_PACKET_R1.md
 HARDENING_GATE7_AWS_LOGIN_REFRESH_TEST_RECEIPT_R1.md
 HARDENING_GATE7_BUNDLE_REPAIR_AUTHORIZATION_RECEIPT_R1.md
 HARDENING_GATE7_CANDIDATE_CONTINUITY_RECEIPT_R1.md
@@ -197,7 +198,7 @@ s3-soak/host_coordinator.py
 s3-soak/test_hardening.py
 ```
 ## Required judge output
-Return exactly one JSON object with keys: `lane`, `model_identity`, `packet_sha256`, `verdict` (`GREEN|NOT_GREEN|RECUSAL_REQUIRED`), `recusal_clear` (boolean), `blocking_findings` (array), `non_blocking_risks` (array), and `summary`. The out-of-band packet SHA-256 supplied by the caller must be copied exactly. Any implementation direction, tool request, or identity adoption invalidates the lane.
+GLM returns exactly one JSON object with keys: `lane`, `model_identity`, `packet_sha256`, `verdict` (`GREEN|NOT_GREEN|RECUSAL_REQUIRED`), `recusal_clear` (boolean), `blocking_findings` (array), `non_blocking_risks` (array), and `summary`. AGY returns its wrapper-native validated fields: `PACKET_SHA256`, `AGY_VERDICT`, `BLOCKERS`, `NON_BLOCKING_RISKS`, `EVIDENCE_GAPS`, `RECUSAL_CHECK`, and `REQUIRED_RERUNS`. The out-of-band packet SHA-256 supplied by the caller must be copied exactly. Any implementation direction, tool request, or identity adoption invalidates the lane.
 
 ## FILE: HARDENING_GATE7_AWS_LOGIN_REFRESH_AMENDMENT_R1.md
 - `BYTES`: `3546`
