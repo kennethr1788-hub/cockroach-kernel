@@ -14,10 +14,16 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from records import (
-    RecoveryError, load_canonical, sha256_hex, validate_candidate,
-    validate_recovery_decision,
-)
+try:
+    from .records import (
+        RecoveryError, load_canonical, sha256_hex, validate_candidate,
+        validate_recovery_decision,
+    )
+except ImportError:  # Direct script compatibility for the preserved P7 harness.
+    from records import (
+        RecoveryError, load_canonical, sha256_hex, validate_candidate,
+        validate_recovery_decision,
+    )
 
 def verify_continuation(decision: Any, candidate: Any) -> tuple[bool, str]:
     """Verify a fresh-context continuation against only the two inputs.

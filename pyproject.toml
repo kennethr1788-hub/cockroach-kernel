@@ -16,9 +16,10 @@ aws-demo = ["pg8000==1.31.5"]
 cockroach-kernel = "cockroach_kernel.cli:main"
 
 [tool.setuptools]
-packages = ["cockroach_kernel", "p9_runtime", "verifier_runtime"]
+packages = ["cockroach_kernel", "p7_runtime", "p9_runtime", "verifier_runtime"]
 
 [tool.setuptools.package-dir]
 cockroach_kernel = "cockroach_kernel"
+p7_runtime = "p7-recovery"
 p9_runtime = "p9-cloud"
 verifier_runtime = "p4-verifier"

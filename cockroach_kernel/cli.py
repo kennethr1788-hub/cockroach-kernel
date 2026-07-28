@@ -1,4 +1,4 @@
-"""Thin CLI facade over the frozen P9 keyless replay and P4 verifier."""
+"""Deterministic replay, receipt inspection, and typed recovery CLI."""
 from __future__ import annotations
 
 import argparse
@@ -268,6 +268,12 @@ def _inspect_command(args: argparse.Namespace) -> int:
     return 0
 
 
+def _recover_command(args: argparse.Namespace) -> int:
+    from cockroach_kernel.recovery_surface import run_cli
+
+    return run_cli(args)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="cockroach-kernel")
     subcommands = parser.add_subparsers(dest="command", required=True)
@@ -280,6 +286,33 @@ def build_parser() -> argparse.ArgumentParser:
     inspect = subcommands.add_parser("inspect", help="validate a canonical receipt")
     inspect.add_argument("receipt")
     inspect.set_defaults(handler=_inspect_command)
+    recover = subcommands.add_parser(
+        "recover",
+        help="recover exact bytes from a declared surviving representation",
+    )
+    recover.add_argument("--request", required=True, help="canonical typed recovery request")
+    recover.add_argument(
+        "--sandbox-root",
+        required=True,
+        help="existing disposable envelope containing every declared root",
+    )
+    recover.add_argument("--workspace", required=True, help="existing successor workspace")
+    recover.add_argument(
+        "--representation-root",
+        required=True,
+        help="existing root containing hash-bound surviving representations",
+    )
+    recover.add_argument(
+        "--custody-root",
+        required=True,
+        help="existing root for persistent one-use warrant state",
+    )
+    recover.add_argument(
+        "--output-root",
+        required=True,
+        help="existing empty root for canonical result records",
+    )
+    recover.set_defaults(handler=_recover_command)
     return parser
 
 
