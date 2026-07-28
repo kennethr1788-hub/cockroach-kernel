@@ -1,0 +1,8 @@
+{"alpha_fresh_context":true,"commit":"1c483b1930e629c9ecb6d73418b9554897dc08ad","credentials_used":false,"distinct_request_hashes":true,"distinct_summary_hashes":true,"entrypoint_name":"cockroach-kernel","help_exit":0,"network_used":false,"omega_fresh_context":true,"python":"Python 3.12.13","recover_help_exit":0,"replay_exit":1,"replay_reason":"WARRANT_REPLAY","representation_a_unchanged":true,"representation_b_unchanged":true,"trial":"one","valid_a_exit":0,"valid_b_exit":0}
+{"scenario_teardown":true,"trial":"one"}
+{"clone_root_present_during_trial":true,"install_exit":0,"trial":"one"}
+{"clean_clone_root_removed":true,"trial":"one"}
+{"alpha_fresh_context":true,"commit":"1c483b1930e629c9ecb6d73418b9554897dc08ad","credentials_used":false,"distinct_request_hashes":true,"distinct_summary_hashes":true,"entrypoint_name":"cockroach-kernel","help_exit":0,"network_used":false,"omega_fresh_context":true,"python":"Python 3.12.13","recover_help_exit":0,"replay_exit":1,"replay_reason":"WARRANT_REPLAY","representation_a_unchanged":true,"representation_b_unchanged":true,"trial":"two","valid_a_exit":0,"valid_b_exit":0}
+{"scenario_teardown":true,"trial":"two"}
+{"clone_root_present_during_trial":true,"install_exit":0,"trial":"two"}
+{"clean_clone_root_removed":true,"trial":"two"}
