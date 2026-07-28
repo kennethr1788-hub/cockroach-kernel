@@ -25,7 +25,7 @@
 - `S3_PREFLIGHT_R6_REPAIR_COMMIT`: `8b1d5bd1038588527bd994eb8fcb5467cac47eac`
 - `S3_PREFLIGHT_R8_REPAIR_COMMIT`: `95408fb9386ced25b468c0957e86e8f73cb123e9`
 - `PENDING_BLOCKERS`: `BULK_RESULT_MISSING_AFTER_PARTIAL_INSERT`; `PACKAGED_EVIDENCE_MANIFEST_HELPER_MISSING`; hidden campaign is 84/84 PASS, one-hour worker is GREEN, AWS margin probe is PASS, custody verification and teardown are GREEN, but both blockers remain load-bearing
-- `REQUIRED_JUDGE_STATE`: Final GLM and AGY review over exact packet SHA-256 `d3a1afe9ef815794a906e47df6d975039b09ac987d41231b8db26b1d368e7e7e`; an honest terminal verdict is NOT_GREEN or BLOCKED under the conjunctive gate
+- `REQUIRED_JUDGE_STATE`: Final GLM and AGY review over exact packet SHA-256 `a27866a084b09d5d4a1e3aaa7202040897150348344e98f3d57fd92e8d1c24fd`; an honest terminal verdict is NOT_GREEN or BLOCKED under the conjunctive gate
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
 - `P9_FINAL_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; RECUSAL_CLEAR`

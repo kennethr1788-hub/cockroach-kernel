@@ -122,15 +122,22 @@ For GLM:
 }
 ```
 
-For AGY:
+For AGY, return the wrapper-validated heading form:
 
-```json
-{
-  "PACKET_SHA256": "<exact packet hash>",
-  "AGY_VERDICT": "GREEN|NOT_GREEN|BLOCKED",
-  "BLOCKERS": [],
-  "VALID_SUB_RESULTS": [],
-  "RECUSAL_CHECK": "CLEAR|RECUSE",
-  "REQUIRED_RERUNS": []
-}
+```text
+PACKET_SHA256: <exact packet hash>
+AGY_VERDICT: GREEN | NOT_GREEN | BLOCKED
+BLOCKERS:
+- <blocking finding or NONE>
+NON_BLOCKING_RISKS:
+- <risk or NONE>
+EVIDENCE_GAPS:
+- <gap or NONE>
+RECUSAL_CHECK: clear | recusal_required
+REQUIRED_RERUNS:
+- <required rerun or NONE>
 ```
+
+AGY may recognize the passed hidden benchmark, live worker, AWS probe, custody
+verification, cleanup, and teardown as valid sub-results inside its findings,
+but must not omit either conjunctive blocker.
