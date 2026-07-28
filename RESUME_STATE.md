@@ -1,10 +1,10 @@
 # Resume State
 
-- `CURRENT_PHASE`: `BLACK_BOX_R3_HIDDEN_CAMPAIGN_EXECUTED_NOT_GREEN_PENDING_FINAL_AUDIT`
+- `CURRENT_PHASE`: `BLACK_BOX_R3_HIDDEN_CAMPAIGN_CLOSED_NOT_GREEN`
 - `LAST_GREEN_GATE`: `HARDENING_6_RUN1_GREEN`
-- `NEXT_ALLOWED_ACTION`: Freeze one compact final evidence packet and obtain a direct independent GLM verdict over its exact hash; preserve the NOT_GREEN campaign without rerun
+- `NEXT_ALLOWED_ACTION`: Archive this supplemental campaign unchanged; any redesigned interface or new actor campaign requires a new plan, authorization, preflight, and separate evidence lineage; Gate 7 remains unaffected and must be entered only through its own plan
 - `FORBIDDEN_ACTIONS`: Rerun any of the 18 behavior failures; change or relax argv acceptance; replace or erase failed evidence; claim BLACK_BOX_EVALUATION_GREEN; use RunPod or paid runtime; begin Gate 7; public actions; release; submission; HOME/live-memory mutation; credential exposure
-- `CURRENT_COMMIT`: `9a1e7875856a459f73c3f9837203b62ca24d7462`
+- `CURRENT_COMMIT`: `80dcc12769916586fc93924ff237423b1e362744` (final packet freeze commit; final verdict receipt follows)
 - `CURRENT_COMMIT_AT_P9_PACKET_FREEZE`: `61d77d1704a3f074427f9f82b300abaaa201f79c`
 - `P9_IMPLEMENTATION_COMMIT`: `cbd58b3af9e1ce5c4ddf8885866b88e7e7c1ca0f`
 - `S3_PREFLIGHT_IMPLEMENTATION_COMMIT`: `9f9e1675b9d12e70e5531a196e33e28c76b9b68a`
@@ -13,8 +13,8 @@
 - `S3_PREFLIGHT_R4_REPAIR_COMMIT`: `06b54e8f61bf0fa227af3de2377a462e369d7d74`
 - `S3_PREFLIGHT_R6_REPAIR_COMMIT`: `8b1d5bd1038588527bd994eb8fcb5467cac47eac`
 - `S3_PREFLIGHT_R8_REPAIR_COMMIT`: `95408fb9386ced25b468c0957e86e8f73cb123e9`
-- `PENDING_BLOCKERS`: BLACK_BOX_EVALUATION_GREEN failed because all 18 actor proposals violated the exact argv contract; final evidence audit remains open
-- `REQUIRED_JUDGE_STATE`: Final direct GLM same-hash audit must independently classify the preserved campaign; it cannot convert 0/18 into GREEN
+- `PENDING_BLOCKERS`: Supplemental BLACK_BOX_EVALUATION_GREEN is permanently unmet for campaign bb-r3-a359b8048a36; this does not alter the last product gate or authorize Gate 7
+- `REQUIRED_JUDGE_STATE`: Final direct GLM 5.2 verdict is NOT_GREEN with EVIDENCE_INTEGRITY GREEN and RECUSAL CLEAR over packet 3f6573ba9eaa632312609be128d33ab5acbecc8bce535f4b7d09d82609b1aa38
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
 - `P9_FINAL_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; RECUSAL_CLEAR`
@@ -23,7 +23,7 @@
 - `P9_JUDGE_EVIDENCE`: `evidence/p9-final-judges-r1/`
 - `RUNPOD_ATTEMPTS`: `8`
 - `RUNPOD_EXPOSURE`: `PRIOR_RECORDED_$1.189989_PLUS_GATE6_R3_THREE_ATTEMPTS_BILLING_PENDING_BOUNDED_MAX_$0.0393356667`
-- `LATEST_CHECKPOINT`: `FRESH_CONTEXT_BLACK_BOX_HIDDEN_CAMPAIGN_REPORT_R3.md`
+- `LATEST_CHECKPOINT`: `FRESH_CONTEXT_BLACK_BOX_HIDDEN_FINAL_GLM_RECEIPT_R3.md`
 - `BLACK_BOX_R3_STATUS`: `BLACK_BOX_R3_PREFLIGHT_GREEN`
 - `BLACK_BOX_R3_PRODUCT_CANDIDATE`: `1c483b1930e629c9ecb6d73418b9554897dc08ad`
 - `BLACK_BOX_R3_PLAN_SHA256`: `92f17ed947e874538b991f6281a3e4b67818a5a28820f07f7a12fbf3f5269adf`
@@ -33,6 +33,8 @@
 - `BLACK_BOX_R3_HIDDEN_EXECUTIONS`: `18`
 - `BLACK_BOX_R3_HIDDEN_CAMPAIGN_ID`: `bb-r3-a359b8048a36`
 - `BLACK_BOX_R3_HIDDEN_CAMPAIGN_RESULT`: `NOT_GREEN; 0_PASS; 18_FAIL_BEHAVIOR; 0_FAIL_SAFETY; 0_INVALID_INFRASTRUCTURE; NO_RERUN`
+- `BLACK_BOX_R3_HIDDEN_FINAL_PACKET_SHA256`: `3f6573ba9eaa632312609be128d33ab5acbecc8bce535f4b7d09d82609b1aa38`
+- `BLACK_BOX_R3_HIDDEN_FINAL_JUDGE_STATE`: `GLM_5_2_NOT_GREEN; EVIDENCE_INTEGRITY_GREEN; RECUSAL_CLEAR; THRESHOLD_FAILED_0_OF_18`
 - `BLACK_BOX_R3_HIDDEN_R2_PACKET_SHA256`: `9e9b54982ccfd18ea9ac9d0372bcce0536162baadd7e75386b144d75ee31f214`
 - `BLACK_BOX_R3_HIDDEN_R2_JUDGE_STATE`: `GLM_5_2_BLOCKED; RECUSAL_CLEAR; EXPLICIT_LOCAL_ACTOR_ROUTE_AUTHORIZATION_REQUIRED`
 - `BLACK_BOX_R3_HIDDEN_R3_PACKET_SHA256`: `654dc5086aedafa9a174ba1c4538990604a471e4ad0a8030236dfff9f2e6f44a`
