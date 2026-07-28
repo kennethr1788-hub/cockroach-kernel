@@ -1,0 +1,18 @@
+PACKET_SHA256: feae49cac213118fb78fcfdb7d72c2d1df7f75293916a6db8d9274212b78187b
+GLM_VERDICT: GREEN
+BLOCKERS:
+- None. As GLM 5.2, I have no authoring, shaping, or prior-verdict conflict on the R3 isolation revision; Claude's material-shaping recusal is preserved and AGY is the properly authorized independent replacement. The packet is sanitized, frozen, internally consistent on candidate commit, campaign id, schedule, manifest, tool, and lifecycle hashes, and correctly bounds what GREEN authorizes (sequential worker creation, capability-only canary, and only after canary success the frozen 54-row campaign; no Gate 7, no payload before canary).
+NON_BLOCKING_RISKS:
+- Live Linux x86_64 kernel seccomp capability canary has not executed yet; local structural tests passed on macOS arm64 only and explicitly are not kernel proof.
+- The seccomp filter's default action is ALLOW; isolation correctness depends on the declared deny list (socket family, x32 path, bpf, io_uring_*, pidfd_getfd, setns, unshare). The packet honestly states this is process-tree network denial, not a network namespace, VM boundary, container-escape defense, or host firewall.
+- Remote root SSH control path remains open for setup/teardown outside the measured process tree; acknowledged in packet.
+- Provider fuses (stop 2026-07-28T09:50:00Z, terminate 2026-07-28T10:00:00Z, 28800 s paid lifetime) leave bounded margin; schedule must be refreshed and re-reviewed if any worker is not created early enough, and must never be extended after payload upload or measurement start.
+- 0 measured executions and 0 R3 RunPod attempts to date; all execution evidence is post-hoc.
+EVIDENCE_GAPS:
+- No live Linux kernel seccomp/NoNewPrivs/CapEff/network-denial attestation in evidence yet (mandatory via capability canary before payload upload).
+- No 54-row measured receipts, checkpoint chain, 18 paired reports, aggregate, teardown proof, or empty scoped inventory yet (expected after successful execution).
+- AGY's same-hash GREEN on this exact packet hash is not present in the packet by design; required for quorum.
+RECUSAL_CHECK: clear
+REQUIRED_RERUNS:
+- AGY (pinned Gemini 3.1 Pro (High) via agy-judge at the declared CLI/wrapper hashes) must independently return GREEN with recusal clear on this exact packet hash before any worker creation.
+- After measured execution, evidence retrieval, exact-ID deletion, and empty scoped inventory, GLM 5.2 and AGY must both return GREEN with recusal clear on one newly frozen final packet hash; a verdict over any prior hash cannot count.
