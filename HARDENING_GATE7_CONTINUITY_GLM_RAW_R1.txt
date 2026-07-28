@@ -1,0 +1,39 @@
+```json
+{
+  "judge_lane": "GLM",
+  "verdict": "GREEN",
+  "recusal_check": "clear",
+  "packet_sha256": "780351e14eb8d1325ef9ddb86c415cb32de57ceb75ea5b31e81ccc3e91034381",
+  "historical_gate6_core_evidence_applicable": true,
+  "expanded_gate7_may_certify_current_surface": true,
+  "remote_gate6_rerun_required": false,
+  "changed_path_classification": {
+    "unchanged_core_authority": [
+      "p4-verifier/verifier.py",
+      "p7-recovery/records.py",
+      "p9-cloud/coordinator.py",
+      "p9-cloud/lambda_handler.py"
+    ],
+    "import_package_compatibility_only": [
+      "p7-recovery/__init__.py",
+      "p7-recovery/fresh_context.py",
+      "pyproject.toml"
+    ],
+    "additive_public_recovery_surface": [
+      "README.md",
+      "cockroach_kernel/cli.py",
+      "cockroach_kernel/recovery_surface.py",
+      "cockroach_kernel/test_recovery_surface.py"
+    ],
+    "behaviorally_changed_core_authority": [],
+    "unresolved": []
+  },
+  "blocking_findings": [],
+  "non_blocking_findings": [
+    "p7-recovery/fresh_context.py is not enumerated in the unchanged-authority bindings table; its import-form-only change and unchanged decision semantics are classified as compatibility-only based on the packet description and corroborated by 304/304 passing tests, 9/9 original Gate 6 mechanical suite, and two clean-clone installs producing byte-identical help outputs.",
+    "The additive recovery surface has been locally tested but not yet remotely certified by Gate 7, as acknowledged in the preserved limits; this is consistent with the expanded Gate 7 certification scope rather than a blocker for historical Gate 6 applicability.",
+    "README.md and pyproject.toml carry no runtime authority; they are grouped with the additive surface / compatibility layer respectively since the schema provides no documentation-only or manifest-only bucket."
+  ],
+  "reasoning": "The P4 verifier, P7 records/selector, and P9 cloud coordinator/lambda handler retain identical SHA-256 hashes with empty git diffs, so the historical Gate 6 core evidence remains applicable to the unchanged comparative core. The recovery_surface.py, its tests, the CLI recover dispatch, README documentation, the p7-recovery package marker, the fresh_context import-form fallback, and the pyproject package mapping are all additive or import/compatibility-only: the new surface imports the existing p7_runtime.records and explicitly does not implement a second selector, and the CLI additions do not alter the pre-existing demo/inspect authority. Mechanical evidence (304/304 tests passing, 9/9 original Gate 6 suite, two independent clean-clone installs in fresh Python 3.12 venvs, byte-identical help outputs, verified cleanup) corroborates that no core authority behavior changed. Therefore expanded Gate 7 may directly certify the current additive public recovery surface without rerunning remote Gate 6."
+}
+```
