@@ -1,9 +1,9 @@
 # Resume State
 
-- `CURRENT_PHASE`: `HARDENING_RUN_GATE_6_RUN1_R2_PREFLIGHT_READY`
+- `CURRENT_PHASE`: `HARDENING_RUN_GATE_6_RUN1_R2_BLOCKED`
 - `LAST_GREEN_GATE`: `HARDENING_5_EVIDENCE_CANDIDATE_R2_GREEN`
-- `NEXT_ALLOWED_ACTION`: Construct and freeze the Gate 6 R2 orchestration, 54-row manifest, sanitized payload, exact Linux tool/worker/cost/lifecycle packet, and obtain required same-hash GLM and Claude preflight GREEN before any RunPod worker creation
-- `FORBIDDEN_ACTIONS`: Launch Gate 6 RunPod worker before the new R2 preflight packet and required judges are GREEN; relabel Gate 5 smoke as Gate 6 evidence; patch or wrap measured receipts after freeze; change candidate 8718fbe; claim Gate 6 or S3 GREEN; claim result 12; claim a complete twelve-hour run; replacement S3 worker without a newly frozen authorization; public actions; release; submission; HOME/live-memory mutation; credential exposure; any worker credential transfer
+- `NEXT_ALLOWED_ACTION`: Freeze a new Gate 6 isolation/platform amendment that can prove unprivileged network denial on the selected worker; obtain fresh operator authorization and fresh same-hash GLM plus Claude preflight review before any replacement RunPod worker
+- `FORBIDDEN_ACTIONS`: Begin Gate 7; reuse the deleted Gate 6 worker; create a replacement Gate 6 worker without a new isolation amendment, packet, authorization, and reviews; relabel Gate 5 smoke as Gate 6 evidence; claim any Gate 6 measured row; change candidate 8718fbe; claim Gate 6 or S3 GREEN; public actions; release; submission; HOME/live-memory mutation; credential exposure; any worker credential transfer
 - `CURRENT_COMMIT_AT_P9_PACKET_FREEZE`: `61d77d1704a3f074427f9f82b300abaaa201f79c`
 - `P9_IMPLEMENTATION_COMMIT`: `cbd58b3af9e1ce5c4ddf8885866b88e7e7c1ca0f`
 - `S3_PREFLIGHT_IMPLEMENTATION_COMMIT`: `9f9e1675b9d12e70e5531a196e33e28c76b9b68a`
@@ -12,24 +12,29 @@
 - `S3_PREFLIGHT_R4_REPAIR_COMMIT`: `06b54e8f61bf0fa227af3de2377a462e369d7d74`
 - `S3_PREFLIGHT_R6_REPAIR_COMMIT`: `8b1d5bd1038588527bd994eb8fcb5467cac47eac`
 - `S3_PREFLIGHT_R8_REPAIR_COMMIT`: `95408fb9386ced25b468c0957e86e8f73cb123e9`
-- `PENDING_BLOCKERS`: Gate 6 R2 orchestration, Linux worker/tool provenance, payload, lifecycle/cost packet, same-hash preflight reviews, measured 54-row execution, final reviews, Hardening Gates 7 through 10, and separately authorized S3-R2 remain incomplete
-- `REQUIRED_JUDGE_STATE`: Gate 4/5 R2 is GLM 5.2 GREEN and Claude Opus 4.8 GREEN with recusal clear; Gate 6 still requires same-hash GLM and Claude preflight/final review; S3-R2 requires a fresh preflight packet and its declared independent judges
+- `PENDING_BLOCKERS`: Gate 6 R2 is blocked because the reviewed RunPod worker denied unprivileged user/network namespace creation; a new isolation/platform amendment, fresh authorization, fresh preflight, 54 measured executions, and final GREEN reviews are required before Hardening Gates 7 through 10 or separately authorized S3-R2
+- `REQUIRED_JUDGE_STATE`: Gate 4/5 R2 remains GLM 5.2 GREEN and Claude Opus 4.8 GREEN with recusal clear; Gate 6 R2 preflight was same-hash GREEN, while both final judges independently confirmed BLOCKED and teardown GREEN for the failed attempt
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
 - `P9_FINAL_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; RECUSAL_CLEAR`
 - `P9_LIVE_EVIDENCE`: `evidence/p9-completion-live-r1/`
 - `P9_MCP_EVIDENCE`: `evidence/p9-mcp-linked-r2/`
 - `P9_JUDGE_EVIDENCE`: `evidence/p9-final-judges-r1/`
-- `RUNPOD_ATTEMPTS`: `4`
-- `RUNPOD_EXPOSURE`: `PROJECTED_AGGREGATE_MAXIMUM_$1.189989`
-- `LATEST_CHECKPOINT`: `HARDENING_GATE5_GREEN_CHECKPOINT_R2.md`
-- `HARDENING_GATE6_STATUS`: `R1_BLOCKED_HISTORICAL; R2_PREFLIGHT_READY_NOT_FROZEN`
-- `HARDENING_GATE6_BLOCKER`: `R1_EVIDENCE_CANDIDATE_INVALIDATED_CLOSED_BY_R2; R2_PREFLIGHT_OPEN`
-- `HARDENING_GATE6_PREFLIGHT_PACKET_SHA256`: `f648e8433928053649ffe4e515a2fae824b2cdeb34afd3403c2fdf4f56e0aed1`
+- `RUNPOD_ATTEMPTS`: `5`
+- `RUNPOD_EXPOSURE`: `PRIOR_RECORDED_$1.189989_PLUS_GATE6_BILLING_PENDING_MAX_$0.0060`
+- `LATEST_CHECKPOINT`: `HARDENING_GATE6_BLOCKED_CHECKPOINT_R2.md`
+- `HARDENING_GATE6_STATUS`: `R1_BLOCKED_HISTORICAL; R2_BLOCKED_TEARDOWN_GREEN`
+- `HARDENING_GATE6_BLOCKER`: `UNPRIVILEGED_NETWORK_NAMESPACE_UNAVAILABLE`
+- `HARDENING_GATE6_PREFLIGHT_PACKET_SHA256`: `f1df04300bd4d865d2c0d2b87bc8c5f607a98f23e7c45d377edc84c31a04346d`
+- `HARDENING_GATE6_FINAL_PACKET_SHA256`: `6f3b1d8a3c10244d88feb99a8a39c9ce13ae836abf9c0117617d7adfcac12ede`
+- `HARDENING_GATE6_PREFLIGHT_JUDGE_STATE`: `GLM 5.2 GREEN; CLAUDE OPUS 4.8 GREEN; RECUSAL CLEAR`
+- `HARDENING_GATE6_FINAL_JUDGE_STATE`: `GLM 5.2 BLOCKED; CLAUDE OPUS 4.8 BLOCKED; RECUSAL CLEAR; TEARDOWN GREEN`
 - `HARDENING_GATE6_MEASURED_EXECUTIONS`: `0`
-- `HARDENING_GATE6_RUNPOD_ATTEMPTS`: `0`
+- `HARDENING_GATE6_RUNPOD_ATTEMPTS`: `1`
+- `HARDENING_GATE6_POD_IDS`: `2sh4lx37f6r73g_DELETED`
 - `HARDENING_GATE6_RUNPOD_INVENTORY`: `[]`
-- `HARDENING_GATE6_COST_STATE`: `EXACT_$0.00`
+- `HARDENING_GATE6_COST_STATE`: `BILLING_PENDING_BOUNDED_MAX_$0.0060`
+- `HARDENING_GATE6_CLOSEOUT_COMMIT`: `cfc3c8bfc07be66b1990fc04cb2b6f79d60e80ad`
 - `HARDENING_PLAN_SHA256`: `1ce953127138a35bd9588d686bbefefc0b012e8f2188a8fea736842030d57310`
 - `HARDENING_GATE0_PACKET_SHA256`: `cdc0e17c9ba6fa58c1304d6bf96e22ebdea1dcfb43084505a9aa706886425823`
 - `HARDENING_GATE0_JUDGE_STATE`: `GLM_4_7_GREEN`
