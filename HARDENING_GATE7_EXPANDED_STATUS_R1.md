@@ -1,6 +1,6 @@
 # Hardening Gate 7 Expanded Status R1
 
-- `STATUS`: `GATE7_A03_MEASURED_CAMPAIGN_IN_PROGRESS_WITH_BULK_BLOCKER`
+- `STATUS`: `HARDENING_7_RUN2_FINAL_REVIEW_PENDING`
 - `LAST_GREEN_GATE`: `GATE7C_SAME_HASH_GREEN`
 - `PRODUCT_CANDIDATE`: `1c483b1930e629c9ecb6d73418b9554897dc08ad`
 - `GATE7B_HARNESS_COMMIT`: `8c66c3c6a5121bae6fc3a4d0240a39883e983027`
@@ -16,21 +16,27 @@
 - `TRANSFER_FILE_COUNT`: `87`
 - `FALSE_PROMOTIONS`: `0`
 - `MUTATION_AFTER_REFUSE_OR_INVALID`: `0`
-- `HIDDEN_SEED_CREATED`: `NO`
-- `RUNPOD_CREATED`: `A01_AND_A02_DELETED; A03_RUNNING_AND_GUARDED`
-- `ACTIVE_RUNPOD_INVENTORY`: `[xvxonfa5ck8wpq]`
+- `HIDDEN_SEED_CREATED`: `YES; EXACTLY_ONE; DISCLOSED_ONLY_AFTER_CLOSEOUT`
+- `HIDDEN_MEASURED_RESULT`: `84_OF_84_PASS; ZERO_BEHAVIOR_FAILURES; ZERO_SAFETY_FAILURES; ZERO_FALSE_PROMOTIONS; ZERO_RESIDUE`
+- `LIVE_WORKER_RESULT`: `GREEN; 3613.026_SECONDS; 60_OF_60_CHECKPOINTS; 12_OF_12_SAFETY_REPLAYS; 12_OF_12_LAMBDA; 108_OF_108_COCKROACHDB_OPS`
+- `RUNPOD_CREATED`: `A01_A02_A03_DELETED`
+- `ACTIVE_RUNPOD_INVENTORY`: `[]`
+- `A03_TEARDOWN`: `TEARDOWN_GREEN; EXACT_ID_ABSENT; CAMPAIGN_ACTIVE_EMPTY`
 - `COCKROACH_READINESS`: `GREEN_READ_ONLY`
-- `AWS_READINESS`: `AUTHENTICATED_BUT_SESSION_MARGIN_INSUFFICIENT; REFRESH_REQUIRED`
+- `AWS_READINESS`: `GREEN; 900_SECOND_POST_FINAL_EXCHANGE_IDENTITY_PROBE_PASS`
 - `AWS_FAILURE_EVIDENCE`: `NONE_CONTROLLING`
 - `RUNPOD_AUTHORIZATION`: `FRESH_NARROW_REPAIR_AND_ONE_REPLACEMENT_ATTEMPT_AUTHORIZED; ACTIONABLE_ONLY_AFTER_FRESH_SAME_HASH_JUDGES`
 - `GATE7C_PACKET_SHA256`: `1f154522ef5c1e31661782b9ced4dce373c54d710e789d650eeb2adc40155843`
 - `GATE7C_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; SAME_HASH; RECUSAL_CLEAR`
 - `GATE7C_REPAIRED_PACKET_SHA256`: `4fd89d699dccd0d3e15451fab40435ad2e9b3f7300061ff8791913dc4b7ecf44`
 - `GATE7C_REPAIRED_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; SAME_HASH; RECUSAL_CLEAR`
-- `REQUIRED_NEXT_GATE`: `COMPLETE_3600_SECOND_LIVE_TRACK_AND_BULK_WORKLOAD; VERIFY_AWS_MARGIN; RETRIEVE_VERIFY_TEARDOWN; FINAL_SAME_HASH_JUDGES`
+- `BULK_RESULT`: `BLOCKED; PARTIAL_INSERT_2000_TASKS_20000_EVENTS_4000_RECEIPTS_0_VECTORS; CANONICAL_RESULT_MISSING; CLEANUP_0_0_0_0`
+- `PACKAGED_MANIFEST_HELPER`: `BLOCKED; REQUIRED_HELPER_ABSENT; DETERMINISTIC_CUSTODY_FALLBACK_USED_AND_EXPLICITLY_LABELED`
+- `FINAL_PACKET_SHA256`: `d3a1afe9ef815794a906e47df6d975039b09ac987d41231b8db26b1d368e7e7e`
+- `REQUIRED_NEXT_GATE`: `FINAL_SAME_HASH_GLM_AND_AGY_REVIEW; THEN_FREEZE_BLOCKED_CHECKPOINT`
 - `PRIOR_GATE7C_PACKET`: `SUPERSEDED; AGY_WRAPPER_SIZE_REJECTION_BEFORE_MODEL_INVOCATION`
 - `PRIOR_GATE7C_JUDGE_ATTEMPT`: `SUPERSEDED; GLM_IDENTITY_VIOLATION_REPAIRED; AGY_SCHEMA_REJECTION_REPAIRED`
-- `FORBIDDEN`: `HIDDEN_SEED_BEFORE_CAMPAIGN_READY, RUNPOD_CREATE_BEFORE_AWS_READINESS_GREEN, MEASURED_EXECUTION_BEFORE_CAMPAIGN_READY, GATE8, S3_R2, RELEASE`
+- `FORBIDDEN`: `ANY_MEASURED_RERUN_OR_RESUME, ANY_REPLACEMENT_WORKER, PRODUCT_MUTATION, GATE8, S3_R2, RELEASE, SUBMISSION`
 
 Gate 7C remains GREEN only for packet
 `1f154522ef5c1e31661782b9ced4dce373c54d710e789d650eeb2adc40155843`.
@@ -52,10 +58,17 @@ historical. The repaired packet is now same-hash GREEN from GLM 5.2 and AGY,
 with recusal clear. The authorized replacement worker may be created, but the
 hidden seed remains forbidden until every `CAMPAIGN_READY` check passes.
 
-A03 now holds the exact repaired 87-file bundle. Transfer bytes and SHA-256,
-every extracted file path/size/hash, Linux CockroachDB archive and binary,
-unprivileged identities, zero capabilities, inherited seccomp, oracle
-exclusion, and known PROMOTE/INVALID canaries passed. A03 remains running under
-an advancing exact-ID lifecycle guard. The current AWS grant expires at
-`2026-07-28T21:29:43Z`, so `CAMPAIGN_READY` is fail-closed pending a fresh
-project-local AWS login with enough margin for the separate one-hour track.
+A03 completed and was deleted. The hidden benchmark passed 84/84, the one-hour
+live worker passed its measured duration and every scheduled checkpoint,
+safety replay, Lambda call, and CockroachDB operation, the post-final-exchange
+AWS identity probe passed, and retrieved custody manifests verified every
+file. Those are valid sub-results.
+
+Gate 7 is nevertheless blocked under its conjunctive acceptance law. The
+required 46,000-row bulk controller exited after partially inserting tasks,
+events, and receipts but before vectors or a canonical result receipt. The
+required packaged evidence-manifest helper was also absent. Synthetic bulk
+residue was cleaned to zero, the worker teardown is GREEN, and neither failed
+condition was rerun or patched. Final independent same-hash review is pending;
+it may recognize the valid sub-results but cannot convert either blocker to
+GREEN.
