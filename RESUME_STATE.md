@@ -1,8 +1,8 @@
 # Resume State
 
-- `CURRENT_PHASE`: `HARDENING_GATE7_RUN2_PROVIDER_READINESS_ATTEMPT_A01`
+- `CURRENT_PHASE`: `HARDENING_GATE7_RUN2_PROVIDER_READINESS_ATTEMPT_A02`
 - `LAST_GREEN_GATE`: `GATE7C_SAME_HASH_GREEN`
-- `NEXT_ALLOWED_ACTION`: Create and verify exactly one policy-compliant attempt A01 worker from the frozen request; delete on any mismatch before upload
+- `NEXT_ALLOWED_ACTION`: After the required backoff, create and verify exactly one policy-compliant attempt A02 worker; use one supervised transfer process and delete on any mismatch before payload acceptance
 - `FORBIDDEN_ACTIONS`: Create the hidden seed before CAMPAIGN_READY; upload before returned worker verification; create a concurrent worker; mutate the frozen product candidate; begin Gate 8, S3-R2, release, publication, video, or submission; mutate HOME/live memory; expose credentials
 - `CURRENT_COMMIT`: `777e3588bc4b07f0a3ea78c7c5831aa087f6869b` (final Gate 7C packet checkpoint; judge receipt follows)
 - `GATE7_EXECUTION_PROMPT_SHA256`: `936c9ae62191e5d8daa0cbd7ef4287d77777e6c761694d6d6d8789842dcb454f`
