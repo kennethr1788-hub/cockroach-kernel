@@ -515,6 +515,7 @@ def preflight() -> dict[str, Any]:
             "public_and_sandbox_canaries": canaries,
             "live_telemetry_hash": digest(canonical(live_telemetry)),
             "live_telemetry_events": len(live_telemetry),
+            "live_telemetry": live_telemetry,
             "telemetry_faults": telemetry,
             "residue_mutations": residue,
             "scorer_calibration": scorer,
