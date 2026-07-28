@@ -4,7 +4,7 @@
 - `LAST_GREEN_GATE`: `HARDENING_6_RUN1_GREEN`
 - `NEXT_ALLOWED_ACTION`: Execute exactly one three-case R4 R2 action-only public canary locally, preserve every result, obtain one independent GLM audit, and stop before any hidden campaign
 - `FORBIDDEN_ACTIONS`: Rerun or alter R3; create a hidden seed; execute hidden scenarios; claim BLACK_BOX_EVALUATION_GREEN; use RunPod or paid runtime; begin Gate 7; public actions; release; submission; HOME/live-memory mutation; credential exposure
-- `CURRENT_COMMIT`: `80dcc12769916586fc93924ff237423b1e362744` (final packet freeze commit; final verdict receipt follows)
+- `CURRENT_COMMIT`: `e49cf9f443fa55499bb8a998cd05e7db9e2d808d` (R4 R2 public-canary repair commit; execution evidence follows)
 - `CURRENT_COMMIT_AT_P9_PACKET_FREEZE`: `61d77d1704a3f074427f9f82b300abaaa201f79c`
 - `P9_IMPLEMENTATION_COMMIT`: `cbd58b3af9e1ce5c4ddf8885866b88e7e7c1ca0f`
 - `S3_PREFLIGHT_IMPLEMENTATION_COMMIT`: `9f9e1675b9d12e70e5531a196e33e28c76b9b68a`

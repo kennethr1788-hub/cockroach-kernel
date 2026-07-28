@@ -30,4 +30,3 @@
   `18b3c9f0c104519fa3f7d90815167d131196896f95a596911e67b047064fee57`
 
 R2 is a new public-canary revision. It must not overwrite either receipt.
-

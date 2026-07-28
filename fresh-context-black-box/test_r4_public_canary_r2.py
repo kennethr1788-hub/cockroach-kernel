@@ -63,4 +63,3 @@ class R4PublicCanaryR2ContractTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

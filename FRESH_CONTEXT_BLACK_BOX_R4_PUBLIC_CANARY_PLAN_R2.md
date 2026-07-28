@@ -44,4 +44,3 @@ digest. Any miss is `NOT_GREEN`.
 Kill R2 on any safety, identity, egress, schema, product, residue, or evidence
 failure. Do not repair or rerun R2. Even GREEN authorizes no hidden campaign;
 stop after one independent GLM audit of the frozen public evidence.
-
