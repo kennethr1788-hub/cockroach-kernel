@@ -41,6 +41,26 @@ def proc_status() -> dict[str, str]:
     return values
 
 
+def load_attestation(path: Path, claimed: str) -> dict[str, object]:
+    if not path.is_absolute() or not path.is_file():
+        raise base.CampaignError("ISOLATION_ATTESTATION_BINDING_INVALID")
+    try:
+        raw = path.read_bytes()
+        record = json.loads(raw)
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise base.CampaignError(
+            "ISOLATION_ATTESTATION_BINDING_INVALID"
+        ) from error
+    if not isinstance(record, dict) or base.canonical(record) != raw:
+        raise base.CampaignError("ISOLATION_ATTESTATION_BINDING_INVALID")
+    body = {key: value for key, value in record.items()
+            if key != "attestation_sha256"}
+    if (record.get("attestation_sha256") != base.digest(body) or
+            record.get("attestation_sha256") != claimed):
+        raise base.CampaignError("ISOLATION_ATTESTATION_BINDING_INVALID")
+    return record
+
+
 def validate_isolation() -> dict[str, object]:
     if os.getuid() == 0 or os.geteuid() == 0:
         raise base.CampaignError("HOST_USER_MUST_BE_UNPRIVILEGED")
@@ -52,14 +72,8 @@ def validate_isolation() -> dict[str, object]:
     path_text = os.environ.get("CK_GATE6_ISOLATION_ATTESTATION", "")
     claimed = os.environ.get("CK_GATE6_ISOLATION_ATTESTATION_SHA256", "")
     path = Path(path_text)
-    if not path.is_absolute() or not path.is_file() or file_hash(path) != claimed:
-        raise base.CampaignError("ISOLATION_ATTESTATION_BINDING_INVALID")
-    record = json.loads(path.read_bytes())
-    body = {key: value for key, value in record.items()
-            if key != "attestation_sha256"}
-    if (record.get("attestation_sha256") != base.digest(body) or
-            record.get("attestation_sha256") != claimed or
-            record.get("uid") == 0 or record.get("euid") == 0 or
+    record = load_attestation(path, claimed)
+    if (record.get("uid") == 0 or record.get("euid") == 0 or
             int(record.get("cap_eff", "-1"), 16) != 0 or
             record.get("no_new_privs") != 1 or
             record.get("seccomp_mode") != 2 or
