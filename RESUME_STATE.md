@@ -1,8 +1,8 @@
 # Resume State
 
-- `CURRENT_PHASE`: `HARDENING_RUN_GATE_6_RUN1_R3_PREFLIGHT`
+- `CURRENT_PHASE`: `HARDENING_RUN_GATE_6_RUN1_R3_PREFLIGHT_BLOCKED`
 - `LAST_GREEN_GATE`: `HARDENING_5_EVIDENCE_CANDIDATE_R2_GREEN`
-- `NEXT_ALLOWED_ACTION`: Submit exact R2 packet 7993cdbf3d76469ba268cb6c4a26742d4726ecfef0b41c1a9e5072a56188650d to GLM 5.2 and Claude Opus 4.8; create no worker before both are GREEN with recusal clear
+- `NEXT_ALLOWED_ACTION`: Obtain explicit operator authority to amend the required independent second preflight lane because Claude is recused; then freeze and review one new same-hash packet before any RunPod creation
 - `FORBIDDEN_ACTIONS`: Begin Gate 7; create a replacement Gate 6 worker before the R3 packet and both same-hash reviews are GREEN; upload the benchmark payload before a capability canary passes; relabel seccomp as a namespace; relabel Gate 5 smoke as Gate 6 evidence; claim any Gate 6 measured row before execution; change candidate 8718fbe; claim Gate 6 or S3 GREEN; public actions; release; submission; HOME/live-memory mutation; credential exposure; any worker credential transfer
 - `CURRENT_COMMIT`: `dc5024d21f71bf23ae35ce3c2c72721e910f362d`
 - `CURRENT_COMMIT_AT_P9_PACKET_FREEZE`: `61d77d1704a3f074427f9f82b300abaaa201f79c`
@@ -13,8 +13,8 @@
 - `S3_PREFLIGHT_R4_REPAIR_COMMIT`: `06b54e8f61bf0fa227af3de2377a462e369d7d74`
 - `S3_PREFLIGHT_R6_REPAIR_COMMIT`: `8b1d5bd1038588527bd994eb8fcb5467cac47eac`
 - `S3_PREFLIGHT_R8_REPAIR_COMMIT`: `95408fb9386ced25b468c0957e86e8f73cb123e9`
-- `PENDING_BLOCKERS`: Gate 6 R3 has no provider proof; the unprivileged seccomp capability canary, 54 measured executions, teardown, and final GREEN reviews remain required before Hardening Gates 7 through 10 or separately authorized S3-R2
-- `REQUIRED_JUDGE_STATE`: Fresh same-hash GLM 5.2 and Claude Opus 4.8 GREEN with recusal clear over the exact R3 packet before worker creation; final same-hash GREEN again after teardown
+- `PENDING_BLOCKERS`: Claude Opus 4.8 is recused because its R1 review materially shaped R2 isolation hardening; the named two-lane preflight cannot clear without an operator-approved judge-contract amendment; no provider proof or measured execution exists
+- `REQUIRED_JUDGE_STATE`: Operator-approved independent second lane plus GLM 5.2 over one fresh same-hash packet before worker creation; final same-hash GREEN again after teardown
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
 - `P9_FINAL_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; RECUSAL_CLEAR`
@@ -39,7 +39,7 @@
 - `HARDENING_GATE6_R3_AMENDMENT_COMMIT`: `dc5024d21f71bf23ae35ce3c2c72721e910f362d`
 - `HARDENING_GATE6_R3_ISOLATION`: `UNPRIVILEGED_NO_NEW_PRIVS_INHERITED_SECCOMP_BPF; NETWORK_NAMESPACE_NOT_CLAIMED`
 - `HARDENING_GATE6_R3_PREFLIGHT_PACKET_SHA256`: `R1_49068ab24f16b51120b447514bd928e527d02428a8343ae10443f8a83041613b_SUPERSEDED; R2_7993cdbf3d76469ba268cb6c4a26742d4726ecfef0b41c1a9e5072a56188650d_CURRENT`
-- `HARDENING_GATE6_R3_JUDGE_STATE`: `R1_BOTH_GREEN_BUT_SUPERSEDED_BY_BUILDER_HARDENING; R2_PENDING`
+- `HARDENING_GATE6_R3_JUDGE_STATE`: `R1_BOTH_GREEN_SUPERSEDED; R2_GLM_5_2_GREEN_AND_CLAUDE_OPUS_4_8_RECUSAL_REQUIRED; PREFLIGHT_BLOCKED`
 - `HARDENING_GATE6_R3_RUNPOD_INVENTORY`: `[]`
 - `HARDENING_PLAN_SHA256`: `1ce953127138a35bd9588d686bbefefc0b012e8f2188a8fea736842030d57310`
 - `HARDENING_GATE0_PACKET_SHA256`: `cdc0e17c9ba6fa58c1304d6bf96e22ebdea1dcfb43084505a9aa706886425823`

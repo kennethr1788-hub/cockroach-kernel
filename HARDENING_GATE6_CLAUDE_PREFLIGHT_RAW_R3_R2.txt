@@ -1,0 +1,9 @@
+{
+  "role": "ICARUS Claude Opus 4.8 non-authoring evidence judge",
+  "packet_sha256": "7993cdbf3d76469ba268cb6c4a26742d4726ecfef0b41c1a9e5072a56188650d",
+  "verdict": "RECUSAL_REQUIRED",
+  "blockers": [],
+  "non_blocking_risks": [],
+  "evidence_gaps": [],
+  "recusal_check": "recusal_required"
+}
