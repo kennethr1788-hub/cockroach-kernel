@@ -1,0 +1,19 @@
+glm-zai: served by glm-5.2
+```text
+VERDICT: GREEN
+SERVED_MODEL: GLM (Independent Judge)
+RECUSAL: CLEAR
+BLOCKERS:
+- none
+NON_BLOCKING_RISKS:
+- The effectiveness of the "zero forbidden access" and "zero residue" guarantees depends entirely on the fidelity of the disposable sandbox and the residue scanner. If the sandbox fails to mount the filesystem correctly or misses a specific kernel-level process state, a false GREEN could occur.
+- The "actor does not inspect installed product source" rule requires strict deterministic enforcement. If the actor uses standard CLI introspection commands (e.g., `which`, `strings`, or environment variable dumps) that inadvertently expose source paths or environment variables, the scorer must reliably distinguish between incidental exposure and explicit source inspection.
+EVIDENCE_REQUIRED_BEFORE_EXECUTION:
+- SHA-256 hashes of the exact frozen candidate commit, package allowlist, deterministic scorer source, scenario generator source, and actor prompt template.
+- Cryptographic commitment (e.g., hash) of the random campaign seed before the execution of the first actor session.
+- Independent verification of the sandbox profile, specifically confirming that network egress and filesystem boundaries are hardened against the model actor.
+CLAIM_BOUNDARY_ASSESSMENT:
+- The claim boundary is highly accurate and appropriately narrow. It explicitly separates this private, model-operated synthetic evaluation from human user testing, Gate 6, Gate 7, live cloud evidence, and population-level performance. It correctly limits the claim to confirming that deterministic scoring validated the recorded outcomes across 18 specific synthetic scenarios. It successfully prevents the generalization of these results into broad production-readiness guarantees.
+RECOMMENDED_MINIMAL_CORRECTIONS:
+- none
+```
