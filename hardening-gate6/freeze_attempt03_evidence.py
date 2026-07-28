@@ -252,7 +252,7 @@ def main() -> int:
 - `LIFECYCLE_FINAL_EVENT_SHA256`: `{lifecycle[-1]['event_hash']}`
 - `MEASURED_EVIDENCE_INDEX_FILE_SHA256`: `{index_hash}`
 - `TRACKED_EVIDENCE_COPIES`: `{json.dumps(copies, sort_keys=True, separators=(',', ':'))}`
-- `FINAL_REVIEW`: `GLM_5_2_AND_AGY_REQUIRED_ON_ONE_EXACT_PACKET_HASH`
+- `FINAL_REVIEW`: `GLM 5.2 AND AGY REQUIRED ON ONE EXACT PACKET HASH`
 
 The local validator recomputed every embedded receipt hash, every receipt file
 hash, all 54 checkpoint event links, the aggregate hash, the evidence-manifest

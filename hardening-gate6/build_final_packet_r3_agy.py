@@ -10,7 +10,7 @@ import subprocess
 
 
 ROOT = Path(__file__).resolve().parent.parent
-OUTPUT = ROOT / "HARDENING_GATE6_FINAL_PACKET_R3_AGY_R1.md"
+OUTPUT = ROOT / "HARDENING_GATE6_FINAL_PACKET_R3_AGY_R2.md"
 FILES = (
     "HARDENING_GATE6_R3_JUDGE_SUBSTITUTION_AUTHORIZATION.md",
     "HARDENING_GATE6_R3_JUDGE_CONTRACT_AMENDMENT.md",
@@ -40,7 +40,7 @@ FILES = (
     "hardening-gate6/freeze_attempt03_evidence.py",
 )
 
-HEADER = """# Hardening Gate 6 — GLM plus AGY Same-Hash Final Packet R3-AGY-R1
+HEADER = """# Hardening Gate 6 — GLM plus AGY Same-Hash Final Packet R3-AGY-R2
 
 ## Controlling decision
 
