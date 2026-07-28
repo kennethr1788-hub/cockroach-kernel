@@ -1,6 +1,6 @@
 # Hardening Gate 6 R3 — AGY Substitution Status
 
-- `STATUS`: `R1_SUPERSEDED_AFTER_INVALID_GLM_IDENTITY_ADOPTION`
+- `STATUS`: `R2_PACKET_FROZEN_AWAITING_BOTH_REVIEWS`
 - `LAST_GREEN_GATE`: `HARDENING_5_EVIDENCE_CANDIDATE_R2_GREEN`
 - `CANDIDATE_COMMIT`: `8718fbecc2b145ff36ce8c3ed655e92b5906aeab`
 - `REQUIRED_PREFLIGHT`: `GLM 5.2 AND AGY GREEN ON THE SAME HASH`
@@ -15,6 +15,7 @@
 - `PREFLIGHT_PACKET_SHA256`: `bce79ec92f76469cbd11efb0a4fd6221ab3da7e3135b2370907800426b40e7be`
 - `R1_AGY`: `GREEN_STALE_AFTER_PACKET_CHANGE`
 - `R1_GLM`: `INVALID_NO_GLM_CONTRACT`
+- `R2_PREFLIGHT_PACKET_SHA256`: `4f598020da961385056d9a6a3f22d03b849624cfa8458fcc48f56bddb3c4620d`
 
 Provider creation remains forbidden until a fresh packet containing the judge
 substitution authorization, amendment, historical recusal, isolation source,

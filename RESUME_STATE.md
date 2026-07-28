@@ -4,7 +4,7 @@
 - `LAST_GREEN_GATE`: `HARDENING_5_EVIDENCE_CANDIDATE_R2_GREEN`
 - `NEXT_ALLOWED_ACTION`: Freeze a corrected R3 GLM plus AGY packet without embedded raw historical judge voices and obtain both GREEN on the new exact same hash before any RunPod creation
 - `FORBIDDEN_ACTIONS`: Begin Gate 7; create a replacement Gate 6 worker before the R3 packet and both same-hash reviews are GREEN; upload the benchmark payload before a capability canary passes; relabel seccomp as a namespace; relabel Gate 5 smoke as Gate 6 evidence; claim any Gate 6 measured row before execution; change candidate 8718fbe; claim Gate 6 or S3 GREEN; public actions; release; submission; HOME/live-memory mutation; credential exposure; any worker credential transfer
-- `CURRENT_COMMIT`: `99ec403ef10486e30072d98403c4b403d9d7e0e3`
+- `CURRENT_COMMIT`: `430de17ea7505884b81e69ae23b4b7b6dceb90ad`
 - `CURRENT_COMMIT_AT_P9_PACKET_FREEZE`: `61d77d1704a3f074427f9f82b300abaaa201f79c`
 - `P9_IMPLEMENTATION_COMMIT`: `cbd58b3af9e1ce5c4ddf8885866b88e7e7c1ca0f`
 - `S3_PREFLIGHT_IMPLEMENTATION_COMMIT`: `9f9e1675b9d12e70e5531a196e33e28c76b9b68a`
@@ -45,6 +45,7 @@
 - `HARDENING_GATE6_R3_AGY_AMENDMENT_COMMIT`: `c9873c0fcc356316742ffc7a5c5bd1bbbbeed55a`
 - `HARDENING_GATE6_R3_AGY_PREFLIGHT_PACKET_SHA256`: `bce79ec92f76469cbd11efb0a4fd6221ab3da7e3135b2370907800426b40e7be`
 - `HARDENING_GATE6_R3_AGY_R1_JUDGE_STATE`: `AGY_GREEN_STALE; GLM_INVALID_IDENTITY_ADOPTION; PACKET_SUPERSEDED`
+- `HARDENING_GATE6_R3_AGY_R2_PREFLIGHT_PACKET_SHA256`: `4f598020da961385056d9a6a3f22d03b849624cfa8458fcc48f56bddb3c4620d`
 - `HARDENING_PLAN_SHA256`: `1ce953127138a35bd9588d686bbefefc0b012e8f2188a8fea736842030d57310`
 - `HARDENING_GATE0_PACKET_SHA256`: `cdc0e17c9ba6fa58c1304d6bf96e22ebdea1dcfb43084505a9aa706886425823`
 - `HARDENING_GATE0_JUDGE_STATE`: `GLM_4_7_GREEN`
