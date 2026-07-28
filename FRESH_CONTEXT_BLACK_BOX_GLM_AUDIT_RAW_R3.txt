@@ -1,0 +1,16 @@
+glm-zai: served by glm-5.2
+```text
+VERDICT: GREEN
+SERVED_MODEL: glm-5.2
+RECUSAL: CLEAR
+BLOCKERS:
+- none
+NON_BLOCKING_RISKS:
+- macOS `sandbox-exec` implementation nuances and profile portability across different macOS versions.
+- Potential undiscovered edge cases in process attribution that might only manifest during the full hidden campaign, despite telemetry calibration.
+PREFLIGHT_EVIDENCE_REQUIRED:
+- Telemetry logs from the preflight showing proper detection and denial event recording for all deny canaries (outside-root access, source/generator access, IPv4/IPv6/DNS, cross-session roots, etc.).
+- Residue scanner outputs demonstrating successful detection of all 9 specified public-fixture mutations and a clean pass on the unmodified fixture.
+- Allow canary outputs proving CLI access, bounded workspace writes, public docs access, and acceptance commands function as expected under the Seatbelt profile.
+- Hash manifests verifying that the candidate, package files, Seatbelt profile, and telemetry schema are strictly frozen to their declared SHA-256 values.
+```
