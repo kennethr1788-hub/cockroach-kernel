@@ -1,6 +1,6 @@
 # Resume State
 
-- `CURRENT_PHASE`: `HARDENING_GATE7_A03_MEASURED_CAMPAIGN_IN_PROGRESS`
+- `CURRENT_PHASE`: `HARDENING_GATE7_A03_MEASURED_CAMPAIGN_IN_PROGRESS_WITH_BULK_BLOCKER`
 - `LAST_GREEN_GATE`: `GATE7C_SAME_HASH_GREEN`
 - `NEXT_ALLOWED_ACTION`: Supervise the active 3600-second live track and bulk workload; then perform the 900-second AWS margin probe, retrieve and verify all evidence, tear down A03, independently recompute, and run final same-hash judges
 - `FORBIDDEN_ACTIONS`: Create another worker under packet `1f154522ef5c1e31661782b9ced4dce373c54d710e789d650eeb2adc40155843`; patch an accepted worker payload; create a hidden seed; begin measured execution; mutate the frozen product candidate; begin Gate 8, S3-R2, release, publication, video, or submission; mutate HOME/live memory; expose credentials
@@ -24,7 +24,7 @@
 - `S3_PREFLIGHT_R4_REPAIR_COMMIT`: `06b54e8f61bf0fa227af3de2377a462e369d7d74`
 - `S3_PREFLIGHT_R6_REPAIR_COMMIT`: `8b1d5bd1038588527bd994eb8fcb5467cac47eac`
 - `S3_PREFLIGHT_R8_REPAIR_COMMIT`: `95408fb9386ced25b468c0957e86e8f73cb123e9`
-- `PENDING_BLOCKERS`: `none while measured campaign runs`; hidden campaign is 84/84 GREEN pending retrieval and independent recomputation; the 3600-second live track, bulk workload, 900-second post-final-exchange AWS probe, teardown, and final judges remain open
+- `PENDING_BLOCKERS`: `BULK_RESULT_MISSING_AFTER_PARTIAL_INSERT`; hidden campaign is 84/84 GREEN pending retrieval and independent recomputation; bulk controller exited after 2,000 tasks, 20,000 events, and 4,000 receipts but before vectors/result receipt; synthetic residue cleanup is GREEN; the 3600-second live track, 900-second post-final-exchange AWS probe, teardown, and final judges remain open
 - `REQUIRED_JUDGE_STATE`: Current Gate 7C results are historical after any bundle repair; fresh GLM 5.2 and AGY same-hash GREEN are required on the repaired packet before a new worker, followed by final measured-campaign GLM and AGY review
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
