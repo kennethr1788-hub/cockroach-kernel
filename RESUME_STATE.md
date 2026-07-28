@@ -1,9 +1,10 @@
 # Resume State
 
-- `CURRENT_PHASE`: `HARDENING_RUN_GATE_6_RUN1_R2_BLOCKED`
+- `CURRENT_PHASE`: `HARDENING_RUN_GATE_6_RUN1_R3_PREFLIGHT`
 - `LAST_GREEN_GATE`: `HARDENING_5_EVIDENCE_CANDIDATE_R2_GREEN`
-- `NEXT_ALLOWED_ACTION`: Freeze a new Gate 6 isolation/platform amendment that can prove unprivileged network denial on the selected worker; obtain fresh operator authorization and fresh same-hash GLM plus Claude preflight review before any replacement RunPod worker
-- `FORBIDDEN_ACTIONS`: Begin Gate 7; reuse the deleted Gate 6 worker; create a replacement Gate 6 worker without a new isolation amendment, packet, authorization, and reviews; relabel Gate 5 smoke as Gate 6 evidence; claim any Gate 6 measured row; change candidate 8718fbe; claim Gate 6 or S3 GREEN; public actions; release; submission; HOME/live-memory mutation; credential exposure; any worker credential transfer
+- `NEXT_ALLOWED_ACTION`: Freeze the R3 byte-complete sanitized packet over orchestration commit dc5024d21f71bf23ae35ce3c2c72721e910f362d; obtain fresh same-hash GLM 5.2 plus Claude Opus 4.8 GREEN before any replacement RunPod worker
+- `FORBIDDEN_ACTIONS`: Begin Gate 7; create a replacement Gate 6 worker before the R3 packet and both same-hash reviews are GREEN; upload the benchmark payload before a capability canary passes; relabel seccomp as a namespace; relabel Gate 5 smoke as Gate 6 evidence; claim any Gate 6 measured row before execution; change candidate 8718fbe; claim Gate 6 or S3 GREEN; public actions; release; submission; HOME/live-memory mutation; credential exposure; any worker credential transfer
+- `CURRENT_COMMIT`: `dc5024d21f71bf23ae35ce3c2c72721e910f362d`
 - `CURRENT_COMMIT_AT_P9_PACKET_FREEZE`: `61d77d1704a3f074427f9f82b300abaaa201f79c`
 - `P9_IMPLEMENTATION_COMMIT`: `cbd58b3af9e1ce5c4ddf8885866b88e7e7c1ca0f`
 - `S3_PREFLIGHT_IMPLEMENTATION_COMMIT`: `9f9e1675b9d12e70e5531a196e33e28c76b9b68a`
@@ -12,8 +13,8 @@
 - `S3_PREFLIGHT_R4_REPAIR_COMMIT`: `06b54e8f61bf0fa227af3de2377a462e369d7d74`
 - `S3_PREFLIGHT_R6_REPAIR_COMMIT`: `8b1d5bd1038588527bd994eb8fcb5467cac47eac`
 - `S3_PREFLIGHT_R8_REPAIR_COMMIT`: `95408fb9386ced25b468c0957e86e8f73cb123e9`
-- `PENDING_BLOCKERS`: Gate 6 R2 is blocked because the reviewed RunPod worker denied unprivileged user/network namespace creation; a new isolation/platform amendment, fresh authorization, fresh preflight, 54 measured executions, and final GREEN reviews are required before Hardening Gates 7 through 10 or separately authorized S3-R2
-- `REQUIRED_JUDGE_STATE`: Gate 4/5 R2 remains GLM 5.2 GREEN and Claude Opus 4.8 GREEN with recusal clear; Gate 6 R2 preflight was same-hash GREEN, while both final judges independently confirmed BLOCKED and teardown GREEN for the failed attempt
+- `PENDING_BLOCKERS`: Gate 6 R3 has no provider proof; the unprivileged seccomp capability canary, 54 measured executions, teardown, and final GREEN reviews remain required before Hardening Gates 7 through 10 or separately authorized S3-R2
+- `REQUIRED_JUDGE_STATE`: Fresh same-hash GLM 5.2 and Claude Opus 4.8 GREEN with recusal clear over the exact R3 packet before worker creation; final same-hash GREEN again after teardown
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
 - `P9_FINAL_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; RECUSAL_CLEAR`
@@ -35,6 +36,11 @@
 - `HARDENING_GATE6_RUNPOD_INVENTORY`: `[]`
 - `HARDENING_GATE6_COST_STATE`: `BILLING_PENDING_BOUNDED_MAX_$0.0060`
 - `HARDENING_GATE6_CLOSEOUT_COMMIT`: `cfc3c8bfc07be66b1990fc04cb2b6f79d60e80ad`
+- `HARDENING_GATE6_R3_AMENDMENT_COMMIT`: `dc5024d21f71bf23ae35ce3c2c72721e910f362d`
+- `HARDENING_GATE6_R3_ISOLATION`: `UNPRIVILEGED_NO_NEW_PRIVS_INHERITED_SECCOMP_BPF; NETWORK_NAMESPACE_NOT_CLAIMED`
+- `HARDENING_GATE6_R3_PREFLIGHT_PACKET_SHA256`: `PENDING`
+- `HARDENING_GATE6_R3_JUDGE_STATE`: `PENDING_GLM_5_2_AND_CLAUDE_OPUS_4_8`
+- `HARDENING_GATE6_R3_RUNPOD_INVENTORY`: `[]`
 - `HARDENING_PLAN_SHA256`: `1ce953127138a35bd9588d686bbefefc0b012e8f2188a8fea736842030d57310`
 - `HARDENING_GATE0_PACKET_SHA256`: `cdc0e17c9ba6fa58c1304d6bf96e22ebdea1dcfb43084505a9aa706886425823`
 - `HARDENING_GATE0_JUDGE_STATE`: `GLM_4_7_GREEN`
