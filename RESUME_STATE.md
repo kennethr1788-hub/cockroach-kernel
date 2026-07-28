@@ -1,10 +1,10 @@
 # Resume State
 
-- `CURRENT_PHASE`: `BLACK_BOX_R3_PUBLIC_FIXTURE_PREFLIGHT_COMPLETE_STOP_BEFORE_HIDDEN_CAMPAIGN`
+- `CURRENT_PHASE`: `BLACK_BOX_R3_HIDDEN_CAMPAIGN_R2_HUMAN_ROUTE_AUTHORIZATION_BLOCKED`
 - `LAST_GREEN_GATE`: `HARDENING_6_RUN1_GREEN`
-- `NEXT_ALLOWED_ACTION`: Obtain separate hidden-campaign authorization covering actor route, served identity, session isolation, privacy, run count, cost, hidden-seed custody, teardown, and final review
-- `FORBIDDEN_ACTIONS`: Generate a hidden seed; select or invoke a black-box actor; execute any hidden session; use RunPod or paid runtime; begin Gate 7; mutate product candidate 1c483b1930e629c9ecb6d73418b9554897dc08ad; publish a black-box claim; public actions; release; submission; HOME/live-memory mutation; credential exposure
-- `CURRENT_COMMIT`: `3ef586979d7b479a7cd86204f4b433cd5da460b3`
+- `NEXT_ALLOWED_ACTION`: Kenneth explicitly authorizes the local Ollama qwen2.5-coder:7b route using the exact statement in FRESH_CONTEXT_BLACK_BOX_HIDDEN_ROUTE_AUTHORIZATION_REQUIRED_R2.md; then rebuild and independently review one fresh same-hash packet
+- `FORBIDDEN_ACTIONS`: Generate a hidden seed; execute any hidden session; reinterpret the blocked judge result; use RunPod or paid runtime; begin Gate 7; mutate product candidate 1c483b1930e629c9ecb6d73418b9554897dc08ad; publish a black-box claim; public actions; release; submission; HOME/live-memory mutation; credential exposure
+- `CURRENT_COMMIT`: `9a1e7875856a459f73c3f9837203b62ca24d7462`
 - `CURRENT_COMMIT_AT_P9_PACKET_FREEZE`: `61d77d1704a3f074427f9f82b300abaaa201f79c`
 - `P9_IMPLEMENTATION_COMMIT`: `cbd58b3af9e1ce5c4ddf8885866b88e7e7c1ca0f`
 - `S3_PREFLIGHT_IMPLEMENTATION_COMMIT`: `9f9e1675b9d12e70e5531a196e33e28c76b9b68a`
@@ -13,8 +13,8 @@
 - `S3_PREFLIGHT_R4_REPAIR_COMMIT`: `06b54e8f61bf0fa227af3de2377a462e369d7d74`
 - `S3_PREFLIGHT_R6_REPAIR_COMMIT`: `8b1d5bd1038588527bd994eb8fcb5467cac47eac`
 - `S3_PREFLIGHT_R8_REPAIR_COMMIT`: `95408fb9386ced25b468c0957e86e8f73cb123e9`
-- `PENDING_BLOCKERS`: None for R3 public-fixture preflight; hidden campaign remains unauthorized and unexecuted
-- `REQUIRED_JUDGE_STATE`: R3 public-fixture preflight is independently GREEN from direct GLM 5.2 over packet 2a273eabffa107e0056c512dcc10b6f34398220fe97c949924552e9843bfb8f0; any hidden campaign requires a separate frozen authorization and review
+- `PENDING_BLOCKERS`: Explicit human authorization is missing for local Ollama qwen2.5-coder:7b actor route; direct GLM 5.2 blocked packet 9e9b54982ccfd18ea9ac9d0372bcce0536162baadd7e75386b144d75ee31f214
+- `REQUIRED_JUDGE_STATE`: After explicit route authorization, rebuild the packet and require fresh direct GLM same-hash GREEN before seed creation; current R2 verdict is BLOCKED with RECUSAL CLEAR
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
 - `P9_FINAL_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; RECUSAL_CLEAR`
@@ -23,7 +23,7 @@
 - `P9_JUDGE_EVIDENCE`: `evidence/p9-final-judges-r1/`
 - `RUNPOD_ATTEMPTS`: `8`
 - `RUNPOD_EXPOSURE`: `PRIOR_RECORDED_$1.189989_PLUS_GATE6_R3_THREE_ATTEMPTS_BILLING_PENDING_BOUNDED_MAX_$0.0393356667`
-- `LATEST_CHECKPOINT`: `FRESH_CONTEXT_BLACK_BOX_PREFLIGHT_STATUS_R3.md`
+- `LATEST_CHECKPOINT`: `FRESH_CONTEXT_BLACK_BOX_HIDDEN_EXECUTION_GLM_RECEIPT_R2.md`
 - `BLACK_BOX_R3_STATUS`: `BLACK_BOX_R3_PREFLIGHT_GREEN`
 - `BLACK_BOX_R3_PRODUCT_CANDIDATE`: `1c483b1930e629c9ecb6d73418b9554897dc08ad`
 - `BLACK_BOX_R3_PLAN_SHA256`: `92f17ed947e874538b991f6281a3e4b67818a5a28820f07f7a12fbf3f5269adf`
@@ -31,6 +31,8 @@
 - `BLACK_BOX_R3_JUDGE_STATE`: `GLM_5_2_GREEN; RECUSAL_CLEAR`
 - `BLACK_BOX_R3_HIDDEN_SEED_CREATED`: `NO`
 - `BLACK_BOX_R3_HIDDEN_EXECUTIONS`: `0`
+- `BLACK_BOX_R3_HIDDEN_R2_PACKET_SHA256`: `9e9b54982ccfd18ea9ac9d0372bcce0536162baadd7e75386b144d75ee31f214`
+- `BLACK_BOX_R3_HIDDEN_R2_JUDGE_STATE`: `GLM_5_2_BLOCKED; RECUSAL_CLEAR; EXPLICIT_LOCAL_ACTOR_ROUTE_AUTHORIZATION_REQUIRED`
 - `HARDENING_GATE6_STATUS`: `R1_BLOCKED_HISTORICAL; R2_BLOCKED_HISTORICAL; R3_HARDENING_6_RUN1_GREEN`
 - `HARDENING_GATE6_BLOCKER`: `none`
 - `HARDENING_GATE6_PREFLIGHT_PACKET_SHA256`: `f1df04300bd4d865d2c0d2b87bc8c5f607a98f23e7c45d377edc84c31a04346d`
