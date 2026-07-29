@@ -2,13 +2,16 @@
 from __future__ import annotations
 
 import importlib.util
+import io
 import json
 from pathlib import Path
 import shutil
 import subprocess
 import sys
 import tempfile
+import tarfile
 import unittest
+from unittest import mock
 
 
 HERE = Path(__file__).resolve().parent
@@ -62,13 +65,18 @@ class ExpandedGate7Tests(unittest.TestCase):
         self.assertIn(
             Path("hardening-gate5/heldout_contract.py"), paths,
         )
+        self.assertIn(Path("s3-soak/freeze_evidence_manifest.py"), paths)
+        helper = next(row for row in rows
+                      if row["path"] == "s3-soak/freeze_evidence_manifest.py")
+        self.assertEqual(helper["mode"], "0755")
+        self.assertEqual(len(helper["sha256"]), 64)
         self.assertEqual(sum(".s3-runtime" in row["path"] for row in rows), 0)
         self.assertEqual(sum(".hardening-runtime" in row["path"] for row in rows), 0)
 
     def test_bulk_live_track_generation_is_exact_and_synthetic(self):
         with tempfile.TemporaryDirectory(prefix="ck-g7-bulk-") as temporary:
             root = Path(temporary) / "generated"
-            manifest = bulk.build_sql("ck-g7r2-public-unit", root)
+            manifest = bulk.build_sql("ck-g7r3-public-unit", root)
             self.assertTrue(manifest["synthetic_only"])
             self.assertEqual(manifest["counts"], {
                 "tasks": 2000,
@@ -79,12 +87,168 @@ class ExpandedGate7Tests(unittest.TestCase):
                 "aws_calls_separate_track": 12,
             })
             self.assertEqual(manifest["concurrency"], 4)
+            self.assertEqual(manifest["unique_vector_digests"], 20000)
+            self.assertEqual(sum(len(rows) for rows in manifest["batches"].values()), 184)
             self.assertEqual(
                 len(json.loads((root / "query-specs.json").read_bytes())), 200
             )
             for path in root.iterdir():
                 self.assertNotIn(b"/Users/", path.read_bytes())
                 self.assertNotIn(b"password", path.read_bytes().lower())
+
+    def test_run2_vector_collision_is_reproduced_and_run3_binding_is_unique(self):
+        old_seen = set()
+        old_collisions = 0
+        new_seen = set()
+        for task_index in range(2000):
+            for sequence in range(10):
+                old = bulk.context_vector.context_vector(
+                    f"continue synthetic task {task_index} trajectory segment {sequence}",
+                    "ck-g7r3-vector-proof",
+                )
+                old_digest = bulk.context_vector.vector_digest(old)
+                old_collisions += old_digest in old_seen
+                old_seen.add(old_digest)
+                new = bulk.context_vector.context_vector(
+                    bulk.vector_text(task_index, sequence), "ck-g7r3-vector-proof",
+                )
+                new_digest = bulk.context_vector.vector_digest(new)
+                self.assertNotIn(new_digest, new_seen)
+                new_seen.add(new_digest)
+        self.assertGreater(old_collisions, 0)
+        self.assertEqual(len(new_seen), 20000)
+
+    def test_packaged_manifest_helper_negative_archive_cases(self):
+        helper_path = BASE / "s3-soak/freeze_evidence_manifest.py"
+        raw = helper_path.read_bytes()
+        row = {
+            "path": "s3-soak/freeze_evidence_manifest.py",
+            "sha256": bundle.digest(raw), "bytes": str(len(raw)), "mode": "0755",
+        }
+
+        def write_archive(path, members):
+            with tarfile.open(path, "w:gz") as archive:
+                for name, value, kind in members:
+                    info = tarfile.TarInfo(name)
+                    info.mode = 0o755
+                    if kind == "symlink":
+                        info.type = tarfile.SYMTYPE
+                        info.linkname = "target"
+                        archive.addfile(info)
+                    else:
+                        info.size = len(value)
+                        archive.addfile(info, io.BytesIO(value))
+
+        with tempfile.TemporaryDirectory(prefix="ck-g7-helper-negative-") as temporary:
+            root = Path(temporary)
+            valid = root / "valid.tgz"
+            expected_name = "bundle/" + row["path"]
+            write_archive(valid, [(expected_name, raw, "file")])
+            self.assertEqual(bundle.validate_archive(valid, [row])["file_count"], 1)
+            cases = {
+                "missing": [],
+                "duplicate": [(expected_name, raw, "file"), (expected_name, raw, "file")],
+                "renamed": [(expected_name + ".renamed", raw, "file")],
+                "symlink": [(expected_name, b"", "symlink")],
+                "altered": [(expected_name, raw + b"x", "file")],
+            }
+            for name, members in cases.items():
+                with self.subTest(name=name):
+                    path = root / f"{name}.tgz"
+                    write_archive(path, members)
+                    with self.assertRaises(bundle.BundleError):
+                        bundle.validate_archive(path, [row])
+
+    def test_serialization_retry_and_nonretryable_vector_failure(self):
+        journal = mock.Mock()
+        manifest = {"batches": {"vectors": [{
+            "path": "batch.sql", "sha256": "", "rows": 1, "batch_index": 1,
+        }]}}
+        with tempfile.TemporaryDirectory(prefix="ck-g7-batch-retry-") as temporary:
+            root = Path(temporary)
+            batch = root / "batch.sql"
+            batch.write_bytes(b"BEGIN; SELECT 1; COMMIT;\n")
+            manifest["batches"]["vectors"][0]["sha256"] = bulk.digest(batch.read_bytes())
+            transient = bulk.hardening.command_failure(
+                "cockroach", 1, b"restart transaction\nSQLSTATE: 40001")
+            with mock.patch.object(bulk.cloud_adapter, "_sql", side_effect=[transient, (b"ok", 2)]):
+                elapsed, hashes, retries = bulk.execute_batches(
+                    {}, {}, root, manifest, "vectors", journal)
+            self.assertEqual((elapsed, retries, len(hashes)), (2, 1, 1))
+            permanent = bulk.hardening.command_failure(
+                "cockroach", 1, b"duplicate\nSQLSTATE: 23505")
+            with mock.patch.object(bulk.cloud_adapter, "_sql", side_effect=permanent):
+                with self.assertRaises(bulk.hardening.ExternalCommandFailure):
+                    bulk.execute_batches({}, {}, root, manifest, "vectors", journal)
+
+    def test_terminal_evidence_missing_and_interrupted_are_fail_closed(self):
+        with tempfile.TemporaryDirectory(prefix="ck-g7-terminal-") as temporary:
+            root = Path(temporary)
+            with self.assertRaisesRegex(bulk.LiveBulkError, "TERMINAL_RECEIPT_MISSING"):
+                bulk.validate_terminal_evidence(root)
+        interrupted = bulk.external_failure_fields(bulk.LiveBulkInterrupted("SIGNAL_SIGTERM"))
+        self.assertEqual(interrupted["failure_class"], "SIGNAL_SIGTERM")
+
+    def test_partial_insert_failure_emits_durable_failure_cleanup_and_terminal(self):
+        campaign_id = "ck-g7r3-partial-unit"
+        with tempfile.TemporaryDirectory(prefix="ck-g7-partial-") as temporary:
+            root = Path(temporary)
+            generated = root / "generated"
+            evidence = root / "evidence"
+            generated.mkdir()
+            evidence.mkdir()
+            batches = {}
+            for stage in ("tasks", "events", "receipts", "vectors"):
+                path = generated / f"{stage}.sql"
+                path.write_bytes(b"BEGIN; SELECT 1; COMMIT;\n")
+                batches[stage] = [{
+                    "path": path.name, "sha256": bulk.digest(path.read_bytes()),
+                    "rows": 1, "batch_index": 1,
+                }]
+            (generated / "cleanup.sql").write_bytes(b"BEGIN; SELECT 1; COMMIT;\n")
+            (generated / "query-specs.json").write_text("[]", encoding="utf-8")
+            manifest_body = {
+                "version": "hardening-gate7-live-bulk-manifest-v2",
+                "campaign_id": campaign_id,
+                "counts": {"tasks": 1, "events": 1, "receipts": 1,
+                           "vectors": 1, "vector_queries": 0},
+                "batches": batches,
+            }
+            manifest = {**manifest_body, "manifest_sha256": bulk.digest(manifest_body)}
+            (generated / "manifest.json").write_bytes(bulk.canonical(manifest))
+            journal = bulk.DurableJournal(evidence / "journal.ndjson", campaign_id)
+            calls = {"cleanup": 0}
+
+            def fake_sql(_config, _env, *, execute=None, file=None, timeout=60, fmt="tsv"):
+                del timeout, fmt
+                if file is not None and Path(file).name == "vectors.sql":
+                    raise bulk.hardening.command_failure(
+                        "cockroach", 1, b"duplicate\nSQLSTATE: 23505")
+                if file is not None and Path(file).name == "cleanup.sql":
+                    calls["cleanup"] += 1
+                    return b"COMMIT\n", 1
+                if execute is not None and "SELECT count" in execute:
+                    return b"count\tcount\tcount\tcount\n0\t0\t0\t0\n", 1
+                return b"COMMIT\n", 1
+
+            try:
+                with mock.patch.object(bulk.cloud_adapter, "_read_config", return_value={}), \
+                        mock.patch.object(bulk.cloud_adapter, "_password", return_value=b"synthetic"), \
+                        mock.patch.object(bulk.cloud_adapter, "_sql_env", return_value={}), \
+                        mock.patch.object(bulk.cloud_adapter, "_sql", side_effect=fake_sql):
+                    with self.assertRaises(bulk.hardening.ExternalCommandFailure):
+                        bulk.run_live(root / "config.json", generated, evidence, journal)
+            finally:
+                journal.close()
+            self.assertEqual(calls["cleanup"], 2)
+            failure = json.loads((evidence / "failure.json").read_bytes())
+            cleanup = json.loads((evidence / "cleanup.json").read_bytes())
+            terminal = json.loads((evidence / "terminal.json").read_bytes())
+            self.assertEqual(failure["sqlstate"], "23505")
+            self.assertEqual(failure["stage"], "VECTORS")
+            self.assertEqual(cleanup["status"], "PASS")
+            self.assertEqual(terminal["status"], "BLOCKED")
+            self.assertEqual(bulk.validate_terminal_evidence(evidence)["status"], "BLOCKED")
 
     def test_hidden_generation_source_commits_before_generation(self):
         source = (HERE / "prepare_hidden_campaign.py").read_text(encoding="utf-8")

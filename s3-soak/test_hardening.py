@@ -38,6 +38,18 @@ class HardeningTests(unittest.TestCase):
                 self.assertFalse(receipt["raw_output_stored"])
                 self.assertNotIn(output.decode(), protocol.canonical(receipt).decode())
 
+    def test_cockroach_sqlstate_is_preserved_without_raw_output(self):
+        raw = (b"ERROR: duplicate key\nSQLSTATE: 23505\n"
+               b"DETAIL: password=must-not-survive")
+        failure = hardening.command_failure("cockroach", 1, raw)
+        self.assertEqual(failure.sqlstate, "23505")
+        receipt = hardening.failure_receipt(
+            campaign_id="ck-s3-hardening-test", sequence=1,
+            stage="VECTOR_BATCH", request_hash="b" * 64,
+            failure=failure, utc="2026-07-29T00:00:00Z")
+        self.assertEqual(receipt["sqlstate"], "23505")
+        self.assertNotIn("must-not-survive", protocol.canonical(receipt).decode())
+
     def test_stage_failure_is_fsynced_before_exact_cleanup(self):
         with tempfile.TemporaryDirectory(prefix="s3-stage-failure-") as temporary:
             root = Path(temporary)

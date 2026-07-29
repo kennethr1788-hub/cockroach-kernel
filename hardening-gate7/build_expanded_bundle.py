@@ -29,6 +29,7 @@ EXACT_FILES = (
     "hardening-gate6/seccomp_exec.py",
     "hardening-gate7/expanded_contract.py",
     "hardening-gate7/generate_expanded_inputs.py",
+    "hardening-gate7/live_bulk_controller.py",
     "hardening-gate7/make_vectors.py",
     "hardening-gate7/prepare_hidden_campaign.py",
     "hardening-gate7/run_expanded_campaign.py",
@@ -38,7 +39,12 @@ EXACT_FILES = (
     "hardening-gate7/surface_cases.py",
     "s2-soak/run_soak.py",
     "s3-soak/protocol.py",
+    "s3-soak/hardening.py",
+    "s3-soak/cloud_adapter.py",
+    "s3-soak/freeze_evidence_manifest.py",
     "s3-soak/worker.py",
+    "p9-cloud/context_vector.py",
+    "p9-cloud/records.py",
     str(LINUX_ARCHIVE),
 )
 TREE_ROOTS = (
@@ -115,6 +121,7 @@ def scan(paths: list[Path]) -> list[dict[str, str]]:
             "path": relative.as_posix(),
             "sha256": digest(raw),
             "bytes": str(len(raw)),
+            "mode": "0755" if relative.suffix == ".py" else "0644",
         })
     archive_row = next(row for row in receipts if row["path"] == LINUX_ARCHIVE.as_posix())
     if archive_row["sha256"] != LINUX_ARCHIVE_SHA256:
@@ -140,6 +147,43 @@ def make_archive(paths: list[Path], output: Path) -> None:
     with gzip.GzipFile(filename="", mode="wb", fileobj=compressed, mtime=0, compresslevel=9) as handle:
         handle.write(buffer.getvalue())
     atomic_write(output, compressed.getvalue())
+
+
+def validate_archive(output: Path, receipts: list[dict[str, str]]) -> dict[str, Any]:
+    expected = {"bundle/" + row["path"]: row for row in receipts}
+    observed: dict[str, dict[str, str]] = {}
+    with tarfile.open(output, "r:gz") as archive:
+        members = archive.getmembers()
+        names = [member.name for member in members]
+        if len(names) != len(set(names)):
+            raise BundleError("ARCHIVE_DUPLICATE_MEMBER")
+        for member in members:
+            if not member.isfile() or member.issym() or member.islnk():
+                raise BundleError("ARCHIVE_NONREGULAR_MEMBER")
+            if member.name not in expected:
+                raise BundleError("ARCHIVE_UNEXPECTED_MEMBER")
+            handle = archive.extractfile(member)
+            if handle is None:
+                raise BundleError("ARCHIVE_MEMBER_UNREADABLE")
+            raw = handle.read()
+            row = expected[member.name]
+            mode = format(member.mode & 0o777, "04o")
+            if (str(len(raw)) != row["bytes"] or digest(raw) != row["sha256"] or
+                    mode != row["mode"]):
+                raise BundleError("ARCHIVE_MEMBER_BINDING_INVALID")
+            observed[member.name] = {
+                "sha256": digest(raw), "bytes": str(len(raw)), "mode": mode,
+            }
+    if set(observed) != set(expected):
+        raise BundleError("ARCHIVE_MEMBER_MISSING")
+    helper = "bundle/s3-soak/freeze_evidence_manifest.py"
+    if helper not in observed:
+        raise BundleError("PACKAGED_MANIFEST_HELPER_MISSING")
+    return {
+        "file_count": len(observed),
+        "tree_sha256": digest(canonical(observed)),
+        "manifest_helper": observed[helper],
+    }
 
 
 def main() -> int:
@@ -168,6 +212,7 @@ def main() -> int:
     atomic_write(output / "PAYLOAD_TREE.json", canonical(tree))
     archive = output / "gate7-worker-bundle.tgz"
     make_archive(paths, archive)
+    archive_validation = validate_archive(archive, rows)
     manifest_body = {
         "version": "hardening-gate7-transfer-manifest-v1",
         "candidate_commit": CANDIDATE,
@@ -176,6 +221,7 @@ def main() -> int:
         "archive_sha256": digest(archive.read_bytes()),
         "archive_bytes": archive.stat().st_size,
         "file_count": len(rows),
+        "archive_validation": archive_validation,
         "runtime_archive_sha256": LINUX_ARCHIVE_SHA256,
         "worker_credentials": False,
         "persistent_volume": False,

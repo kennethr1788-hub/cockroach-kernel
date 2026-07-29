@@ -9,14 +9,17 @@ in dependency order before returning.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import hashlib
 import json
 import os
 from pathlib import Path
+import signal
 import statistics
 import sys
 import threading
 import time
+import traceback
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any
 
@@ -26,6 +29,7 @@ sys.path.insert(0, str(BASE / "s3-soak"))
 sys.path.insert(0, str(BASE / "p9-cloud"))
 import cloud_adapter  # type: ignore  # noqa: E402
 import context_vector  # type: ignore  # noqa: E402
+import hardening  # type: ignore  # noqa: E402
 
 
 TASKS = 2_000
@@ -35,7 +39,9 @@ VECTORS_PER_TASK = 10
 QUERY_SAMPLES = 200
 CONCURRENCY = 4
 AWS_CALLS_SEPARATE_TRACK = 12
-PREFIX = "ck-g7r2-"
+PREFIX = "ck-g7r3-"
+BATCH_SIZE = 250
+MAX_SERIALIZATION_RETRIES = 3
 DATABASE_GROWTH_LIMIT = 536_870_912
 EVIDENCE_GROWTH_LIMIT = 67_108_864
 QUERY_P99_LIMIT_MS = 10_000
@@ -44,6 +50,76 @@ INSERT_TOTAL_LIMIT_MS = 300_000
 
 class LiveBulkError(RuntimeError):
     pass
+
+
+class LiveBulkInterrupted(LiveBulkError):
+    pass
+
+
+class DurableJournal:
+    """Hash-chained, fsynced stage and batch events for one controller run."""
+
+    def __init__(self, path: Path, campaign_id: str) -> None:
+        self.path = path.resolve()
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.handle = self.path.open("xb", buffering=0)
+        self.campaign_id = campaign_id
+        self.started_ns = time.monotonic_ns()
+        self.sequence = 0
+        self.prior_hash = "0" * 64
+        self.stage = "BOOT"
+        self.batch_index: int | None = None
+
+    def emit(self, event: str, stage: str, **details: Any) -> dict[str, Any]:
+        self.sequence += 1
+        self.stage = stage
+        self.batch_index = details.get("batch_index")
+        body = {
+            "version": "hardening-gate7-live-bulk-journal-v2",
+            "campaign_id": self.campaign_id,
+            "sequence": self.sequence,
+            "event": event,
+            "stage": stage,
+            "batch_index": self.batch_index,
+            "utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "elapsed_ns": time.monotonic_ns() - self.started_ns,
+            "prior_event_hash": self.prior_hash,
+            "details": details,
+        }
+        record = dict(body, event_hash=digest(body))
+        raw = canonical(record) + b"\n"
+        self.handle.write(raw)
+        os.fsync(self.handle.fileno())
+        self.prior_hash = record["event_hash"]
+        return record
+
+    def close(self) -> None:
+        if not self.handle.closed:
+            self.handle.close()
+
+
+class DurableTextLog:
+    """Minimal text stream that fsyncs every write and never follows links."""
+
+    def __init__(self, path: Path) -> None:
+        path = path.resolve()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        self.handle = os.fdopen(descriptor, "w", encoding="utf-8", buffering=1)
+
+    def write(self, value: str) -> int:
+        written = self.handle.write(value)
+        self.handle.flush()
+        os.fsync(self.handle.fileno())
+        return written
+
+    def flush(self) -> None:
+        self.handle.flush()
+        os.fsync(self.handle.fileno())
+
+    def close(self) -> None:
+        if not self.handle.closed:
+            self.handle.close()
 
 
 def canonical(value: Any) -> bytes:
@@ -96,6 +172,14 @@ def vector_literal(value: list[float]) -> str:
     return "'[" + ",".join(format(item, ".6f") for item in value) + "]'::VECTOR(64)"
 
 
+def vector_text(task_index: int, sequence: int) -> str:
+    """Bind an order-insensitive projection to one unique task/event pair."""
+    return (
+        f"continue synthetic task {task_index} trajectory segment {sequence} "
+        f"eventkey t{task_index}s{sequence}"
+    )
+
+
 def campaign_prefix(campaign_id: str) -> str:
     if not campaign_id.startswith(PREFIX) or not campaign_id.replace("-", "").isalnum():
         raise LiveBulkError("CAMPAIGN_ID_INVALID")
@@ -117,6 +201,7 @@ def build_sql(campaign_id: str, output: Path) -> dict[str, Any]:
     event_rows: list[str] = []
     receipt_rows: list[str] = []
     vector_rows: list[str] = []
+    vector_digests: set[str] = set()
     query_vectors: list[tuple[str, list[float]]] = []
     for task_index in range(TASKS):
         task_id = f"{prefix}task-{task_index:04d}"
@@ -146,9 +231,12 @@ def build_sql(campaign_id: str, output: Path) -> dict[str, Any]:
                     f"{byte_literal(event_hash)},'SEALED',"
                     f"{sql_literal(receipt_json)}::JSONB)"
                 )
-            text = f"continue synthetic task {task_index} trajectory segment {sequence}"
+            text = vector_text(task_index, sequence)
             vector = context_vector.context_vector(text, campaign_id)
             vector_digest = context_vector.vector_digest(vector)
+            if vector_digest in vector_digests:
+                raise LiveBulkError("VECTOR_DIGEST_COLLISION")
+            vector_digests.add(vector_digest)
             vector_rows.append(
                 f"({sql_literal(task_id + '-vector-' + format(sequence, '02d'))},"
                 f"{sql_literal(task_id)},{byte_literal(event_hash)},"
@@ -171,15 +259,24 @@ def build_sql(campaign_id: str, output: Path) -> dict[str, Any]:
         ),
     }
     sql_hashes: dict[str, str] = {}
+    batch_files: dict[str, list[dict[str, Any]]] = {}
     for name, (columns, rows) in tables.items():
-        statements = ["BEGIN;"]
-        for group in batched(rows, 250):
-            statements.append(f"INSERT INTO {columns} VALUES " + ",".join(group) + ";")
-        statements.append("COMMIT;")
-        raw = ("\n".join(statements) + "\n").encode("utf-8")
-        path = output / f"insert-{name}.sql"
-        atomic_write(path, raw)
-        sql_hashes[path.name] = digest(raw)
+        batch_files[name] = []
+        for batch_index, group in enumerate(batched(rows, BATCH_SIZE), start=1):
+            raw = (
+                "BEGIN;\nINSERT INTO " + columns + " VALUES " +
+                ",".join(group) + ";\nCOMMIT;\n"
+            ).encode("utf-8")
+            path = output / f"insert-{name}-batch-{batch_index:04d}.sql"
+            atomic_write(path, raw)
+            row = {
+                "path": path.name,
+                "sha256": digest(raw),
+                "rows": len(group),
+                "batch_index": batch_index,
+            }
+            batch_files[name].append(row)
+            sql_hashes[path.name] = row["sha256"]
     query_specs = []
     for index, (task_id, vector) in enumerate(query_vectors, start=1):
         sql = (
@@ -206,7 +303,7 @@ def build_sql(campaign_id: str, output: Path) -> dict[str, Any]:
     )
     atomic_write(output / "cleanup.sql", cleanup.encode("utf-8"))
     manifest_body = {
-        "version": "hardening-gate7-live-bulk-manifest-v1",
+        "version": "hardening-gate7-live-bulk-manifest-v2",
         "campaign_id": campaign_id,
         "synthetic_only": True,
         "counts": {
@@ -218,6 +315,9 @@ def build_sql(campaign_id: str, output: Path) -> dict[str, Any]:
             "aws_calls_separate_track": AWS_CALLS_SEPARATE_TRACK,
         },
         "concurrency": CONCURRENCY,
+        "batch_size": BATCH_SIZE,
+        "batches": batch_files,
+        "unique_vector_digests": len(vector_digests),
         "sql_files": sql_hashes,
         "query_specs_sha256": digest(query_path.read_bytes()),
         "cleanup_sha256": digest(cleanup.encode("utf-8")),
@@ -239,33 +339,131 @@ def percentile(values: list[int], percentage: int) -> int:
     return ordered[max(0, (len(ordered) * percentage + 99) // 100 - 1)]
 
 
-def run_live(config_path: Path, generated: Path, evidence: Path) -> dict[str, Any]:
+def parse_count_row(raw: bytes, expected_fields: int = 4) -> tuple[int, ...]:
+    rows = [line.strip() for line in raw.decode("utf-8").splitlines() if line.strip()]
+    for row in reversed(rows):
+        fields = row.split("\t")
+        if len(fields) == expected_fields and all(field.isdigit() for field in fields):
+            return tuple(int(field) for field in fields)
+    raise LiveBulkError("COUNT_OUTPUT_INVALID")
+
+
+def external_failure_fields(exc: BaseException) -> dict[str, Any]:
+    if isinstance(exc, hardening.ExternalCommandFailure):
+        return {
+            "exception_type": type(exc).__name__,
+            "failure_class": exc.failure_class,
+            "operation_family": exc.command_family,
+            "return_code": exc.return_code,
+            "signal": -exc.return_code if exc.return_code < 0 else None,
+            "sqlstate": exc.sqlstate,
+            "sanitized_output_sha256": exc.output_hash,
+        }
+    reason = str(exc) if isinstance(exc, LiveBulkError) else "UNCLASSIFIED_INTERNAL"
+    return {
+        "exception_type": type(exc).__name__,
+        "failure_class": reason,
+        "operation_family": "internal",
+        "return_code": -1,
+        "signal": None,
+        "sqlstate": None,
+        "sanitized_output_sha256": digest(type(exc).__name__.encode("utf-8")),
+    }
+
+
+def write_receipt(path: Path, version: str, body: dict[str, Any]) -> dict[str, Any]:
+    core = {"version": version, **body}
+    receipt = dict(core, receipt_sha256=digest(core))
+    atomic_write(path, canonical(receipt))
+    return receipt
+
+
+def execute_batches(config: dict[str, Any], sql_env: dict[str, str],
+                    generated: Path, manifest: dict[str, Any], stage: str,
+                    journal: DurableJournal) -> tuple[int, list[str], int]:
+    total_ms = 0
+    output_hashes: list[str] = []
+    retries = 0
+    rows_completed = 0
+    for row in manifest["batches"][stage]:
+        batch_index = row["batch_index"]
+        path = generated / row["path"]
+        if digest(path.read_bytes()) != row["sha256"]:
+            raise LiveBulkError("BATCH_HASH_MISMATCH")
+        attempt = 0
+        while True:
+            attempt += 1
+            journal.emit("BATCH_START", stage.upper(), batch_index=batch_index,
+                         attempt=attempt, rows=row["rows"], sql_sha256=row["sha256"])
+            try:
+                raw, elapsed = cloud_adapter._sql(
+                    config, sql_env, file=path, timeout=120,
+                )
+                total_ms += elapsed
+                output_hash = digest(raw)
+                output_hashes.append(output_hash)
+                rows_completed += row["rows"]
+                journal.emit("BATCH_PASS", stage.upper(), batch_index=batch_index,
+                             attempt=attempt, rows=row["rows"],
+                             output_sha256=output_hash, elapsed_ms=elapsed)
+                break
+            except hardening.ExternalCommandFailure as exc:
+                journal.emit("BATCH_FAIL", stage.upper(), batch_index=batch_index,
+                             attempt=attempt, rows=row["rows"],
+                             **external_failure_fields(exc))
+                if exc.sqlstate == "40001" and attempt <= MAX_SERIALIZATION_RETRIES:
+                    retries += 1
+                    journal.emit("BATCH_RETRY", stage.upper(), batch_index=batch_index,
+                                 attempt=attempt, sqlstate=exc.sqlstate)
+                    continue
+                raise
+    return total_ms, output_hashes, retries
+
+
+def run_live(config_path: Path, generated: Path, evidence: Path,
+             journal: DurableJournal) -> dict[str, Any]:
     config = cloud_adapter._read_config(config_path.resolve())
     manifest = json.loads((generated / "manifest.json").read_bytes())
     campaign_id = manifest["campaign_id"]
     prefix = campaign_prefix(campaign_id)
     secret = bytearray()
     sql_env = None
-    evidence.mkdir(parents=True, exist_ok=False)
+    if not evidence.is_dir():
+        raise LiveBulkError("EVIDENCE_ROOT_MISSING")
     active = 0
     active_max = 0
     lock = threading.Lock()
+    cleanup_receipt: dict[str, Any] | None = None
+    actual_counts: tuple[int, ...] | None = None
     try:
+        journal.emit("STAGE_START", "AUTH", credential_bytes_recorded=False)
         secret.extend(cloud_adapter._password(config))
         sql_env = cloud_adapter._sql_env(config, bytes(secret))
+        journal.emit("STAGE_PASS", "AUTH", credential_bytes_recorded=False)
+        journal.emit("STAGE_START", "PRECLEAN")
         cloud_adapter._sql(config, sql_env, file=generated / "cleanup.sql", timeout=180)
+        journal.emit("STAGE_PASS", "PRECLEAN")
         before_raw, _ = cloud_adapter._sql(
             config, sql_env,
             execute="SELECT count(*) FROM ck.tasks WHERE task_id LIKE " + sql_literal(prefix + "%"),
         )
         insert_latencies: dict[str, int] = {}
         insert_hashes: dict[str, str] = {}
+        insert_batch_output_hashes: dict[str, list[str]] = {}
+        serialization_retries = 0
         for name in ("tasks", "events", "receipts", "vectors"):
-            raw, elapsed = cloud_adapter._sql(
-                config, sql_env, file=generated / f"insert-{name}.sql", timeout=300,
+            journal.emit("STAGE_START", name.upper(),
+                         batches=len(manifest["batches"][name]))
+            elapsed, hashes, retries = execute_batches(
+                config, sql_env, generated, manifest, name, journal,
             )
             insert_latencies[name] = elapsed
-            insert_hashes[name] = digest(raw)
+            insert_batch_output_hashes[name] = hashes
+            insert_hashes[name] = digest(hashes)
+            serialization_retries += retries
+            journal.emit("STAGE_PASS", name.upper(),
+                         batches=len(hashes), elapsed_ms=elapsed,
+                         output_set_sha256=insert_hashes[name], retries=retries)
         count_sql = (
             "SELECT "
             f"(SELECT count(*) FROM ck.tasks WHERE task_id LIKE {sql_literal(prefix + '%')}),"
@@ -274,6 +472,15 @@ def run_live(config_path: Path, generated: Path, evidence: Path) -> dict[str, An
             f"(SELECT count(*) FROM ck.context_vectors WHERE task_id LIKE {sql_literal(prefix + '%')});"
         )
         counts_raw, counts_ms = cloud_adapter._sql(config, sql_env, execute=count_sql)
+        actual_counts = parse_count_row(counts_raw)
+        expected_counts = (
+            manifest["counts"]["tasks"], manifest["counts"]["events"],
+            manifest["counts"]["receipts"], manifest["counts"]["vectors"],
+        )
+        if actual_counts != expected_counts:
+            raise LiveBulkError("INSERT_COUNT_MISMATCH")
+        journal.emit("STAGE_PASS", "COUNTS", actual_counts=list(actual_counts),
+                     expected_counts=list(expected_counts), elapsed_ms=counts_ms)
         specs = json.loads((generated / "query-specs.json").read_bytes())
 
         def query(spec: dict[str, Any]) -> tuple[int, str]:
@@ -330,19 +537,38 @@ def run_live(config_path: Path, generated: Path, evidence: Path) -> dict[str, An
             f"SELECT count(*) FROM ck.tasks WHERE task_id={sql_literal(duplicate_id)};"
         )
         duplicate_raw, duplicate_ms = cloud_adapter._sql(config, sql_env, execute=duplicate_sql)
+        journal.emit("STAGE_START", "CLEANUP")
         cleanup_raw, cleanup_ms = cloud_adapter._sql(
             config, sql_env, file=generated / "cleanup.sql", timeout=300,
         )
         residue_raw, residue_ms = cloud_adapter._sql(config, sql_env, execute=count_sql)
+        residue_counts = parse_count_row(residue_raw)
+        if residue_counts != (0, 0, 0, 0):
+            raise LiveBulkError("CLEANUP_RESIDUE")
+        cleanup_receipt = write_receipt(
+            evidence / "cleanup.json", "hardening-gate7-live-bulk-cleanup-v2", {
+                "campaign_id": campaign_id,
+                "status": "PASS",
+                "cleanup_output_sha256": digest(cleanup_raw),
+                "cleanup_ms": cleanup_ms,
+                "residue_output_sha256": digest(residue_raw),
+                "residue_ms": residue_ms,
+                "residue_counts": list(residue_counts),
+            },
+        )
+        journal.emit("STAGE_PASS", "CLEANUP", cleanup_receipt_sha256=cleanup_receipt["receipt_sha256"])
         result_body = {
-            "version": "hardening-gate7-live-bulk-result-v1",
+            "version": "hardening-gate7-live-bulk-result-v2",
             "campaign_id": campaign_id,
             "manifest_sha256": manifest["manifest_sha256"],
             "before_count_output_sha256": digest(before_raw),
             "count_output_sha256": digest(counts_raw),
             "expected_counts": manifest["counts"],
+            "actual_counts": list(actual_counts),
             "insert_latency_ms": insert_latencies,
             "insert_output_hashes": insert_hashes,
+            "insert_batch_output_hashes": insert_batch_output_hashes,
+            "serialization_retries": serialization_retries,
             "insert_total_ms": sum(insert_latencies.values()),
             "count_query_ms": counts_ms,
             "query_count": len(query_results),
@@ -367,12 +593,20 @@ def run_live(config_path: Path, generated: Path, evidence: Path) -> dict[str, An
             "cleanup_ms": cleanup_ms,
             "residue_output_sha256": digest(residue_raw),
             "residue_ms": residue_ms,
+            "residue_counts": list(residue_counts),
+            "cleanup_receipt_sha256": cleanup_receipt["receipt_sha256"],
+            "journal_terminal_prior_hash": journal.prior_hash,
             "credential_bytes_recorded": False,
             "worker_received_credentials": False,
             "synthetic_only": True,
         }
         result_body["green"] = (
             len(query_results) == QUERY_SAMPLES
+            and actual_counts == expected_counts
+            and residue_counts == (0, 0, 0, 0)
+            and sum(len(rows) for rows in insert_batch_output_hashes.values()) == sum(
+                len(rows) for rows in manifest["batches"].values()
+            )
             and active_max >= 2
             and result_body["query_latency_ms"]["p99"] <= QUERY_P99_LIMIT_MS
             and result_body["insert_total_ms"] <= INSERT_TOTAL_LIMIT_MS
@@ -381,12 +615,121 @@ def run_live(config_path: Path, generated: Path, evidence: Path) -> dict[str, An
         )
         result = dict(result_body, result_sha256=digest(result_body))
         atomic_write(evidence / "result.json", canonical(result))
+        journal.emit("TERMINAL_PASS", "TERMINAL", process_exit_status=0,
+                     signal=None, result_sha256=result["result_sha256"])
+        write_receipt(
+            evidence / "terminal.json", "hardening-gate7-live-bulk-terminal-v2", {
+                "campaign_id": campaign_id,
+                "status": "GREEN",
+                "process_exit_status": 0,
+                "signal": None,
+                "result_sha256": result["result_sha256"],
+                "journal_terminal_hash": journal.prior_hash,
+            },
+        )
         return result
+    except BaseException as exc:
+        failure_fields = external_failure_fields(exc)
+        failure_receipt = write_receipt(
+            evidence / "failure.json", "hardening-gate7-live-bulk-failure-v2", {
+                "campaign_id": campaign_id,
+                "stage": journal.stage,
+                "batch_index": journal.batch_index,
+                **failure_fields,
+            },
+        )
+        journal.emit("TERMINAL_FAIL", "TERMINAL",
+                     failure_receipt_sha256=failure_receipt["receipt_sha256"],
+                     **failure_fields)
+        if sql_env is not None and cleanup_receipt is None:
+            try:
+                cleanup_raw, cleanup_ms = cloud_adapter._sql(
+                    config, sql_env, file=generated / "cleanup.sql", timeout=300,
+                )
+                count_sql = (
+                    "SELECT "
+                    f"(SELECT count(*) FROM ck.tasks WHERE task_id LIKE {sql_literal(prefix + '%')}),"
+                    f"(SELECT count(*) FROM ck.trajectory_events WHERE task_id LIKE {sql_literal(prefix + '%')}),"
+                    f"(SELECT count(*) FROM ck.receipts WHERE task_id LIKE {sql_literal(prefix + '%')}),"
+                    f"(SELECT count(*) FROM ck.context_vectors WHERE task_id LIKE {sql_literal(prefix + '%')});"
+                )
+                residue_raw, residue_ms = cloud_adapter._sql(
+                    config, sql_env, execute=count_sql, timeout=120,
+                )
+                residue_counts = parse_count_row(residue_raw)
+                cleanup_receipt = write_receipt(
+                    evidence / "cleanup.json", "hardening-gate7-live-bulk-cleanup-v2", {
+                        "campaign_id": campaign_id,
+                        "status": "PASS" if residue_counts == (0, 0, 0, 0) else "BLOCKED",
+                        "cleanup_output_sha256": digest(cleanup_raw),
+                        "cleanup_ms": cleanup_ms,
+                        "residue_output_sha256": digest(residue_raw),
+                        "residue_ms": residue_ms,
+                        "residue_counts": list(residue_counts),
+                    },
+                )
+            except BaseException as cleanup_exc:
+                cleanup_receipt = write_receipt(
+                    evidence / "cleanup.json", "hardening-gate7-live-bulk-cleanup-v2", {
+                        "campaign_id": campaign_id,
+                        "status": "BLOCKED",
+                        "failure": external_failure_fields(cleanup_exc),
+                    },
+                )
+        write_receipt(
+            evidence / "terminal.json", "hardening-gate7-live-bulk-terminal-v2", {
+                "campaign_id": campaign_id,
+                "status": "BLOCKED",
+                "process_exit_status": 2,
+                "signal": failure_fields["signal"],
+                "failure_receipt_sha256": failure_receipt["receipt_sha256"],
+                "cleanup_receipt_sha256": (
+                    cleanup_receipt["receipt_sha256"] if cleanup_receipt else None
+                ),
+                "journal_terminal_hash": journal.prior_hash,
+            },
+        )
+        raise
     finally:
         if sql_env is not None:
             sql_env.pop("PGPASSWORD", None)
         for index in range(len(secret)):
             secret[index] = 0
+
+
+def validate_terminal_evidence(evidence: Path) -> dict[str, Any]:
+    """Fail closed when terminal, cleanup, or result custody is incomplete."""
+    terminal_path = evidence / "terminal.json"
+    cleanup_path = evidence / "cleanup.json"
+    if not terminal_path.is_file():
+        raise LiveBulkError("TERMINAL_RECEIPT_MISSING")
+    if not cleanup_path.is_file():
+        raise LiveBulkError("CLEANUP_RECEIPT_MISSING")
+    terminal = json.loads(terminal_path.read_bytes())
+    cleanup = json.loads(cleanup_path.read_bytes())
+    for value in (terminal, cleanup):
+        body = {key: item for key, item in value.items() if key != "receipt_sha256"}
+        if value.get("receipt_sha256") != digest(body):
+            raise LiveBulkError("RECEIPT_HASH_INVALID")
+    if cleanup.get("status") != "PASS" or cleanup.get("residue_counts") != [0, 0, 0, 0]:
+        raise LiveBulkError("CLEANUP_RECEIPT_BLOCKED")
+    if terminal.get("status") == "GREEN":
+        result_path = evidence / "result.json"
+        if not result_path.is_file():
+            raise LiveBulkError("RESULT_RECEIPT_MISSING")
+        result = json.loads(result_path.read_bytes())
+        body = {key: item for key, item in result.items() if key != "result_sha256"}
+        if result.get("result_sha256") != digest(body) or result.get("green") is not True:
+            raise LiveBulkError("RESULT_RECEIPT_INVALID")
+        if terminal.get("result_sha256") != result["result_sha256"]:
+            raise LiveBulkError("TERMINAL_RESULT_LINK_INVALID")
+    elif terminal.get("status") != "BLOCKED":
+        raise LiveBulkError("TERMINAL_STATUS_INVALID")
+    return {
+        "status": terminal["status"],
+        "terminal_receipt_sha256": terminal["receipt_sha256"],
+        "cleanup_receipt_sha256": cleanup["receipt_sha256"],
+    }
 
 
 def main() -> int:
@@ -397,16 +740,72 @@ def main() -> int:
     parser.add_argument("--evidence-root", type=Path)
     parser.add_argument("--generate-only", action="store_true")
     args = parser.parse_args()
-    manifest = build_sql(args.campaign_id, args.generated_root.resolve())
     if args.generate_only:
+        manifest = build_sql(args.campaign_id, args.generated_root.resolve())
         print(canonical({
             "status": "GENERATED", "manifest_sha256": manifest["manifest_sha256"]
         }).decode("utf-8"))
         return 0
     if args.config is None or args.evidence_root is None:
         raise LiveBulkError("LIVE_ARGUMENTS_REQUIRED")
-    result = run_live(args.config, args.generated_root.resolve(), args.evidence_root.resolve())
-    return 0 if result["green"] else 2
+    evidence = args.evidence_root.resolve()
+    evidence.mkdir(parents=True, exist_ok=False)
+    stdout_log = DurableTextLog(evidence / "controller.stdout.log")
+    stderr_log = DurableTextLog(evidence / "controller.stderr.log")
+    journal = DurableJournal(evidence / "journal.ndjson", args.campaign_id)
+    prior_handlers: dict[int, Any] = {}
+
+    def interrupted(signum: int, _frame: Any) -> None:
+        raise LiveBulkInterrupted("SIGNAL_" + signal.Signals(signum).name)
+
+    for signum in (signal.SIGINT, signal.SIGTERM):
+        prior_handlers[signum] = signal.signal(signum, interrupted)
+    try:
+        with contextlib.redirect_stdout(stdout_log), contextlib.redirect_stderr(stderr_log):
+            journal.emit("PROCESS_START", "BOOT", process_id=os.getpid(),
+                         process_exit_status=None, signal=None)
+            try:
+                manifest = build_sql(args.campaign_id, args.generated_root.resolve())
+                journal.emit("STAGE_PASS", "GENERATE",
+                             manifest_sha256=manifest["manifest_sha256"],
+                             unique_vector_digests=manifest["unique_vector_digests"])
+                result = run_live(args.config, args.generated_root.resolve(), evidence, journal)
+                print(canonical({"status": "GREEN", "result_sha256": result["result_sha256"]}).decode("utf-8"))
+                return 0 if result["green"] else 2
+            except BaseException as exc:
+                if not (evidence / "failure.json").exists():
+                    fields = external_failure_fields(exc)
+                    failure = write_receipt(
+                        evidence / "failure.json", "hardening-gate7-live-bulk-failure-v2", {
+                            "campaign_id": args.campaign_id,
+                            "stage": journal.stage,
+                            "batch_index": journal.batch_index,
+                            **fields,
+                        },
+                    )
+                    journal.emit("TERMINAL_FAIL", "TERMINAL",
+                                 failure_receipt_sha256=failure["receipt_sha256"],
+                                 **fields)
+                    write_receipt(
+                        evidence / "terminal.json", "hardening-gate7-live-bulk-terminal-v2", {
+                            "campaign_id": args.campaign_id,
+                            "status": "BLOCKED",
+                            "process_exit_status": 2,
+                            "signal": fields["signal"],
+                            "failure_receipt_sha256": failure["receipt_sha256"],
+                            "cleanup_receipt_sha256": None,
+                            "journal_terminal_hash": journal.prior_hash,
+                        },
+                    )
+                print(type(exc).__name__ + ":" + external_failure_fields(exc)["failure_class"],
+                      file=sys.stderr)
+                return 2
+    finally:
+        for signum, handler in prior_handlers.items():
+            signal.signal(signum, handler)
+        journal.close()
+        stdout_log.close()
+        stderr_log.close()
 
 
 if __name__ == "__main__":

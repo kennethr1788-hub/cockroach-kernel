@@ -10,6 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import os
 from pathlib import Path
+import re
 import shutil
 import signal
 import time
@@ -47,6 +48,7 @@ class ExternalCommandFailure(RuntimeError):
     return_code: int
     output_hash: str
     failure_class: str
+    sqlstate: str | None = None
 
     def __str__(self) -> str:
         return f"{self.failure_class}:{self.command_family}:{self.return_code}"
@@ -68,11 +70,13 @@ def classify_external_failure(command_family: str, output: bytes) -> str:
 
 def command_failure(command_family: str, return_code: int,
                     output: bytes) -> ExternalCommandFailure:
+    match = re.search(rb"(?:SQLSTATE:\s*|SQLSTATE[ =])([0-9A-Z]{5})", output[:1_048_576])
     return ExternalCommandFailure(
         command_family=command_family,
         return_code=return_code,
         output_hash=protocol.sha256(output),
         failure_class=classify_external_failure(command_family, output),
+        sqlstate=match.group(1).decode("ascii") if match else None,
     )
 
 
@@ -112,6 +116,7 @@ def failure_receipt(*, campaign_id: str, sequence: int, stage: str,
         "failure_class": failure.failure_class,
         "command_family": failure.command_family,
         "return_code": failure.return_code,
+        "sqlstate": failure.sqlstate,
         "sanitized_output_sha256": failure.output_hash,
         "raw_output_stored": False,
         "utc": utc or time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),

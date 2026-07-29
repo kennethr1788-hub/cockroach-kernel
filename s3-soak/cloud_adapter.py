@@ -348,6 +348,7 @@ def run_live(request: dict[str, Any], config_path: Path,
                 return_code=-1,
                 output_hash=protocol.sha256(str(exc).encode("utf-8")),
                 failure_class=hardening.UNKNOWN_EXTERNAL_COMMAND,
+                sqlstate=None,
             )
         receipt = hardening.failure_receipt(
             campaign_id=request["campaign_id"],
