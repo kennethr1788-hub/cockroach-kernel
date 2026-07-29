@@ -54,7 +54,7 @@ HARNESS_FILES = (
     "s3-soak/cloud_adapter.py",
     "s3-soak/remote_bridge.py",
     "s3-soak/coordinator_guard.py",
-    "HARDENING_GATE7_EXPANDED_THRESHOLDS_R1.json",
+    "HARDENING_GATE7_RUN5_THRESHOLDS_R2.json",
     "HARDENING_GATE7_RUN5_SCHEDULE_R1.json",
     "HARDENING_GATE7_EXPANDED_EXECUTION_WIRING_R1.md",
 )
@@ -127,7 +127,7 @@ def contract_hash(plan: Path, prompt: Path) -> str:
     rows = [
         {"label": "plan", "sha256": digest(plan.read_bytes())},
         {"label": "prompt", "sha256": digest(prompt.read_bytes())},
-        file_record("HARDENING_GATE7_EXPANDED_THRESHOLDS_R1.json"),
+        file_record("HARDENING_GATE7_RUN5_THRESHOLDS_R2.json"),
         file_record("HARDENING_GATE7_RUN5_SCHEDULE_R1.json"),
     ]
     return digest(canonical(rows))

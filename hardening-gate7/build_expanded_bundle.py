@@ -39,6 +39,7 @@ EXACT_FILES = (
     "hardening-gate7/run_trial.py",
     "hardening-gate7/score_expanded_campaign.py",
     "hardening-gate7/surface_cases.py",
+    "HARDENING_GATE7_RUN5_THRESHOLDS_R2.json",
     "s2-soak/run_soak.py",
     "s3-soak/protocol.py",
     "s3-soak/hardening.py",

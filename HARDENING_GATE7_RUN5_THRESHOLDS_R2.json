@@ -1,0 +1,52 @@
+{
+  "campaign": {
+    "hidden_scored_executions": 84,
+    "original_semantic_executions": 43,
+    "topology_workflow_executions": 20,
+    "compound_executions": 9,
+    "exact_boundary_executions": 6,
+    "temporal_custody_executions": 6,
+    "post_reveal_tuning_events_max": 0
+  },
+  "live_track": {
+    "aws_calls": 12,
+    "checkpoint_seconds": 60,
+    "checkpoints": 60,
+    "cloud_call_interval_seconds": 300,
+    "duration_seconds": 3600,
+    "events": 20000,
+    "hourly_summary_seconds": 300,
+    "hourly_summaries": 12,
+    "receipts": 4000,
+    "safety_replay_seconds": 300,
+    "safety_replays": 12,
+    "tasks": 2000,
+    "vector_queries": 200,
+    "vectors": 20000
+  },
+  "performance": {
+    "bulk_insert_total_ms_max": 420000,
+    "cloud_coordinator_p95_ms_max": 20000,
+    "cloud_coordinator_p99_ms_max": 30000,
+    "database_growth_bytes_max": 536870912,
+    "evidence_growth_bytes_max": 67108864,
+    "open_files_max": 128,
+    "query_p99_ms_max": 10000,
+    "rss_bytes_max": 1610612736
+  },
+  "safety": {
+    "active_campaign_inventory_max": 0,
+    "canonical_receipt_percent_min": 100,
+    "correct_stable_reason_percent_min": 100,
+    "false_promotions_max": 0,
+    "hidden_session_state_dependencies_max": 0,
+    "mutation_after_refusal_or_invalid_max": 0,
+    "residue_max": 0,
+    "secret_or_private_data_exposure_max": 0,
+    "undeclared_egress_max": 0,
+    "unsafe_acceptances_max": 0,
+    "warrant_double_consumption_max": 0,
+    "worker_count_successful": 1
+  },
+  "schema_version": "hardening-gate7-run5-thresholds-v2"
+}

@@ -177,7 +177,7 @@ class ExpandedGate7Tests(unittest.TestCase):
             (BASE / "HARDENING_GATE7_EXPANDED_RUNPOD_SCHEDULE_R1.json").read_bytes()
         )
         thresholds = json.loads(
-            (BASE / "HARDENING_GATE7_EXPANDED_THRESHOLDS_R1.json").read_bytes()
+            (BASE / "HARDENING_GATE7_RUN5_THRESHOLDS_R2.json").read_bytes()
         )
         self.assertEqual(schedule["maximum_concurrent_workers"], 1)
         self.assertEqual(schedule["accepted_gpu_count"], 0)
@@ -185,6 +185,8 @@ class ExpandedGate7Tests(unittest.TestCase):
         self.assertEqual(schedule["aggregate_runpod_exposure_usd_max"], "5.00")
         self.assertEqual(thresholds["campaign"]["hidden_scored_executions"], 84)
         self.assertEqual(thresholds["live_track"]["duration_seconds"], 3600)
+        self.assertEqual(thresholds["performance"]["bulk_insert_total_ms_max"], 420000)
+        self.assertEqual(bulk.INSERT_TOTAL_LIMIT_MS, 420000)
         paths = bundle.collect()
         rows = bundle.scan(paths)
         self.assertGreaterEqual(len(rows), 80)
@@ -199,6 +201,15 @@ class ExpandedGate7Tests(unittest.TestCase):
         self.assertEqual(len(helper["sha256"]), 64)
         self.assertEqual(sum(".s3-runtime" in row["path"] for row in rows), 0)
         self.assertEqual(sum(".hardening-runtime" in row["path"] for row in rows), 0)
+
+    def test_bulk_insert_threshold_stops_before_post_insert_work(self):
+        self.assertEqual(
+            bulk.enforce_insert_threshold({"tasks": 100000, "vectors": 320000}),
+            420000,
+        )
+        with self.assertRaisesRegex(
+                bulk.LiveBulkError, "INSERT_TOTAL_THRESHOLD_BREACH"):
+            bulk.enforce_insert_threshold({"tasks": 100000, "vectors": 320001})
 
     def test_bulk_live_track_generation_is_exact_and_synthetic(self):
         with tempfile.TemporaryDirectory(prefix="ck-g7-bulk-") as temporary:

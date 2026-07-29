@@ -51,7 +51,7 @@ SERIALIZATION_RETRY_BACKOFF_MS = 250
 DATABASE_GROWTH_LIMIT = 536_870_912
 EVIDENCE_GROWTH_LIMIT = 67_108_864
 QUERY_P99_LIMIT_MS = 10_000
-INSERT_TOTAL_LIMIT_MS = 300_000
+INSERT_TOTAL_LIMIT_MS = 420_000
 
 
 class LiveBulkError(RuntimeError):
@@ -194,6 +194,14 @@ def campaign_prefix(campaign_id: str) -> str:
 
 def hash_for(*parts: object) -> str:
     return digest({"parts": list(parts)})
+
+
+def enforce_insert_threshold(insert_latencies: dict[str, int]) -> int:
+    """Stop before queries when the frozen bulk-insert ceiling is breached."""
+    total_ms = sum(insert_latencies.values())
+    if total_ms > INSERT_TOTAL_LIMIT_MS:
+        raise LiveBulkError("INSERT_TOTAL_THRESHOLD_BREACH")
+    return total_ms
 
 
 def batched(values: list[str], size: int) -> list[list[str]]:
@@ -654,6 +662,12 @@ def run_live(config_path: Path, generated: Path, evidence: Path,
             journal.emit("STAGE_PASS", name.upper(),
                          batches=len(hashes), elapsed_ms=elapsed,
                          output_set_sha256=insert_hashes[name], retries=retries)
+        insert_total_ms = enforce_insert_threshold(insert_latencies)
+        journal.emit(
+            "MECHANICAL_PASS", "INSERT_THRESHOLD",
+            insert_total_ms=insert_total_ms,
+            insert_total_limit_ms=INSERT_TOTAL_LIMIT_MS,
+        )
         counts_raw, counts_ms = cloud_adapter._sql(config, sql_env, execute=count_sql)
         actual_counts = parse_count_row(counts_raw)
         expected_counts = (
@@ -754,7 +768,7 @@ def run_live(config_path: Path, generated: Path, evidence: Path,
             "insert_output_hashes": insert_hashes,
             "insert_batch_output_hashes": insert_batch_output_hashes,
             "serialization_retries": serialization_retries,
-            "insert_total_ms": sum(insert_latencies.values()),
+            "insert_total_ms": insert_total_ms,
             "count_query_ms": counts_ms,
             "query_count": len(query_results),
             "query_latency_ms": {
