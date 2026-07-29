@@ -224,6 +224,12 @@ class ExpandedGate7Tests(unittest.TestCase):
             self.assertEqual(manifest["unique_vector_digests"], 20000)
             self.assertEqual(sum(len(rows) for rows in manifest["batches"].values()), 184)
             self.assertEqual(manifest["cleanup_batch_count"], 35)
+            self.assertEqual(manifest["execution_policy"], {
+                "batch_timeout_seconds": 120,
+                "vector_batch_timeout_seconds": 300,
+                "serialization_retries": 3,
+                "serialization_retry_backoff_ms": 250,
+            })
             cleanup_manifest = json.loads(
                 (generated_a / "cleanup-manifest.json").read_bytes()
             )
@@ -428,10 +434,15 @@ class ExpandedGate7Tests(unittest.TestCase):
             manifest["batches"]["vectors"][0]["sha256"] = bulk.digest(batch.read_bytes())
             transient = bulk.hardening.command_failure(
                 "cockroach", 1, b"restart transaction\nSQLSTATE: 40001")
-            with mock.patch.object(bulk.cloud_adapter, "_sql", side_effect=[transient, (b"ok", 2)]):
+            with mock.patch.object(
+                    bulk.cloud_adapter, "_sql",
+                    side_effect=[transient, (b"ok", 2)]) as sql_call, \
+                    mock.patch.object(bulk.time, "sleep") as sleep_call:
                 elapsed, hashes, retries = bulk.execute_batches(
                     {}, {}, root, manifest, "vectors", journal)
             self.assertEqual((elapsed, retries, len(hashes)), (2, 1, 1))
+            self.assertEqual(sql_call.call_args_list[0].kwargs["timeout"], 300)
+            sleep_call.assert_called_once_with(0.25)
             permanent = bulk.hardening.command_failure(
                 "cockroach", 1, b"duplicate\nSQLSTATE: 23505")
             with mock.patch.object(bulk.cloud_adapter, "_sql", side_effect=permanent):

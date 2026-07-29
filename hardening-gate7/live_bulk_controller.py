@@ -44,6 +44,9 @@ CAMPAIGN_RE = re.compile(r"^ck-g7r[0-9]+-[A-Za-z0-9-]+$")
 BATCH_SIZE = 250
 CLEANUP_TASK_BATCH_SIZE = 250
 MAX_SERIALIZATION_RETRIES = 3
+BATCH_TIMEOUT_SECONDS = 120
+VECTOR_BATCH_TIMEOUT_SECONDS = 300
+SERIALIZATION_RETRY_BACKOFF_MS = 250
 DATABASE_GROWTH_LIMIT = 536_870_912
 EVIDENCE_GROWTH_LIMIT = 67_108_864
 QUERY_P99_LIMIT_MS = 10_000
@@ -379,6 +382,12 @@ def build_sql(campaign_id: str, output: Path) -> dict[str, Any]:
         "cleanup_manifest_sha256": cleanup_manifest["cleanup_manifest_sha256"],
         "cleanup_batch_count": len(cleanup_batches),
         "cleanup_sha256": digest(cleanup_plan),
+        "execution_policy": {
+            "batch_timeout_seconds": BATCH_TIMEOUT_SECONDS,
+            "vector_batch_timeout_seconds": VECTOR_BATCH_TIMEOUT_SECONDS,
+            "serialization_retries": MAX_SERIALIZATION_RETRIES,
+            "serialization_retry_backoff_ms": SERIALIZATION_RETRY_BACKOFF_MS,
+        },
         "ceilings": {
             "database_growth_bytes": DATABASE_GROWTH_LIMIT,
             "evidence_growth_bytes": EVIDENCE_GROWTH_LIMIT,
@@ -464,8 +473,11 @@ def execute_batches(config: dict[str, Any], sql_env: dict[str, str],
             journal.emit("BATCH_START", stage.upper(), batch_index=batch_index,
                          attempt=attempt, rows=row["rows"], sql_sha256=row["sha256"])
             try:
+                timeout_seconds = (VECTOR_BATCH_TIMEOUT_SECONDS
+                                   if stage == "vectors"
+                                   else BATCH_TIMEOUT_SECONDS)
                 raw, elapsed = cloud_adapter._sql(
-                    config, sql_env, file=path, timeout=120,
+                    config, sql_env, file=path, timeout=timeout_seconds,
                 )
                 total_ms += elapsed
                 output_hash = digest(raw)
@@ -481,8 +493,11 @@ def execute_batches(config: dict[str, Any], sql_env: dict[str, str],
                              **external_failure_fields(exc))
                 if exc.sqlstate == "40001" and attempt <= MAX_SERIALIZATION_RETRIES:
                     retries += 1
+                    backoff_ms = SERIALIZATION_RETRY_BACKOFF_MS * attempt
                     journal.emit("BATCH_RETRY", stage.upper(), batch_index=batch_index,
-                                 attempt=attempt, sqlstate=exc.sqlstate)
+                                 attempt=attempt, sqlstate=exc.sqlstate,
+                                 backoff_ms=backoff_ms)
+                    time.sleep(backoff_ms / 1000)
                     continue
                 raise
     return total_ms, output_hashes, retries
@@ -541,11 +556,14 @@ def execute_cleanup_batches(config: dict[str, Any], sql_env: dict[str, str],
                 )
                 if exc.sqlstate == "40001" and attempt <= MAX_SERIALIZATION_RETRIES:
                     retries += 1
+                    backoff_ms = SERIALIZATION_RETRY_BACKOFF_MS * attempt
                     journal.emit(
                         "CLEANUP_BATCH_RETRY", "CLEANUP",
                         cleanup_stage=row["stage"], batch_index=row["batch_index"],
                         attempt=attempt, sqlstate=exc.sqlstate,
+                        backoff_ms=backoff_ms,
                     )
+                    time.sleep(backoff_ms / 1000)
                     continue
                 raise
     return total_ms, output_hashes, retries
