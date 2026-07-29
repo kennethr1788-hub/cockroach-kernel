@@ -42,7 +42,8 @@ CONCURRENCY = 4
 AWS_CALLS_SEPARATE_TRACK = 12
 CAMPAIGN_RE = re.compile(r"^ck-g7r[0-9]+-[A-Za-z0-9-]+$")
 BATCH_SIZE = 250
-CLEANUP_TASK_BATCH_SIZE = 250
+CLEANUP_DEFAULT_TASK_BATCH_SIZE = 250
+CLEANUP_VECTOR_ROW_BATCH_SIZE = 250
 MAX_SERIALIZATION_RETRIES = 3
 BATCH_TIMEOUT_SECONDS = 120
 VECTOR_BATCH_TIMEOUT_SECONDS = 300
@@ -298,9 +299,11 @@ def build_sql(campaign_id: str, output: Path) -> dict[str, Any]:
     atomic_write(query_path, canonical(query_specs))
     cleanup_batches: list[dict[str, Any]] = []
 
-    def add_cleanup(stage: str, statement: str, *, task_count: int) -> None:
+    def add_cleanup(stage: str, statement: str, *, task_count: int,
+                    row_limit: int | None = None) -> None:
         stage_index = 1 + sum(row["stage"] == stage for row in cleanup_batches)
-        raw = ("BEGIN;\n" + statement + "\nCOMMIT;\n").encode("utf-8")
+        raw = ("BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED;\n" +
+               statement + "\nCOMMIT;\n").encode("utf-8")
         path = output / f"cleanup-{stage}-batch-{stage_index:04d}.sql"
         atomic_write(path, raw)
         cleanup_batches.append({
@@ -309,6 +312,7 @@ def build_sql(campaign_id: str, output: Path) -> dict[str, Any]:
             "stage": stage,
             "batch_index": stage_index,
             "task_count": task_count,
+            "row_limit": row_limit,
         })
 
     add_cleanup(
@@ -322,13 +326,22 @@ def build_sql(campaign_id: str, output: Path) -> dict[str, Any]:
         task_count=0,
     )
     task_ids = [f"{prefix}task-{index:04d}" for index in range(TASKS)]
+    vector_batches = (TASKS * VECTORS_PER_TASK + CLEANUP_VECTOR_ROW_BATCH_SIZE - 1) // CLEANUP_VECTOR_ROW_BATCH_SIZE
+    for _ in range(vector_batches):
+        add_cleanup(
+            "vectors",
+            "DELETE FROM ck.context_vectors "
+            f"WHERE vector_id LIKE {sql_literal(prefix + '%')} "
+            f"ORDER BY vector_id LIMIT {CLEANUP_VECTOR_ROW_BATCH_SIZE};",
+            task_count=0,
+            row_limit=CLEANUP_VECTOR_ROW_BATCH_SIZE,
+        )
     for table, stage in (
-        ("ck.context_vectors", "vectors"),
         ("ck.receipts", "receipts"),
         ("ck.trajectory_events", "events"),
         ("ck.tasks", "tasks"),
     ):
-        for group in batched(task_ids, CLEANUP_TASK_BATCH_SIZE):
+        for group in batched(task_ids, CLEANUP_DEFAULT_TASK_BATCH_SIZE):
             identifiers = ",".join(sql_literal(item) for item in group)
             add_cleanup(
                 stage,
@@ -351,7 +364,9 @@ def build_sql(campaign_id: str, output: Path) -> dict[str, Any]:
     cleanup_manifest_body = {
         "version": "hardening-gate7-live-bulk-cleanup-manifest-v1",
         "campaign_id": campaign_id,
-        "task_batch_size": CLEANUP_TASK_BATCH_SIZE,
+        "default_task_batch_size": CLEANUP_DEFAULT_TASK_BATCH_SIZE,
+        "vector_row_batch_size": CLEANUP_VECTOR_ROW_BATCH_SIZE,
+        "vector_batch_count": vector_batches,
         "batch_count": len(cleanup_batches),
         "batches": cleanup_batches,
         "composed_cleanup_sha256": digest(cleanup_plan),
@@ -531,6 +546,7 @@ def execute_cleanup_batches(config: dict[str, Any], sql_env: dict[str, str],
                 "CLEANUP_BATCH_START", "CLEANUP",
                 cleanup_stage=row["stage"], batch_index=row["batch_index"],
                 attempt=attempt, task_count=row["task_count"],
+                row_limit=row.get("row_limit"),
                 sql_sha256=row["sha256"],
             )
             try:
@@ -544,6 +560,7 @@ def execute_cleanup_batches(config: dict[str, Any], sql_env: dict[str, str],
                     "CLEANUP_BATCH_PASS", "CLEANUP",
                     cleanup_stage=row["stage"], batch_index=row["batch_index"],
                     attempt=attempt, task_count=row["task_count"],
+                    row_limit=row.get("row_limit"),
                     output_sha256=output_hash, elapsed_ms=elapsed,
                 )
                 break
@@ -552,6 +569,7 @@ def execute_cleanup_batches(config: dict[str, Any], sql_env: dict[str, str],
                     "CLEANUP_BATCH_FAIL", "CLEANUP",
                     cleanup_stage=row["stage"], batch_index=row["batch_index"],
                     attempt=attempt, task_count=row["task_count"],
+                    row_limit=row.get("row_limit"),
                     **external_failure_fields(exc),
                 )
                 if exc.sqlstate == "40001" and attempt <= MAX_SERIALIZATION_RETRIES:

@@ -223,7 +223,7 @@ class ExpandedGate7Tests(unittest.TestCase):
             self.assertEqual(manifest["concurrency"], 4)
             self.assertEqual(manifest["unique_vector_digests"], 20000)
             self.assertEqual(sum(len(rows) for rows in manifest["batches"].values()), 184)
-            self.assertEqual(manifest["cleanup_batch_count"], 35)
+            self.assertEqual(manifest["cleanup_batch_count"], 107)
             self.assertEqual(manifest["execution_policy"], {
                 "batch_timeout_seconds": 120,
                 "vector_batch_timeout_seconds": 300,
@@ -233,7 +233,17 @@ class ExpandedGate7Tests(unittest.TestCase):
             cleanup_manifest = json.loads(
                 (generated_a / "cleanup-manifest.json").read_bytes()
             )
-            self.assertEqual(cleanup_manifest["batch_count"], 35)
+            self.assertEqual(cleanup_manifest["batch_count"], 107)
+            self.assertEqual(cleanup_manifest["vector_row_batch_size"], 250)
+            self.assertEqual(cleanup_manifest["vector_batch_count"], 80)
+            self.assertEqual(cleanup_manifest["default_task_batch_size"], 250)
+            first_vector_cleanup = generated_a / next(
+                row["path"] for row in cleanup_manifest["batches"]
+                if row["stage"] == "vectors"
+            )
+            cleanup_sql = first_vector_cleanup.read_text(encoding="utf-8")
+            self.assertIn("ISOLATION LEVEL READ COMMITTED", cleanup_sql)
+            self.assertIn("ORDER BY vector_id LIMIT 250", cleanup_sql)
             self.assertEqual(
                 cleanup_manifest["cleanup_manifest_sha256"],
                 manifest["cleanup_manifest_sha256"],
