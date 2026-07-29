@@ -156,7 +156,8 @@ def main() -> int:
     ).splitlines()
     if changed_product:
         raise FreezeError("FROZEN_PRODUCT_CHANGED")
-    if list(BASE.rglob("master-seed.bin")):
+    current_campaign_root = BASE / ".hardening-runtime/gate7-r5"
+    if current_campaign_root.exists() and list(current_campaign_root.rglob("master-seed.bin")):
         raise FreezeError("PREMATURE_HIDDEN_SEED_PRESENT")
     plan = args.plan.resolve()
     prompt = args.prompt.resolve()

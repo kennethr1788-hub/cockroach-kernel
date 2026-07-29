@@ -29,7 +29,7 @@
 | `hardening-gate7/run4_evidence_custody.py` | `4990f41a7f9e4522ee9a8c32fe6f47815cb8da1e4130c7b240fada4a17fd3dee` |
 | `hardening-gate7/run4_track_gate.py` | `5c8abdf600475826317d1fecfeef66dcaa8a423f99e1bcdb9d7522bef3e072c7` |
 | `hardening-gate7/build_expanded_bundle.py` | `f547eff8c79286c46330426f86b0c3b597f0ac487c41dd03b583b1c1ec578bed` |
-| `hardening-gate7/freeze_expanded_preflight.py` | `60227a011ef1839557b3208602de074c234f4131d3456b32a10088dd14deb217` |
+| `hardening-gate7/freeze_expanded_preflight.py` | `a78d7f79e9dd2654ff0a99c8984f0c13f83225777c6d5e69cf29e02bfd4e4ad7` |
 | `hardening-gate7/local_collision_migration_proof.sh` | `1d5a1bae6547c332fc71ec0a3c642e5ee9c9e9761bfec68943130fbe88f6842a` |
 | `p9-cloud/migrations/001_cloud.sql` | `b17d93fe6c7236c4498f85cc0c5012f9967ddd8c384ed61c853b901dba539f59` |
 | `p9-cloud/migrations/003_collision_safe_vector_digest.sql` | `d4696b355525454158818d29c4c8d6f3fa317e549a5bd32fb184eb008119d660` |
