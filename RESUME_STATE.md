@@ -2,12 +2,13 @@
 
 - `CURRENT_PHASE`: `HARDENING_7_RUN5_PREFLIGHT`
 - `LAST_GREEN_GATE`: `GATE7_RUN4_PREFLIGHT_GREEN`
-- `NEXT_ALLOWED_ACTION`: Re-freeze local mechanical evidence and source bindings for the threshold-amended candidate, then build the ordinary public-canary-bound Run 5 worker preflight packet
+- `NEXT_ALLOWED_ACTION`: Build and freeze the ordinary public-canary-bound Run 5 worker preflight packet from a clean commit, then require same-hash GLM 5.2 plus AGY GREEN before worker creation
 - `FORBIDDEN_ACTIONS`: Relabel or resume Run 3 or Run 4; reuse either hidden seed or hidden inputs; tune after hidden reveal; create a Run 5 worker before the public full-scale canary, packet freeze, and independent same-hash preflight; begin Gate 8 before Gate 7 final independent GREEN; begin Gate 9, S3-R2, release, publication, video, or submission; mutate HOME/live memory; expose credentials
 - `CURRENT_COMMIT`: `7cbfb699cf04034af48aa61be9325828b085f75d`
 - `GATE7_RUN5_AUTHORIZATION`: `RECORDED; CONTINUE_THROUGH_GATE8; POLICY_BOUNDED_RUNPOD_RUNS_AND_SEQUENTIAL_RETRIES_AUTHORIZED`
 - `GATE7_RUN5_REPAIR_COMMIT`: `9f76ece0e1aa98ac5bf037299ce1547c9c534aab`
 - `GATE7_RUN5_LOCAL_PREFLIGHT`: `R3_GREEN_EXCEPT_AWS_AUTH; RECEIPT_SHA256_2aaafb2e7d56a8e75e01f5df3a733c5f56bf8ee265dedde56a88fe5b275bcd0e; SOURCE_BINDINGS_SHA256_07d616082b32b61e21c84b86c76b1349444ed873801d705b2b692b195d467e96; CONTRACT_SHA256_a643d0a04baa2d76f23b0a9a5d34c247c805e52b4792671426c658ad16df91be; HIDDEN_SEED_FALSE; ACTIVE_RUNPOD_INVENTORY_EMPTY`
+- `GATE7_RUN5_LOCAL_PREFLIGHT_R4`: `GREEN_EXCEPT_AWS_AUTH; RECEIPT_SHA256_69be4430ab252aded29dce0030f91dca659366016509adb49e19bbc984cded17; SOURCE_BINDINGS_SHA256_bda2ba096003c3adf1622b1187c0d6d16c48c4b660af382403fe0268a3e300bc; CONTRACT_SHA256_6131faf2b309ec835b618c4f5523fca6dbe431d32c4e3397d07dee9a35a6978e; HIDDEN_SEED_FALSE; ACTIVE_RUNPOD_INVENTORY_EMPTY`
 - `GATE7_RUN5_LIVE_MIGRATION`: `GREEN; MIGRATION_003_APPLIED; OLD_UNIQUE_DIGEST_CONSTRAINT_ABSENT; NONUNIQUE_DIGEST_INDEX_PRESENT`
 - `GATE7_RUN5_PUBLIC_CANARY_R1`: `BLOCKED_ON_VECTOR_CLEANUP_BATCH_77_TIMEOUT; FAIL_CLOSED_CLEANUP_COMPLETED_107_OF_107; DIRECT_RESIDUE_ZERO; PRESERVED`
 - `GATE7_RUN5_PUBLIC_CANARY_R2`: `BLOCKED_ON_VECTOR_INSERT_BATCH_48_AFTER_THREE_SQLSTATE_40001_RETRIES_DURING_ACTIVE_SCHEMA_CHANGE_GC; CLEANUP_107_OF_107; DIRECT_RESIDUE_ZERO; PRESERVED`
@@ -48,7 +49,7 @@
 - `S3_PREFLIGHT_R4_REPAIR_COMMIT`: `06b54e8f61bf0fa227af3de2377a462e369d7d74`
 - `S3_PREFLIGHT_R6_REPAIR_COMMIT`: `8b1d5bd1038588527bd994eb8fcb5467cac47eac`
 - `S3_PREFLIGHT_R8_REPAIR_COMMIT`: `95408fb9386ced25b468c0957e86e8f73cb123e9`
-- `PENDING_BLOCKERS`: `RUN3_IMMUTABLY_BLOCKED`; `RUN4_IMMUTABLY_BLOCKED`; Run 5 public canaries R1 through R4 remain BLOCKED; threshold-amended local freeze and ordinary same-hash Run 5 worker preflight remain open; AWS login refresh remains open; no current Run 5 worker or hidden seed exists
+- `PENDING_BLOCKERS`: `RUN3_IMMUTABLY_BLOCKED`; `RUN4_IMMUTABLY_BLOCKED`; Run 5 public canaries R1 through R4 remain BLOCKED; ordinary same-hash Run 5 worker preflight remains open; AWS login refresh remains open; no current Run 5 worker or hidden seed exists
 - `REQUIRED_JUDGE_STATE`: Run 5 requires fresh same-hash GLM 5.2 plus AGY GREEN on the public-canary-bound preflight packet before worker creation, and again on the retrieved final packet before Gate 7 GREEN; Gate 8 requires its own same-hash independent review
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`

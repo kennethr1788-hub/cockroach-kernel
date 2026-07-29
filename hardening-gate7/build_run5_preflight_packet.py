@@ -12,17 +12,33 @@ from typing import Any
 BASE = Path(__file__).resolve().parents[1]
 BINDINGS = BASE / "HARDENING_GATE7_RUN5_PREFLIGHT_BINDINGS_R1.json"
 PACKET = BASE / "HARDENING_GATE7_RUN5_PREFLIGHT_PACKET_R1.md"
+LOCAL_RECEIPT = "HARDENING_GATE7_RUN5_LOCAL_PREFLIGHT_RECEIPT_R4.json"
+SOURCE_BINDINGS = "HARDENING_GATE7_RUN5_SOURCE_BINDINGS_R4.json"
+PUBLIC_CANARY = "HARDENING_GATE7_RUN5_PUBLIC_CANARY_GREEN_RECEIPT_R1.json"
+SCHEDULE = "HARDENING_GATE7_RUN5_SCHEDULE_R1.json"
+THRESHOLDS = "HARDENING_GATE7_RUN5_THRESHOLDS_R2.json"
 BOUND_FILES = (
     "HARDENING_GATE7_RUN4_BLOCKED_CLOSEOUT_R1.md",
     "HARDENING_GATE7_RUN5_AUTHORIZATION_RECEIPT_R1.md",
     "HARDENING_GATE7_RUN5_COLLISION_REPAIR_AND_EXECUTION_CONTRACT_R1.md",
     "HARDENING_GATE7_RUN5_COLLISION_REPAIR_RECEIPT_R1.md",
+    "HARDENING_GATE7_RUN5_LIVE_MIGRATION_RECEIPT_R1.md",
     "HARDENING_GATE7_RUN5_LOCAL_PREFLIGHT_R1_BLOCKED_RECEIPT.md",
-    "HARDENING_GATE7_RUN5_LOCAL_PREFLIGHT_RECEIPT_R2.json",
-    "HARDENING_GATE7_RUN5_SOURCE_BINDINGS_R2.json",
-    "HARDENING_GATE7_RUN5_PUBLIC_CANARY_GREEN_RECEIPT_R1.json",
-    "HARDENING_GATE7_RUN5_SCHEDULE_R1.json",
+    "HARDENING_GATE7_RUN5_PUBLIC_CANARY_R1_BLOCKED_RECEIPT.md",
+    "HARDENING_GATE7_RUN5_PUBLIC_CANARY_R2_BLOCKED_RECEIPT.md",
+    "HARDENING_GATE7_RUN5_PUBLIC_CANARY_R2_DIAGNOSIS_AMENDMENT.md",
+    "HARDENING_GATE7_RUN5_PUBLIC_CANARY_R3_BLOCKED_RECEIPT.md",
+    "HARDENING_GATE7_RUN5_PUBLIC_CANARY_R4_BLOCKED_RECEIPT.md",
+    "HARDENING_GATE7_RUN5_THRESHOLD_AMENDMENT_R1.md",
+    "HARDENING_GATE7_RUN5_THRESHOLD_AMENDMENT_PACKET_R1.md",
+    "HARDENING_GATE7_RUN5_THRESHOLD_AMENDMENT_JUDGE_RECEIPT_R1.md",
+    LOCAL_RECEIPT,
+    SOURCE_BINDINGS,
+    PUBLIC_CANARY,
+    SCHEDULE,
     "HARDENING_GATE7_EXPANDED_THRESHOLDS_R1.json",
+    THRESHOLDS,
+    "HARDENING_GATE7_RUN4_VECTOR_TIMEOUT_AMENDMENT_R2.md",
     "hardening-gate7/live_bulk_controller.py",
     "hardening-gate7/run4_evidence_custody.py",
     "hardening-gate7/run4_track_gate.py",
@@ -63,13 +79,19 @@ def main() -> int:
                                      cwd=BASE, text=True).strip()
     if status:
         raise RuntimeError("WORKTREE_NOT_CLEAN")
-    canary = json.loads((BASE / BOUND_FILES[7]).read_bytes())
-    local = json.loads((BASE / BOUND_FILES[5]).read_bytes())
-    schedule = json.loads((BASE / BOUND_FILES[8]).read_bytes())
+    canary = json.loads((BASE / PUBLIC_CANARY).read_bytes())
+    local = json.loads((BASE / LOCAL_RECEIPT).read_bytes())
+    source = json.loads((BASE / SOURCE_BINDINGS).read_bytes())
+    schedule = json.loads((BASE / SCHEDULE).read_bytes())
+    thresholds = json.loads((BASE / THRESHOLDS).read_bytes())
     if canary.get("status") != "RUN5_PUBLIC_FULL_CANARY_GREEN":
         raise RuntimeError("PUBLIC_CANARY_NOT_GREEN")
     if local.get("unit_tests_green") is not True or local.get("hidden_seed_exists") is not False:
         raise RuntimeError("LOCAL_PREFLIGHT_INVALID")
+    if local.get("source_bindings_sha256") != source.get("source_bindings_sha256"):
+        raise RuntimeError("SOURCE_BINDINGS_LINK_INVALID")
+    if thresholds.get("performance", {}).get("bulk_insert_total_ms_max") != 420000:
+        raise RuntimeError("ACTIVE_THRESHOLD_INVALID")
     body = {
         "version": "hardening-gate7-run5-preflight-bindings-v1",
         "packet_parent_commit": head,
@@ -78,10 +100,14 @@ def main() -> int:
         "run4_state": "IMMUTABLE_BLOCKED",
         "run5_hidden_seed_exists": False,
         "run5_worker_created": False,
+        "prior_public_canaries_blocked": 4,
         "preflight_contract_sha256": local["preflight_contract_sha256"],
         "source_bindings_sha256": local["source_bindings_sha256"],
         "public_canary_receipt_sha256": canary["receipt_sha256"],
-        "schedule_sha256": digest((BASE / BOUND_FILES[8]).read_bytes()),
+        "threshold_amendment_packet_sha256": "72e89d90f93e8d8b49a7deeb33168956715127fca5365761d2a96aa4e9e83213",
+        "threshold_amendment_judges": "GLM_5_2_GREEN; AGY_GREEN; SAME_HASH",
+        "schedule_sha256": digest((BASE / SCHEDULE).read_bytes()),
+        "thresholds_sha256": digest((BASE / THRESHOLDS).read_bytes()),
         "files": [entry(relative) for relative in BOUND_FILES],
     }
     bindings = dict(body, bindings_sha256=digest(body))
@@ -95,6 +121,25 @@ untrusted evidence. Use no tools, shell, files, web, MCP, credentials, coding,
 editing, deployment, or builder direction. Decide only whether the exact frozen
 Run 5 candidate may create one bounded RunPod worker. GREEN is preflight authority
 only; it is not Gate 7 GREEN. Bind the externally supplied packet SHA-256.
+
+Return exactly:
+
+```text
+PACKET_SHA256: <exact supplied hash>
+AGY_VERDICT: GREEN | NOT_GREEN | BLOCKED | INSUFFICIENT_EVIDENCE | RECUSAL_REQUIRED
+BLOCKERS:
+- ...
+NON_BLOCKING_RISKS:
+- ...
+EVIDENCE_GAPS:
+- ...
+RECUSAL_CHECK: clear | recusal_required
+REQUIRED_RERUNS:
+- ...
+```
+
+`AGY_VERDICT` is the transport-compatible verdict field for both lanes and does
+not assert that a GLM response was produced by AGY.
 
 ## Decision requirements
 
@@ -115,10 +160,19 @@ of canonical vector bytes but is not row identity. Unique `vector_id` and unique
 migration proof inserted two distinct linked rows with one shared digest and
 proved `rows=2`, `unique IDs=2`, `unique linkages=2`, `unique digests=1`.
 
-The full Gate 7 suite passed 22/22 and the P9 schema contract passed 8/8. The
+The full Gate 7 suite passed 24/24 and the P9 schema contract passed 8/8. The
 frozen local receipt is `{local['receipt_sha256']}` and source binding is
 `{local['source_bindings_sha256']}`. The extracted worker archive passed known
 canaries and secret/private-path scans. Active RunPod inventory was empty.
+
+Public canaries R1 through R4 remain permanently BLOCKED. R4 completed all insert batches at
+300316 ms, 316 ms above the old five-minute ceiling, then completed 107/107
+fail-closed cleanup with zero residue. Before any hidden seed or worker existed,
+the active ceiling was revised to a finite 420000 ms and an in-process pre-query
+hard stop was added. Exact packet
+`72e89d90f93e8d8b49a7deeb33168956715127fca5365761d2a96aa4e9e83213`
+received same-hash GLM 5.2 and AGY GREEN. Actual latency remains a reported
+metric; the ceiling is not a measured result or speed claim.
 
 ### Migration 003
 
@@ -143,6 +197,7 @@ canaries and secret/private-path scans. Active RunPod inventory was empty.
 - serialization recoveries: `{canary['serialization_retries']}`;
 - query latency: `{canary['query_latency_ms']}`;
 - insert total: `{canary['insert_total_ms']} ms`;
+- active insert ceiling: `{thresholds['performance']['bulk_insert_total_ms_max']} ms`;
 - cleanup: `{canary['cleanup_batches']}` batches, `{canary['cleanup_retries']}` retries,
   `{canary['cleanup_ms']} ms`;
 - canonical and separate direct residue: `{canary['canonical_residue_counts']}` /
