@@ -484,6 +484,49 @@ class ExpandedGate7Tests(unittest.TestCase):
                 with self.assertRaises(bulk.hardening.ExternalCommandFailure):
                     bulk.execute_batches({}, {}, root, manifest, "vectors", journal)
 
+    def test_vector_cleanup_uses_bounded_vector_timeout_only(self):
+        journal = mock.Mock()
+        with tempfile.TemporaryDirectory(prefix="ck-g7-cleanup-timeout-") as temporary:
+            root = Path(temporary)
+            rows = []
+            for stage in ("vectors", "tasks"):
+                path = root / f"cleanup-{stage}.sql"
+                path.write_bytes(b"BEGIN; SELECT 1; COMMIT;\n")
+                rows.append({
+                    "path": path.name,
+                    "sha256": bulk.digest(path.read_bytes()),
+                    "stage": stage,
+                    "batch_index": 1,
+                    "task_count": 0 if stage == "vectors" else 1,
+                    "row_limit": 250 if stage == "vectors" else None,
+                })
+            body = {
+                "version": "hardening-gate7-live-bulk-cleanup-manifest-v1",
+                "campaign_id": "ck-g7r5-unit-cleanup-timeout",
+                "batch_count": len(rows),
+                "batches": rows,
+                "composed_cleanup_sha256": bulk.digest(
+                    b"".join((root / row["path"]).read_bytes() for row in rows)
+                ),
+            }
+            cleanup = dict(body, cleanup_manifest_sha256=bulk.digest(body))
+            (root / "cleanup-manifest.json").write_bytes(bulk.canonical(cleanup))
+            manifest = {
+                "cleanup_manifest_sha256": cleanup["cleanup_manifest_sha256"],
+                "cleanup_batch_count": len(rows),
+            }
+            with mock.patch.object(
+                    bulk.cloud_adapter, "_sql",
+                    side_effect=[(b"ok", 2), (b"ok", 3)]) as sql_call:
+                elapsed, hashes, retries = bulk.execute_cleanup_batches(
+                    {}, {}, root, manifest, journal,
+                )
+            self.assertEqual((elapsed, len(hashes), retries), (5, 2, 0))
+            self.assertEqual(
+                [call.kwargs["timeout"] for call in sql_call.call_args_list],
+                [bulk.VECTOR_BATCH_TIMEOUT_SECONDS, bulk.BATCH_TIMEOUT_SECONDS],
+            )
+
     def test_terminal_evidence_missing_and_interrupted_are_fail_closed(self):
         with tempfile.TemporaryDirectory(prefix="ck-g7-terminal-") as temporary:
             root = Path(temporary)

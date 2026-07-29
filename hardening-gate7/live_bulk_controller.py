@@ -565,8 +565,13 @@ def execute_cleanup_batches(config: dict[str, Any], sql_env: dict[str, str],
                 sql_sha256=row["sha256"],
             )
             try:
+                timeout = (
+                    VECTOR_BATCH_TIMEOUT_SECONDS
+                    if row["stage"] == "vectors"
+                    else BATCH_TIMEOUT_SECONDS
+                )
                 raw, elapsed = cloud_adapter._sql(
-                    config, sql_env, file=path, timeout=120,
+                    config, sql_env, file=path, timeout=timeout,
                 )
                 total_ms += elapsed
                 output_hash = digest(raw)
