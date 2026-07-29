@@ -1,16 +1,16 @@
 # Resume State
 
-- `CURRENT_PHASE`: `HARDENING_7_RUN3_BLOCKED`
-- `LAST_GREEN_GATE`: `GATE7_RUN3_LOCAL_REPAIR_GREEN`
-- `NEXT_ALLOWED_ACTION`: Separately authorize and independently requalify canonical agy-judge for signed AGY 1.1.8, then rerun AGY on unchanged Run 3 packet SHA-256 ba08a143db1304a6a5f9ae60708a774658609a4e8d1ebfe2bb4dcb1b966d4383; if packet bytes change, rerun both judges
-- `FORBIDDEN_ACTIONS`: Modify the AGY pin without full independent requalification; substitute bare AGY; create RunPod while AGY is unavailable; create hidden seed before CAMPAIGN_READY; tune after hidden reveal; resume or relabel Run 2; mutate the frozen product candidate; begin Gate 8, S3-R2, release, publication, video, or submission; mutate HOME/live memory; expose credentials
-- `CURRENT_COMMIT`: `a7ffa36ed82664fe9443df9aa553cd26bd031566` (Run 3 sanitized preflight packet R2)
+- `CURRENT_PHASE`: `HARDENING_7_RUN3_AWS_REFRESH_REQUIRED`
+- `LAST_GREEN_GATE`: `GATE7_RUN3_R5_PREFLIGHT_GREEN`
+- `NEXT_ALLOWED_ACTION`: Kenneth completes the project-local AWS login; rerun the sanitized CockroachDB/AWS readiness probe; only on GREEN continue into the already-authorized bounded RunPod creation envelope
+- `FORBIDDEN_ACTIONS`: Create a paid RunPod worker while AWS readiness is not GREEN; create hidden seed before CAMPAIGN_READY; tune after hidden reveal; resume or relabel Run 2; mutate the frozen product candidate; begin Gate 8, S3-R2, release, publication, video, or submission; mutate HOME/live memory; expose credentials
+- `CURRENT_COMMIT`: `02da56305e146cd555116e9a942e6d3c2b1f68c6` (Run 3 R5 same-hash preflight GREEN receipt)
 - `GATE7_RUN3_AUTHORIZATION_PROMPT_SHA256`: `a941c6e85d021d2ec77ea442765f4df724283af76f74c8b7f19ed91d077f8d30`
 - `GATE7_RUN3_LOCAL_RECEIPT`: `HARDENING_GATE7_RUN3_LOCAL_GATE_RECEIPT_R1.md`
 - `GATE7_RUN3_TRANSFER_ARCHIVE_SHA256`: `d0a47c311ad14f16e1bed2df181bb3d6885accf155be7322a67829c201023b28`
-- `GATE7_RUN3_PREFLIGHT_PACKET_SHA256`: `ba08a143db1304a6a5f9ae60708a774658609a4e8d1ebfe2bb4dcb1b966d4383`
-- `GATE7_RUN3_GLM_PREFLIGHT`: `GREEN; glm-5.2; HASH_MATCH; RECUSAL_CLEAR`
-- `GATE7_RUN3_AGY_PREFLIGHT`: `JUDGE_UNAVAILABLE; AGY_1_1_8_SHA256_251662551657dd0955428dd31536e7adf84c1cb4d53f20b6dca8bf8714762ff9; CANONICAL_PIN_REJECTED; PROVIDER_NOT_INVOKED`
+- `GATE7_RUN3_PREFLIGHT_PACKET_SHA256`: `5274e5f8c35383ff26f283764ba64385c3e3e5d5711da07a9b20735c6ccba7c9`
+- `GATE7_RUN3_GLM_PREFLIGHT`: `GREEN; exact glm-5.2 transport verified; HASH_MATCH; RECUSAL_CLEAR`
+- `GATE7_RUN3_AGY_PREFLIGHT`: `GREEN; signed AGY 1.1.8; Gemini 3.1 Pro High; HASH_MATCH; RECUSAL_CLEAR`
 - `GATE7_EXECUTION_PROMPT_SHA256`: `936c9ae62191e5d8daa0cbd7ef4287d77777e6c761694d6d6d8789842dcb454f`
 - `GATE7_EXPANDED_PLAN_SHA256`: `0f58b51c07d25d4643b98524e53f171d6e9c0d667c46e0718b07f40f27c1d7e7`
 - `GATE7_PRODUCT_CANDIDATE`: `1c483b1930e629c9ecb6d73418b9554897dc08ad`
@@ -30,8 +30,8 @@
 - `S3_PREFLIGHT_R4_REPAIR_COMMIT`: `06b54e8f61bf0fa227af3de2377a462e369d7d74`
 - `S3_PREFLIGHT_R6_REPAIR_COMMIT`: `8b1d5bd1038588527bd994eb8fcb5467cac47eac`
 - `S3_PREFLIGHT_R8_REPAIR_COMMIT`: `95408fb9386ced25b468c0957e86e8f73cb123e9`
-- `PENDING_BLOCKERS`: `AGY_JUDGE_BINARY_DRIFT`; both Run 2 defects are directly closed locally, GLM preflight is GREEN, AGY provider was not invoked, and no new provider campaign has started
-- `REQUIRED_JUDGE_STATE`: BLOCKED; exact-model GLM 5.2 is GREEN on packet ba08a143db1304a6a5f9ae60708a774658609a4e8d1ebfe2bb4dcb1b966d4383, but canonical AGY is unavailable after binary auto-update
+- `PENDING_BLOCKERS`: `AWS_PROJECT_LOCAL_LOGIN_EXPIRED`; CockroachDB readiness is GREEN, RunPod inventory is empty, and no Run 3 worker or hidden seed exists
+- `REQUIRED_JUDGE_STATE`: `PREFLIGHT_GREEN`; exact-model GLM 5.2 and canonical AGY 1.1.8 are same-hash GREEN on packet 5274e5f8c35383ff26f283764ba64385c3e3e5d5711da07a9b20735c6ccba7c9; final same-hash review remains pending measured evidence
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
 - `P9_FINAL_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; RECUSAL_CLEAR`
