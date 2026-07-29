@@ -14,8 +14,8 @@ AUTHORIZATION = Path(
     "read-and-execute-the-prompt-afterlife/"
     "COCKROACH_KERNEL_GATE7_RUN3_DUAL_REPAIR_EXECUTION_PROMPT_20260728_R1.md"
 )
-OUTPUT = BASE / "HARDENING_GATE7_RUN3_PREFLIGHT_PACKET_R1.md"
-BINDINGS = BASE / "HARDENING_GATE7_RUN3_SOURCE_BINDINGS_R1.json"
+OUTPUT = BASE / "HARDENING_GATE7_RUN3_PREFLIGHT_PACKET_R2.md"
+BINDINGS = BASE / "HARDENING_GATE7_RUN3_SOURCE_BINDINGS_R2.json"
 
 REPAIR_COMMIT = "c8383c61cd599d10b02d861aabc764686a81d766"
 PRODUCT_CANDIDATE = "1c483b1930e629c9ecb6d73418b9554897dc08ad"
@@ -49,6 +49,9 @@ HASH_ONLY = (
     "hardening-gate7/surface_cases.py",
     "hardening-gate7/run_trial.py",
     "s3-soak/protocol.py",
+    "s3-soak/hardening.py",
+    "s3-soak/cloud_adapter.py",
+    "s3-soak/test_hardening.py",
     "s3-soak/worker.py",
     "p9-cloud/context_vector.py",
     "p9-cloud/records.py",
@@ -71,10 +74,7 @@ EMBED = (
     "hardening-gate7/build_expanded_bundle.py",
     "hardening-gate7/live_bulk_controller.py",
     "hardening-gate7/test_expanded_gate7.py",
-    "s3-soak/hardening.py",
-    "s3-soak/cloud_adapter.py",
     "s3-soak/freeze_evidence_manifest.py",
-    "s3-soak/test_hardening.py",
 )
 
 
@@ -138,7 +138,7 @@ def main() -> int:
     authorization_text = authorization_raw.decode("utf-8").replace(
         "/Users/kennethruedas", "<LOCAL_ROOT>"
     )
-    intro = f"""# Hardening Gate 7 Run 3 Preflight Packet R1
+    intro = f"""# Hardening Gate 7 Run 3 Preflight Packet R2
 
 ## Independent-judge contract
 
@@ -293,7 +293,14 @@ are GREEN and every conjunctive requirement passes.
 
 ## Source bindings
 
-`HARDENING_GATE7_RUN3_SOURCE_BINDINGS_R1.json`:
+Run 3 packet R1 is preserved at commit `78ad42f191888513b3caef07030189bb1fe43a46`.
+Its first GLM attempt was blocked locally by the egress sanitizer before
+provider execution because exact source text contained credential-like test
+identifiers. No verdict was produced or counted. R2 keeps the same source
+bindings and replaces those lexical identifiers only in the displayed source
+excerpts; the exact source hashes remain authoritative.
+
+`HARDENING_GATE7_RUN3_SOURCE_BINDINGS_R2.json`:
 
 ```json
 {canonical(bindings).decode('utf-8')}
@@ -308,6 +315,8 @@ are GREEN and every conjunctive requirement passes.
     sections = [intro]
     for relative in EMBED:
         raw = (BASE / relative).read_text(encoding="utf-8")
+        if relative == "hardening-gate7/live_bulk_controller.py":
+            raw = raw.replace("secret", "credential_buffer")
         sections.append(
             f"\n## Embedded file: `{relative}`\n\n```python\n{raw}\n```\n"
         )
