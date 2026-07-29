@@ -14,7 +14,7 @@ Return exactly:
 
 ```text
 PACKET_SHA256: <exact supplied hash>
-VERDICT: GREEN | NOT_GREEN | BLOCKED | INSUFFICIENT_EVIDENCE | RECUSAL_REQUIRED
+AGY_VERDICT: GREEN | NOT_GREEN | BLOCKED | INSUFFICIENT_EVIDENCE | RECUSAL_REQUIRED
 BLOCKERS:
 - ...
 NON_BLOCKING_RISKS:
@@ -25,6 +25,9 @@ RECUSAL_CHECK: clear | recusal_required
 REQUIRED_RERUNS:
 - ...
 ```
+
+`AGY_VERDICT` is the transport-compatible verdict field for both lanes; it does
+not assert that a GLM response was produced by AGY.
 
 Do not provide patches, code, or implementation instructions.
 
