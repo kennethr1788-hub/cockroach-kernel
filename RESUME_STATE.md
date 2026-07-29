@@ -1,10 +1,10 @@
 # Resume State
 
-- `CURRENT_PHASE`: `HARDENING_7_RUN5_EXECUTION`
+- `CURRENT_PHASE`: `HARDENING_7_RUN5_BLOCKED_CLOSEOUT`
 - `LAST_GREEN_GATE`: `GATE7_RUN5_PREFLIGHT_GREEN`
-- `NEXT_ALLOWED_ACTION`: Start the one-hour credential-free Track 2 worker only after the amended Track 2 start marker is committed and pushed; preserve sealed Track 1 and clean Track 3 unchanged
-- `FORBIDDEN_ACTIONS`: Relabel or resume Run 3 or Run 4; reuse either hidden seed or hidden inputs; tune after hidden reveal; create a Run 5 worker before the public full-scale canary, packet freeze, and independent same-hash preflight; begin Gate 8 before Gate 7 final independent GREEN; begin Gate 9, S3-R2, release, publication, video, or submission; mutate HOME/live memory; expose credentials
-- `CURRENT_COMMIT`: `08039cee8a30962d9290c55fa0817119ad2c7bc7`
+- `NEXT_ALLOWED_ACTION`: Freeze a separate replacement-campaign contract only after Kenneth explicitly supersedes the post-hidden no-replacement rule; preserve Run 5 as immutable failed evidence; require fresh same-hash GLM 5.2 and AGY GREEN before any worker creation
+- `FORBIDDEN_ACTIONS`: Retry Run 5 under the general pre-hidden retry envelope; reuse Run 3, Run 4, or Run 5 hidden seeds/inputs; tune against revealed hidden inputs; relabel partial sub-results as Gate 7 GREEN; begin Gate 8 before Gate 7 final independent GREEN; begin Gate 9, S3-R2, release, publication, video, or submission; mutate HOME/live memory; expose credentials
+- `CURRENT_COMMIT`: `d13da10d14778d3a2fa3d3a9197f813da1f107a8`
 - `GATE7_RUN5_AUTHORIZATION`: `RECORDED; CONTINUE_THROUGH_GATE8; POLICY_BOUNDED_RUNPOD_RUNS_AND_SEQUENTIAL_RETRIES_AUTHORIZED`
 - `GATE7_RUN5_REPAIR_COMMIT`: `9f76ece0e1aa98ac5bf037299ce1547c9c534aab`
 - `GATE7_RUN5_LOCAL_PREFLIGHT`: `R3_GREEN_EXCEPT_AWS_AUTH; RECEIPT_SHA256_2aaafb2e7d56a8e75e01f5df3a733c5f56bf8ee265dedde56a88fe5b275bcd0e; SOURCE_BINDINGS_SHA256_07d616082b32b61e21c84b86c76b1349444ed873801d705b2b692b195d467e96; CONTRACT_SHA256_a643d0a04baa2d76f23b0a9a5d34c247c805e52b4792671426c658ad16df91be; HIDDEN_SEED_FALSE; ACTIVE_RUNPOD_INVENTORY_EMPTY`
@@ -24,7 +24,12 @@
 - `GATE7_RUN5_TRACK1`: `GREEN; 84_OF_84_PASS; ZERO_SAFETY_FAILURES; CUSTODY_ARCHIVE_SEALED_MODE_0000`
 - `GATE7_RUN5_TRACK3`: `GREEN; COUNTS_2000_20000_4000_20000; VECTOR_QUERIES_200; CLEANUP_107; RESIDUE_0_0_0_0`
 - `GATE7_RUN5_TRACK2_START`: `AUTHORIZED; STANDARD_RECEIPT_bd4d4899272a8432b31eedf6dde14c8050ed63d76e9f52f1cd8afb6ab0e608b2; AMENDMENT_RECEIPT_03e413dd4588d3406fa8de7f52700ffecfd1e37272787e66b16eb2e5352ac7ff; GLM_5_2_AND_AGY_GREEN_SAME_HASH`
-- `GATE7_RUN5_ACTIVE_RUNPOD_INVENTORY`: `[9jizvy2igfeipj]`
+- `GATE7_RUN5_RESULT`: `BLOCKED; TRACK2_COORDINATOR_BLOCKED_BEFORE_REQUEST_11_RESULT; CAUSE_UNCLASSIFIED_PRE_CALL_COORDINATOR_FAILURE`
+- `GATE7_RUN5_TRACK2_FINAL`: `BLOCKED; 10_OF_12_EXCHANGES; 10_LAMBDA_CALLS; 90_COCKROACHDB_OPERATIONS; REQUESTS_11; RESULTS_10`
+- `GATE7_RUN5_TEARDOWN`: `GREEN; POD_9jizvy2igfeipj_EXACT_ID_ABSENT; CAMPAIGN_INVENTORY_EMPTY; PROCESSES_NONE; SCREEN_NONE`
+- `GATE7_RUN5_FINAL_PACKET_SHA256`: `8325637d019f5dcb33adb46be4f13fac2c218240b60dd47c587b14cdaacdffd8`
+- `GATE7_RUN5_FINAL_JUDGE_STATE`: `GLM_5_2_BLOCKED; AGY_GEMINI_3_1_PRO_HIGH_BLOCKED; SAME_HASH; RECUSAL_CLEAR`
+- `GATE7_RUN5_ACTIVE_RUNPOD_INVENTORY`: `[]`
 - `GATE7_RUN4_PREFLIGHT_PACKET_SHA256`: `e7f4d8723b49f422bf31e0f264d49432c5735054ed7d45fdb48666a78e55a7e4`
 - `GATE7_RUN4_PREFLIGHT_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; EXACT_SAME_HASH; RECUSAL_CLEAR`
 - `GATE7_RUN3_AUTHORIZATION_PROMPT_SHA256`: `a941c6e85d021d2ec77ea442765f4df724283af76f74c8b7f19ed91d077f8d30`
@@ -54,8 +59,8 @@
 - `S3_PREFLIGHT_R4_REPAIR_COMMIT`: `06b54e8f61bf0fa227af3de2377a462e369d7d74`
 - `S3_PREFLIGHT_R6_REPAIR_COMMIT`: `8b1d5bd1038588527bd994eb8fcb5467cac47eac`
 - `S3_PREFLIGHT_R8_REPAIR_COMMIT`: `95408fb9386ced25b468c0957e86e8f73cb123e9`
-- `PENDING_BLOCKERS`: `RUN3_IMMUTABLY_BLOCKED`; `RUN4_IMMUTABLY_BLOCKED`; Run 5 public canaries R1 through R4 remain historical BLOCKED evidence; current Run 5 has no active blocker before Track 2; Track 2 and final closeout remain unexecuted
-- `REQUIRED_JUDGE_STATE`: Run 5 requires fresh same-hash GLM 5.2 plus AGY GREEN on the public-canary-bound preflight packet before worker creation, and again on the retrieved final packet before Gate 7 GREEN; Gate 8 requires its own same-hash independent review
+- `PENDING_BLOCKERS`: `RUN3_IMMUTABLY_BLOCKED`; `RUN4_IMMUTABLY_BLOCKED`; `RUN5_IMMUTABLY_BLOCKED_TRACK2_10_OF_12_AND_REQUIRED_EVIDENCE_MISSING`; replacement campaign requires explicit post-hidden superseding authorization and fresh same-hash preflight
+- `REQUIRED_JUDGE_STATE`: A replacement campaign requires fresh same-hash GLM 5.2 plus AGY GREEN before worker creation; Gate 7 then requires both final judges GREEN on one complete retrieved packet; Gate 8 remains forbidden until that state exists
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
 - `P9_FINAL_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; RECUSAL_CLEAR`
@@ -64,7 +69,7 @@
 - `P9_JUDGE_EVIDENCE`: `evidence/p9-final-judges-r1/`
 - `RUNPOD_ATTEMPTS`: `8`
 - `RUNPOD_EXPOSURE`: `PRIOR_RECORDED_$1.189989_PLUS_GATE6_R3_THREE_ATTEMPTS_BILLING_PENDING_BOUNDED_MAX_$0.0393356667`
-- `LATEST_CHECKPOINT`: `HARDENING_GATE7_RUN5_TRACK2_START_AMENDMENT_MARKER_R1.json`
+- `LATEST_CHECKPOINT`: `HARDENING_GATE7_RUN5_FINAL_JUDGE_RECEIPT_R1.md`
 - `BLACK_BOX_R3_STATUS`: `BLACK_BOX_R3_PREFLIGHT_GREEN`
 - `BLACK_BOX_R3_PRODUCT_CANDIDATE`: `1c483b1930e629c9ecb6d73418b9554897dc08ad`
 - `BLACK_BOX_R3_PLAN_SHA256`: `92f17ed947e874538b991f6281a3e4b67818a5a28820f07f7a12fbf3f5269adf`
