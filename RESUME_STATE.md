@@ -1,10 +1,15 @@
 # Resume State
 
-- `CURRENT_PHASE`: `HARDENING_7_RUN4_BLOCKED`
+- `CURRENT_PHASE`: `HARDENING_7_RUN5_PREFLIGHT`
 - `LAST_GREEN_GATE`: `GATE7_RUN4_PREFLIGHT_GREEN`
-- `NEXT_ALLOWED_ACTION`: obtain separate Run 5 authorization; repair the collision-unsafe bulk vector linkage contract without using Run 4 hidden inputs as tuning data; prove 20,000-row generation and explicit collision handling locally; run a public full-scale canary; freeze new source and packet hashes; obtain fresh same-hash GLM 5.2 and AGY GREEN before any worker or hidden seed
-- `FORBIDDEN_ACTIONS`: Relabel or resume Run 3 or Run 4; reuse either hidden seed or hidden inputs; tune against measured results; create a Run 5 worker before separate authorization, collision-safe repair, public full-scale canary, packet freeze, and independent same-hash preflight; begin Gate 8, S3-R2, release, publication, video, or submission; mutate HOME/live memory; expose credentials
-- `CURRENT_COMMIT`: `3535646f1d57a00e368c31862d9591fd39351b49` (pre-closeout AWS refresh checkpoint; closeout commit pending)
+- `NEXT_ALLOWED_ACTION`: Kenneth refreshes the existing project-local AWS login and CockroachDB Cloud session; apply migration 003; run the fresh 46,000-row public live canary with 200 queries, 107 cleanup batches, and zero residue; commit the canary receipt; freeze the Run 5 packet; obtain fresh same-hash GLM 5.2 and AGY GREEN before any worker or hidden seed
+- `FORBIDDEN_ACTIONS`: Relabel or resume Run 3 or Run 4; reuse either hidden seed or hidden inputs; tune against measured results; create a Run 5 worker before the public full-scale canary, packet freeze, and independent same-hash preflight; begin Gate 8 before Gate 7 final independent GREEN; begin Gate 9, S3-R2, release, publication, video, or submission; mutate HOME/live memory; expose credentials
+- `CURRENT_COMMIT`: `4dc6fa0e83a212d6531f54d262996861347e9d82`
+- `GATE7_RUN5_AUTHORIZATION`: `RECORDED; CONTINUE_THROUGH_GATE8; POLICY_BOUNDED_RUNPOD_RUNS_AND_SEQUENTIAL_RETRIES_AUTHORIZED`
+- `GATE7_RUN5_REPAIR_COMMIT`: `9f76ece0e1aa98ac5bf037299ce1547c9c534aab`
+- `GATE7_RUN5_LOCAL_PREFLIGHT`: `GREEN_EXCEPT_CLOUD_AUTH; TESTS_22_OF_22; P9_CONTRACTS_8_OF_8; COLLISION_MIGRATION_PROOF_GREEN; 20000_VECTOR_IDENTITIES_AND_LINKAGES_GREEN`
+- `GATE7_RUN5_CLOUD_AUTH`: `AWS_SESSION_EXPIRED; COCKROACHDB_CONSOLE_LOGIN_REQUIRED; NO_WORKER_CREATED; NO_HIDDEN_SEED`
+- `GATE7_RUN5_ACTIVE_RUNPOD_INVENTORY`: `[]`
 - `GATE7_RUN4_PREFLIGHT_PACKET_SHA256`: `e7f4d8723b49f422bf31e0f264d49432c5735054ed7d45fdb48666a78e55a7e4`
 - `GATE7_RUN4_PREFLIGHT_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; EXACT_SAME_HASH; RECUSAL_CLEAR`
 - `GATE7_RUN3_AUTHORIZATION_PROMPT_SHA256`: `a941c6e85d021d2ec77ea442765f4df724283af76f74c8b7f19ed91d077f8d30`
@@ -34,8 +39,8 @@
 - `S3_PREFLIGHT_R4_REPAIR_COMMIT`: `06b54e8f61bf0fa227af3de2377a462e369d7d74`
 - `S3_PREFLIGHT_R6_REPAIR_COMMIT`: `8b1d5bd1038588527bd994eb8fcb5467cac47eac`
 - `S3_PREFLIGHT_R8_REPAIR_COMMIT`: `95408fb9386ced25b468c0957e86e8f73cb123e9`
-- `PENDING_BLOCKERS`: `RUN3_IMMUTABLY_BLOCKED`; `RUN4_IMMUTABLY_BLOCKED`; Track 3 failed before database access with `VECTOR_DIGEST_COLLISION`; Run 4 Track 1 is valid and sealed but Gate 7 remains conjunctively blocked; Run 4 worker deleted and inventory empty
-- `REQUIRED_JUDGE_STATE`: any separately authorized Run 5 requires a fresh packet and same-hash GLM 5.2 plus AGY GREEN before worker creation; Run 4 final GREEN review was not reached and cannot be inferred
+- `PENDING_BLOCKERS`: `RUN3_IMMUTABLY_BLOCKED`; `RUN4_IMMUTABLY_BLOCKED`; current Run 5 preflight requires Kenneth to refresh AWS and CockroachDB authentication; migration 003 and the public live canary have not yet executed; no current Run 5 worker or hidden seed exists
+- `REQUIRED_JUDGE_STATE`: Run 5 requires fresh same-hash GLM 5.2 plus AGY GREEN on the public-canary-bound preflight packet before worker creation, and again on the retrieved final packet before Gate 7 GREEN; Gate 8 requires its own same-hash independent review
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
 - `P9_FINAL_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; RECUSAL_CLEAR`
