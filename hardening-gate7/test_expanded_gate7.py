@@ -108,13 +108,13 @@ class ExpandedGate7Tests(unittest.TestCase):
                 "campaign_id": campaign_id + "-track3",
                 "green": True,
                 "actual_counts": [2000, 20000, 4000, 20000],
+                "cleanup_receipt_sha256": cleanup_record["receipt_sha256"],
             }, "result_sha256")
             terminal_record = hashed({
                 "version": "unit-terminal",
                 "campaign_id": campaign_id + "-track3",
                 "status": "GREEN",
                 "result_sha256": result_record["result_sha256"],
-                "cleanup_receipt_sha256": cleanup_record["receipt_sha256"],
             }, "receipt_sha256")
             records = {
                 "aggregate.json": aggregate,
@@ -153,10 +153,10 @@ class ExpandedGate7Tests(unittest.TestCase):
                     body["residue_counts"] = replacement
                     changed_cleanup = hashed(body, "receipt_sha256")
                     case_records["cleanup.json"] = changed_cleanup
-                    terminal_body = {key: value for key, value in terminal_record.items()
-                                     if key != "receipt_sha256"}
-                    terminal_body["cleanup_receipt_sha256"] = changed_cleanup["receipt_sha256"]
-                    case_records["terminal.json"] = hashed(terminal_body, "receipt_sha256")
+                    result_body = {key: value for key, value in result_record.items()
+                                   if key != "result_sha256"}
+                    result_body["cleanup_receipt_sha256"] = changed_cleanup["receipt_sha256"]
+                    case_records["result.json"] = hashed(result_body, "result_sha256")
                 else:
                     body = {key: value for key, value in custody_record.items()
                             if key != "receipt_sha256"}
