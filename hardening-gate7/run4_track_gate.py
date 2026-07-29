@@ -105,8 +105,13 @@ def evaluate(campaign_id: str, aggregate_path: Path, custody_path: Path,
         raise TrackGateError("TRACK3_RESULT_INVALID")
     if terminal.get("result_sha256") != result["result_sha256"]:
         raise TrackGateError("TRACK3_RESULT_LINK_INVALID")
-    if terminal.get("cleanup_receipt_sha256") != cleanup["receipt_sha256"]:
+    if result.get("cleanup_receipt_sha256") != cleanup["receipt_sha256"]:
         raise TrackGateError("TRACK3_CLEANUP_LINK_INVALID")
+    if not (
+        terminal.get("campaign_id") == result.get("campaign_id")
+        == cleanup.get("campaign_id")
+    ):
+        raise TrackGateError("TRACK3_CAMPAIGN_LINK_INVALID")
     if not str(aggregate.get("campaign_id", "")).startswith(campaign_id):
         raise TrackGateError("TRACK1_CAMPAIGN_LINK_INVALID")
     if not str(result.get("campaign_id", "")).startswith(campaign_id):
