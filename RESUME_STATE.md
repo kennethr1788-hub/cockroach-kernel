@@ -1,10 +1,10 @@
 # Resume State
 
-- `CURRENT_PHASE`: `HARDENING_7_RUN3_CAMPAIGN_READY`
+- `CURRENT_PHASE`: `HARDENING_7_RUN3_MEASURED_ACTIVE`
 - `LAST_GREEN_GATE`: `GATE7_RUN3_R5_PREFLIGHT_GREEN`
-- `NEXT_ALLOWED_ACTION`: checkpoint the A01 CAMPAIGN_READY receipt, then create the one authorized hidden seed and execute the three frozen measured tracks exactly once
+- `NEXT_ALLOWED_ACTION`: monitor the active measured campaign, preserve Track 1 and Track 3 results, supervise Track 2 through 3,600 measured seconds, then retrieve and verify all evidence before teardown
 - `FORBIDDEN_ACTIONS`: Create another worker; replace or restart A01 after hidden reveal; regenerate hidden inputs; tune after hidden reveal; resume or relabel Run 2; mutate the frozen product candidate; begin Gate 8, S3-R2, release, publication, video, or submission; mutate HOME/live memory; expose credentials
-- `CURRENT_COMMIT`: `6dc1bf428f69b57697242ae985834b6725c041c8` (pre-CAMPAIGN_READY checkpoint)
+- `CURRENT_COMMIT`: `90fd700fe038d0354c585dc4b7b539a5ea00b3d9` (CAMPAIGN_READY checkpoint pushed before hidden generation)
 - `GATE7_RUN3_AUTHORIZATION_PROMPT_SHA256`: `a941c6e85d021d2ec77ea442765f4df724283af76f74c8b7f19ed91d077f8d30`
 - `GATE7_RUN3_LOCAL_RECEIPT`: `HARDENING_GATE7_RUN3_LOCAL_GATE_RECEIPT_R1.md`
 - `GATE7_RUN3_TRANSFER_ARCHIVE_SHA256`: `d0a47c311ad14f16e1bed2df181bb3d6885accf155be7322a67829c201023b28`
@@ -16,7 +16,7 @@
 - `GATE7_PRODUCT_CANDIDATE`: `1c483b1930e629c9ecb6d73418b9554897dc08ad`
 - `GATE7A_PACKET_SHA256`: `780351e14eb8d1325ef9ddb86c415cb32de57ceb75ea5b31e81ccc3e91034381`
 - `GATE7A_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GEMINI_3_1_PRO_HIGH_GREEN; SAME_HASH; RECUSAL_CLEAR`
-- `GATE7B_STATE`: `CAMPAIGN_READY; A01_RUNNING; EXTRACTED_CANARIES_GREEN; HIDDEN_SEED_ABSENT; MEASURED_EXECUTION_ABSENT`
+- `GATE7B_STATE`: `MEASURED_ACTIVE; TRACK1_84_OF_84_GREEN; TRACK2_RUNNING; TRACK3_RUNNING; RERUN_FORBIDDEN`
 - `GATE7B_PREFLIGHT_RECEIPT_SHA256`: `c708b5c6eeaf32b23a26f0af1faf86a42dc778d7de422d2df5a05a6e613256f2`
 - `GATE7B_SOURCE_BINDINGS_SHA256`: `e250304d3f48096cd094ebeda259161b650d23eb3434ab1f6417d1d6695da067`
 - `GATE7C_PACKET_SHA256`: `1f154522ef5c1e31661782b9ced4dce373c54d710e789d650eeb2adc40155843`
@@ -32,7 +32,7 @@
 - `S3_PREFLIGHT_R4_REPAIR_COMMIT`: `06b54e8f61bf0fa227af3de2377a462e369d7d74`
 - `S3_PREFLIGHT_R6_REPAIR_COMMIT`: `8b1d5bd1038588527bd994eb8fcb5467cac47eac`
 - `S3_PREFLIGHT_R8_REPAIR_COMMIT`: `95408fb9386ced25b468c0957e86e8f73cb123e9`
-- `PENDING_BLOCKERS`: `none`; A01 is CAMPAIGN_READY, hidden seed is absent, and measured execution has not started
+- `PENDING_BLOCKERS`: `none currently`; Track 2 and Track 3 remain incomplete and final retrieval, teardown, rescore, packet, and judges remain pending
 - `REQUIRED_JUDGE_STATE`: `PREFLIGHT_GREEN`; exact-model GLM 5.2 and canonical AGY 1.1.8 are same-hash GREEN on packet 5274e5f8c35383ff26f283764ba64385c3e3e5d5711da07a9b20735c6ccba7c9; final same-hash review remains pending measured evidence
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
@@ -42,7 +42,7 @@
 - `P9_JUDGE_EVIDENCE`: `evidence/p9-final-judges-r1/`
 - `RUNPOD_ATTEMPTS`: `8`
 - `RUNPOD_EXPOSURE`: `PRIOR_RECORDED_$1.189989_PLUS_GATE6_R3_THREE_ATTEMPTS_BILLING_PENDING_BOUNDED_MAX_$0.0393356667`
-- `LATEST_CHECKPOINT`: `HARDENING_GATE7_RUN3_CAMPAIGN_READY_RECEIPT_R1.md`
+- `LATEST_CHECKPOINT`: `HARDENING_GATE7_RUN3_MEASURED_START_RECEIPT_R1.md`
 - `BLACK_BOX_R3_STATUS`: `BLACK_BOX_R3_PREFLIGHT_GREEN`
 - `BLACK_BOX_R3_PRODUCT_CANDIDATE`: `1c483b1930e629c9ecb6d73418b9554897dc08ad`
 - `BLACK_BOX_R3_PLAN_SHA256`: `92f17ed947e874538b991f6281a3e4b67818a5a28820f07f7a12fbf3f5269adf`
