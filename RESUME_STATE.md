@@ -4,7 +4,7 @@
 - `LAST_GREEN_GATE`: `GATE7_RUN4_PREFLIGHT_GREEN`
 - `NEXT_ALLOWED_ACTION`: Poll the exact dropped-index GC job read-only until terminal; then run one fresh unchanged public live canary R4 and require 46,000 exact rows, 200 vector queries, 107 cleanup batches, and zero residue before packet freeze
 - `FORBIDDEN_ACTIONS`: Relabel or resume Run 3 or Run 4; reuse either hidden seed or hidden inputs; tune against measured results; create a Run 5 worker before the public full-scale canary, packet freeze, and independent same-hash preflight; begin Gate 8 before Gate 7 final independent GREEN; begin Gate 9, S3-R2, release, publication, video, or submission; mutate HOME/live memory; expose credentials
-- `CURRENT_COMMIT`: `6f70d0a30c12003727d05d76d0fa93608d75ce37`
+- `CURRENT_COMMIT`: `49e1a4be2460d48f7ed5f625621fc0681d2fe79d`
 - `GATE7_RUN5_AUTHORIZATION`: `RECORDED; CONTINUE_THROUGH_GATE8; POLICY_BOUNDED_RUNPOD_RUNS_AND_SEQUENTIAL_RETRIES_AUTHORIZED`
 - `GATE7_RUN5_REPAIR_COMMIT`: `9f76ece0e1aa98ac5bf037299ce1547c9c534aab`
 - `GATE7_RUN5_LOCAL_PREFLIGHT`: `R3_GREEN_EXCEPT_AWS_AUTH; RECEIPT_SHA256_2aaafb2e7d56a8e75e01f5df3a733c5f56bf8ee265dedde56a88fe5b275bcd0e; SOURCE_BINDINGS_SHA256_07d616082b32b61e21c84b86c76b1349444ed873801d705b2b692b195d467e96; CONTRACT_SHA256_a643d0a04baa2d76f23b0a9a5d34c247c805e52b4792671426c658ad16df91be; HIDDEN_SEED_FALSE; ACTIVE_RUNPOD_INVENTORY_EMPTY`
@@ -54,7 +54,7 @@
 - `P9_JUDGE_EVIDENCE`: `evidence/p9-final-judges-r1/`
 - `RUNPOD_ATTEMPTS`: `8`
 - `RUNPOD_EXPOSURE`: `PRIOR_RECORDED_$1.189989_PLUS_GATE6_R3_THREE_ATTEMPTS_BILLING_PENDING_BOUNDED_MAX_$0.0393356667`
-- `LATEST_CHECKPOINT`: `HARDENING_GATE7_RUN4_BLOCKED_CLOSEOUT_R1.md`
+- `LATEST_CHECKPOINT`: `HARDENING_GATE7_RUN5_PUBLIC_CANARY_R3_BLOCKED_RECEIPT.md`
 - `BLACK_BOX_R3_STATUS`: `BLACK_BOX_R3_PREFLIGHT_GREEN`
 - `BLACK_BOX_R3_PRODUCT_CANDIDATE`: `1c483b1930e629c9ecb6d73418b9554897dc08ad`
 - `BLACK_BOX_R3_PLAN_SHA256`: `92f17ed947e874538b991f6281a3e4b67818a5a28820f07f7a12fbf3f5269adf`
