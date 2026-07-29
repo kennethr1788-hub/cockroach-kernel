@@ -2,9 +2,9 @@
 
 - `CURRENT_PHASE`: `HARDENING_7_RUN4_PUBLIC_CANARY_GREEN`
 - `LAST_GREEN_GATE`: `GATE7_RUN4_PUBLIC_CANARY_R3_GREEN`
-- `NEXT_ALLOWED_ACTION`: freeze one sanitized Run 4 packet over commit 5376f6346c3a8ee04b9f675cfe1180a34a3d4c49 and the public-canary hashes, obtain same-hash exact-model GLM 5.2 and canonical AGY GREEN, then create at most one concurrent worker under the bounded retry envelope
+- `NEXT_ALLOWED_ACTION`: freeze one sanitized Run 4 packet over commit 29a167905326ed15482f7c06ed9f9d4b6ae6f16a and the public-canary hashes, obtain same-hash exact-model GLM 5.2 and canonical AGY GREEN, then create at most one concurrent worker under the bounded retry envelope
 - `FORBIDDEN_ACTIONS`: Relabel or resume Run 3; reuse its hidden seed or inputs; tune its measured results; create a worker before the Run 4 repair, local proof, packet freeze, and independent same-hash preflight; begin Gate 8, S3-R2, release, publication, video, or submission; mutate HOME/live memory; expose credentials
-- `CURRENT_COMMIT`: `5376f6346c3a8ee04b9f675cfe1180a34a3d4c49` (indexed cleanup repair; public canary receipt not yet committed)
+- `CURRENT_COMMIT`: `29a167905326ed15482f7c06ed9f9d4b6ae6f16a` (public canary R3 GREEN receipt and resume-state checkpoint committed)
 - `GATE7_RUN3_AUTHORIZATION_PROMPT_SHA256`: `a941c6e85d021d2ec77ea442765f4df724283af76f74c8b7f19ed91d077f8d30`
 - `GATE7_RUN3_LOCAL_RECEIPT`: `HARDENING_GATE7_RUN3_LOCAL_GATE_RECEIPT_R1.md`
 - `GATE7_RUN3_TRANSFER_ARCHIVE_SHA256`: `d0a47c311ad14f16e1bed2df181bb3d6885accf155be7322a67829c201023b28`

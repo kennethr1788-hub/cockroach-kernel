@@ -25,7 +25,7 @@
     {
       "phase": 2,
       "track": "TRACK3",
-      "requirement": "complete the 46000-row CockroachDB workload, 35 bounded cleanup batches, canonical GREEN terminal, and zero residue"
+      "requirement": "complete the 46000-row CockroachDB workload, 107 bounded indexed cleanup batches, canonical GREEN terminal, and zero residue"
     },
     {
       "phase": 3,
