@@ -75,8 +75,16 @@ class ExpandedGate7Tests(unittest.TestCase):
 
     def test_bulk_live_track_generation_is_exact_and_synthetic(self):
         with tempfile.TemporaryDirectory(prefix="ck-g7-bulk-") as temporary:
-            root = Path(temporary) / "generated"
-            manifest = bulk.build_sql("ck-g7r3-public-unit", root)
+            root = Path(temporary)
+            generated_a = root / "generated-a"
+            generated_b = root / "generated-b"
+            manifest = bulk.build_sql("ck-g7r3-public-unit", generated_a)
+            repeated = bulk.build_sql("ck-g7r3-public-unit", generated_b)
+            self.assertEqual(manifest, repeated)
+            self.assertEqual(
+                {path.name: path.read_bytes() for path in generated_a.iterdir()},
+                {path.name: path.read_bytes() for path in generated_b.iterdir()},
+            )
             self.assertTrue(manifest["synthetic_only"])
             self.assertEqual(manifest["counts"], {
                 "tasks": 2000,
@@ -90,11 +98,123 @@ class ExpandedGate7Tests(unittest.TestCase):
             self.assertEqual(manifest["unique_vector_digests"], 20000)
             self.assertEqual(sum(len(rows) for rows in manifest["batches"].values()), 184)
             self.assertEqual(
-                len(json.loads((root / "query-specs.json").read_bytes())), 200
+                len(json.loads((generated_a / "query-specs.json").read_bytes())), 200
             )
-            for path in root.iterdir():
+            for path in generated_a.iterdir():
                 self.assertNotIn(b"/Users/", path.read_bytes())
                 self.assertNotIn(b"password", path.read_bytes().lower())
+
+    def test_full_46000_controller_success_repeats_deterministic_semantics(self):
+        campaign_id = "ck-g7r3-success-unit"
+        expected_counts = [2000, 20000, 4000, 20000]
+        with tempfile.TemporaryDirectory(prefix="ck-g7-success-") as temporary:
+            root = Path(temporary)
+            generated = root / "generated"
+            manifest = bulk.build_sql(campaign_id, generated)
+
+            def execute_once(name):
+                evidence = root / name
+                evidence.mkdir()
+                journal = bulk.DurableJournal(
+                    evidence / "journal.ndjson", campaign_id,
+                )
+                lock = bulk.threading.Lock()
+                calls = {"cleanup": 0, "batch_files": [], "queries": 0}
+
+                def fake_sql(_config, _env, *, execute=None, file=None,
+                             timeout=60, fmt="tsv"):
+                    del timeout, fmt
+                    if file is not None:
+                        filename = Path(file).name
+                        with lock:
+                            if filename == "cleanup.sql":
+                                calls["cleanup"] += 1
+                            else:
+                                calls["batch_files"].append(filename)
+                        return b"COMMIT\n", 2
+                    if execute is None:
+                        raise AssertionError("SQL_OPERATION_MISSING")
+                    if execute.startswith("EXPLAIN "):
+                        return b"plan\nvector index\n", 3
+                    if execute == "SHOW REGIONS FROM CLUSTER;":
+                        return b"region\nus-west1\n", 3
+                    if " ROLLBACK;" in execute:
+                        return b"count\n0\n", 3
+                    if "ON CONFLICT DO NOTHING" in execute:
+                        return b"count\n1\n", 3
+                    if execute.startswith("SELECT vector_id FROM"):
+                        task_id = execute.split("WHERE task_id='", 1)[1].split("'", 1)[0]
+                        with lock:
+                            calls["queries"] += 1
+                            query_number = calls["queries"]
+                        bulk.time.sleep(0.002)
+                        return (
+                            f"vector_id\n{task_id}-vector-00\n".encode("utf-8"),
+                            query_number % 5 + 1,
+                        )
+                    if "(SELECT count(*) FROM ck.tasks" in execute:
+                        with lock:
+                            cleaned = calls["cleanup"] >= 2
+                        counts = [0, 0, 0, 0] if cleaned else expected_counts
+                        return (
+                            b"tasks\tevents\treceipts\tvectors\n" +
+                            ("\t".join(str(value) for value in counts) + "\n").encode("utf-8"),
+                            3,
+                        )
+                    if execute.startswith("SELECT count(*) FROM ck.tasks"):
+                        return b"count\n0\n", 1
+                    raise AssertionError("UNEXPECTED_SQL_OPERATION")
+
+                try:
+                    with mock.patch.object(
+                            bulk.cloud_adapter, "_read_config", return_value={}), \
+                            mock.patch.object(
+                                bulk.cloud_adapter, "_password", return_value=b"synthetic"), \
+                            mock.patch.object(
+                                bulk.cloud_adapter, "_sql_env",
+                                side_effect=lambda *_args: {"PGPASSWORD": "synthetic"}), \
+                            mock.patch.object(
+                                bulk.cloud_adapter, "_sql", side_effect=fake_sql):
+                        result = bulk.run_live(
+                            root / "config.json", generated, evidence, journal,
+                        )
+                finally:
+                    journal.close()
+
+                self.assertTrue(result["green"])
+                self.assertEqual(result["actual_counts"], expected_counts)
+                self.assertEqual(result["query_count"], 200)
+                self.assertEqual(calls["queries"], 200)
+                self.assertEqual(calls["cleanup"], 2)
+                self.assertEqual(len(calls["batch_files"]), 184)
+                self.assertEqual(
+                    sorted(calls["batch_files"]),
+                    sorted(row["path"] for rows in manifest["batches"].values()
+                           for row in rows),
+                )
+                self.assertEqual(
+                    bulk.validate_terminal_evidence(evidence)["status"], "GREEN",
+                )
+
+                stable_result = dict(result)
+                for field in (
+                    "result_sha256", "journal_terminal_prior_hash",
+                    "cleanup_receipt_sha256",
+                ):
+                    stable_result.pop(field)
+                terminal = json.loads((evidence / "terminal.json").read_bytes())
+                stable_terminal = {
+                    "version": terminal["version"],
+                    "campaign_id": terminal["campaign_id"],
+                    "status": terminal["status"],
+                    "process_exit_status": terminal["process_exit_status"],
+                    "signal": terminal["signal"],
+                }
+                return stable_result, stable_terminal, (evidence / "cleanup.json").read_bytes()
+
+            first = execute_once("evidence-a")
+            second = execute_once("evidence-b")
+            self.assertEqual(first, second)
 
     def test_run2_vector_collision_is_reproduced_and_run3_binding_is_unique(self):
         old_seen = set()
