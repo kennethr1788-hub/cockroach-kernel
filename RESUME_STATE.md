@@ -1,13 +1,16 @@
 # Resume State
 
-- `CURRENT_PHASE`: `HARDENING_7_RUN3_LOCAL_REPAIR_GREEN_PREFLIGHT_PENDING`
+- `CURRENT_PHASE`: `HARDENING_7_RUN3_BLOCKED`
 - `LAST_GREEN_GATE`: `GATE7_RUN3_LOCAL_REPAIR_GREEN`
-- `NEXT_ALLOWED_ACTION`: Freeze the new Run 3 source-bound packet and obtain same-hash exact-model GLM 5.2 plus AGY preflight; create no RunPod worker until both are GREEN
-- `FORBIDDEN_ACTIONS`: Create RunPod before Run 3 preflight; create hidden seed before CAMPAIGN_READY; tune after hidden reveal; resume or relabel Run 2; mutate the frozen product candidate; begin Gate 8, S3-R2, release, publication, video, or submission; mutate HOME/live memory; expose credentials
-- `CURRENT_COMMIT`: `c8383c61cd599d10b02d861aabc764686a81d766` (Run 3 repaired source and tests)
+- `NEXT_ALLOWED_ACTION`: Separately authorize and independently requalify canonical agy-judge for signed AGY 1.1.8, then rerun AGY on unchanged Run 3 packet SHA-256 ba08a143db1304a6a5f9ae60708a774658609a4e8d1ebfe2bb4dcb1b966d4383; if packet bytes change, rerun both judges
+- `FORBIDDEN_ACTIONS`: Modify the AGY pin without full independent requalification; substitute bare AGY; create RunPod while AGY is unavailable; create hidden seed before CAMPAIGN_READY; tune after hidden reveal; resume or relabel Run 2; mutate the frozen product candidate; begin Gate 8, S3-R2, release, publication, video, or submission; mutate HOME/live memory; expose credentials
+- `CURRENT_COMMIT`: `a7ffa36ed82664fe9443df9aa553cd26bd031566` (Run 3 sanitized preflight packet R2)
 - `GATE7_RUN3_AUTHORIZATION_PROMPT_SHA256`: `a941c6e85d021d2ec77ea442765f4df724283af76f74c8b7f19ed91d077f8d30`
 - `GATE7_RUN3_LOCAL_RECEIPT`: `HARDENING_GATE7_RUN3_LOCAL_GATE_RECEIPT_R1.md`
 - `GATE7_RUN3_TRANSFER_ARCHIVE_SHA256`: `d0a47c311ad14f16e1bed2df181bb3d6885accf155be7322a67829c201023b28`
+- `GATE7_RUN3_PREFLIGHT_PACKET_SHA256`: `ba08a143db1304a6a5f9ae60708a774658609a4e8d1ebfe2bb4dcb1b966d4383`
+- `GATE7_RUN3_GLM_PREFLIGHT`: `GREEN; glm-5.2; HASH_MATCH; RECUSAL_CLEAR`
+- `GATE7_RUN3_AGY_PREFLIGHT`: `JUDGE_UNAVAILABLE; AGY_1_1_8_SHA256_251662551657dd0955428dd31536e7adf84c1cb4d53f20b6dca8bf8714762ff9; CANONICAL_PIN_REJECTED; PROVIDER_NOT_INVOKED`
 - `GATE7_EXECUTION_PROMPT_SHA256`: `936c9ae62191e5d8daa0cbd7ef4287d77777e6c761694d6d6d8789842dcb454f`
 - `GATE7_EXPANDED_PLAN_SHA256`: `0f58b51c07d25d4643b98524e53f171d6e9c0d667c46e0718b07f40f27c1d7e7`
 - `GATE7_PRODUCT_CANDIDATE`: `1c483b1930e629c9ecb6d73418b9554897dc08ad`
@@ -27,8 +30,8 @@
 - `S3_PREFLIGHT_R4_REPAIR_COMMIT`: `06b54e8f61bf0fa227af3de2377a462e369d7d74`
 - `S3_PREFLIGHT_R6_REPAIR_COMMIT`: `8b1d5bd1038588527bd994eb8fcb5467cac47eac`
 - `S3_PREFLIGHT_R8_REPAIR_COMMIT`: `95408fb9386ced25b468c0957e86e8f73cb123e9`
-- `PENDING_BLOCKERS`: `RUN3_PREFLIGHT_NOT_YET_FROZEN_OR_JUDGED`; both Run 2 defects are directly closed locally but no new provider campaign has started
-- `REQUIRED_JUDGE_STATE`: PENDING; exact-model GLM 5.2 and AGY must both return GREEN over one new Run 3 packet hash before worker creation
+- `PENDING_BLOCKERS`: `AGY_JUDGE_BINARY_DRIFT`; both Run 2 defects are directly closed locally, GLM preflight is GREEN, AGY provider was not invoked, and no new provider campaign has started
+- `REQUIRED_JUDGE_STATE`: BLOCKED; exact-model GLM 5.2 is GREEN on packet ba08a143db1304a6a5f9ae60708a774658609a4e8d1ebfe2bb4dcb1b966d4383, but canonical AGY is unavailable after binary auto-update
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
 - `P9_FINAL_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; RECUSAL_CLEAR`
@@ -37,7 +40,7 @@
 - `P9_JUDGE_EVIDENCE`: `evidence/p9-final-judges-r1/`
 - `RUNPOD_ATTEMPTS`: `8`
 - `RUNPOD_EXPOSURE`: `PRIOR_RECORDED_$1.189989_PLUS_GATE6_R3_THREE_ATTEMPTS_BILLING_PENDING_BOUNDED_MAX_$0.0393356667`
-- `LATEST_CHECKPOINT`: `HARDENING_GATE7_RUN3_LOCAL_GATE_RECEIPT_R1.md`
+- `LATEST_CHECKPOINT`: `HARDENING_GATE7_RUN3_PREFLIGHT_BLOCKED_RECEIPT_R1.md`
 - `BLACK_BOX_R3_STATUS`: `BLACK_BOX_R3_PREFLIGHT_GREEN`
 - `BLACK_BOX_R3_PRODUCT_CANDIDATE`: `1c483b1930e629c9ecb6d73418b9554897dc08ad`
 - `BLACK_BOX_R3_PLAN_SHA256`: `92f17ed947e874538b991f6281a3e4b67818a5a28820f07f7a12fbf3f5269adf`
