@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Authorize Run 4 Track 2 only after sealed Track 1 and clean Track 3."""
+"""Authorize Track 2 only after sealed Track 1 and clean Track 3."""
 from __future__ import annotations
 
 import argparse
@@ -11,7 +11,7 @@ import re
 from typing import Any
 
 
-CAMPAIGN_RE = re.compile(r"^ck-g7r4-[A-Za-z0-9-]+$")
+CAMPAIGN_RE = re.compile(r"^ck-g7r[45]-[A-Za-z0-9-]+$")
 EXPECTED_COUNTS = [2000, 20000, 4000, 20000]
 
 
@@ -112,7 +112,7 @@ def evaluate(campaign_id: str, aggregate_path: Path, custody_path: Path,
     if not str(result.get("campaign_id", "")).startswith(campaign_id):
         raise TrackGateError("TRACK3_CAMPAIGN_LINK_INVALID")
     body = {
-        "version": "hardening-gate7-run4-track2-start-gate-v1",
+        "version": "hardening-gate7-track2-start-gate-v2",
         "campaign_id": campaign_id,
         "track1_aggregate_file_sha256": aggregate_file_hash,
         "track1_custody_file_sha256": custody_file_hash,

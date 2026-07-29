@@ -47,6 +47,8 @@ EXACT_FILES = (
     "s3-soak/worker.py",
     "p9-cloud/context_vector.py",
     "p9-cloud/records.py",
+    "p9-cloud/migrations/001_cloud.sql",
+    "p9-cloud/migrations/003_collision_safe_vector_digest.sql",
     str(LINUX_ARCHIVE),
 )
 TREE_ROOTS = (

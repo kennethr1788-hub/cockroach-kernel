@@ -49,8 +49,8 @@ def canonical(value):
 
 
 class ExpandedGate7Tests(unittest.TestCase):
-    def test_run4_track1_custody_seal_and_unseal_are_hash_bound(self):
-        with tempfile.TemporaryDirectory(prefix="ck-g7r4-custody-") as temporary:
+    def test_measured_track1_custody_seal_and_unseal_are_hash_bound(self):
+        with tempfile.TemporaryDirectory(prefix="ck-g7r5-custody-") as temporary:
             root = Path(temporary)
             archive = root / "track1-evidence.tar.gz"
             archive.write_bytes(b"synthetic-track1-evidence\n")
@@ -58,7 +58,7 @@ class ExpandedGate7Tests(unittest.TestCase):
             unseal_path = root / "track1-unseal.json"
 
             receipt = custody.seal(
-                archive, receipt_path, "ck-g7r4-unit-custody",
+                archive, receipt_path, "ck-g7r5-unit-custody",
             )
             self.assertEqual(receipt["status"], "SEALED")
             self.assertEqual(stat.S_IMODE(archive.stat().st_mode), 0)
@@ -70,12 +70,12 @@ class ExpandedGate7Tests(unittest.TestCase):
             custody.validate_receipt(json.loads(unseal_path.read_bytes()))
             self.assertEqual(result["archive_sha256"], receipt["archive_sha256"])
 
-    def test_run4_track2_gate_requires_green_sealed_and_zero_residue(self):
+    def test_measured_track2_gate_requires_green_sealed_and_zero_residue(self):
         def hashed(body, field):
             return dict(body, **{field: track_gate.digest(body)})
 
-        campaign_id = "ck-g7r4-unit-gate"
-        with tempfile.TemporaryDirectory(prefix="ck-g7r4-track-gate-") as temporary:
+        campaign_id = "ck-g7r5-unit-gate"
+        with tempfile.TemporaryDirectory(prefix="ck-g7r5-track-gate-") as temporary:
             root = Path(temporary)
             aggregate = hashed({
                 "version": "unit-track1",
@@ -192,6 +192,7 @@ class ExpandedGate7Tests(unittest.TestCase):
             Path("hardening-gate5/heldout_contract.py"), paths,
         )
         self.assertIn(Path("s3-soak/freeze_evidence_manifest.py"), paths)
+        self.assertIn(Path("p9-cloud/migrations/003_collision_safe_vector_digest.sql"), paths)
         helper = next(row for row in rows
                       if row["path"] == "s3-soak/freeze_evidence_manifest.py")
         self.assertEqual(helper["mode"], "0755")
@@ -221,7 +222,18 @@ class ExpandedGate7Tests(unittest.TestCase):
                 "aws_calls_separate_track": 12,
             })
             self.assertEqual(manifest["concurrency"], 4)
-            self.assertEqual(manifest["unique_vector_digests"], 20000)
+            self.assertLessEqual(manifest["unique_vector_digests"], 20000)
+            self.assertEqual(
+                manifest["vector_digest_collisions"],
+                20000 - manifest["unique_vector_digests"],
+            )
+            self.assertGreaterEqual(manifest["max_vector_digest_multiplicity"], 1)
+            self.assertEqual(manifest["unique_vector_ids"], 20000)
+            self.assertEqual(manifest["unique_vector_linkages"], 20000)
+            self.assertEqual(
+                manifest["vector_digest_policy"],
+                "NON_UNIQUE_CONTENT_DIGEST_EXACT_ROW_LINKAGE",
+            )
             self.assertEqual(sum(len(rows) for rows in manifest["batches"].values()), 184)
             self.assertEqual(manifest["cleanup_batch_count"], 107)
             self.assertEqual(manifest["execution_policy"], {
@@ -369,10 +381,9 @@ class ExpandedGate7Tests(unittest.TestCase):
             second = execute_once("evidence-b")
             self.assertEqual(first, second)
 
-    def test_run2_vector_collision_is_reproduced_and_run3_binding_is_unique(self):
+    def test_projection_digest_is_not_used_as_row_identity(self):
         old_seen = set()
         old_collisions = 0
-        new_seen = set()
         for task_index in range(2000):
             for sequence in range(10):
                 old = bulk.context_vector.context_vector(
@@ -382,14 +393,28 @@ class ExpandedGate7Tests(unittest.TestCase):
                 old_digest = bulk.context_vector.vector_digest(old)
                 old_collisions += old_digest in old_seen
                 old_seen.add(old_digest)
-                new = bulk.context_vector.context_vector(
-                    bulk.vector_text(task_index, sequence), "ck-g7r3-vector-proof",
-                )
-                new_digest = bulk.context_vector.vector_digest(new)
-                self.assertNotIn(new_digest, new_seen)
-                new_seen.add(new_digest)
         self.assertGreater(old_collisions, 0)
-        self.assertEqual(len(new_seen), 20000)
+
+    def test_adversarial_vector_digest_collisions_preserve_unique_linkage(self):
+        with tempfile.TemporaryDirectory(prefix="ck-g7-collision-safe-") as temporary:
+            root = Path(temporary)
+            with (
+                mock.patch.object(bulk, "TASKS", 2),
+                mock.patch.object(bulk, "EVENTS_PER_TASK", 2),
+                mock.patch.object(bulk, "VECTORS_PER_TASK", 2),
+                mock.patch.object(bulk, "RECEIPTS_PER_TASK", 1),
+                mock.patch.object(bulk, "QUERY_SAMPLES", 2),
+                mock.patch.object(
+                    bulk.context_vector, "vector_digest", return_value="ab" * 32,
+                ),
+            ):
+                manifest = bulk.build_sql("ck-g7r5-public-collision", root / "generated")
+            self.assertEqual(manifest["counts"]["vectors"], 4)
+            self.assertEqual(manifest["unique_vector_digests"], 1)
+            self.assertEqual(manifest["vector_digest_collisions"], 3)
+            self.assertEqual(manifest["max_vector_digest_multiplicity"], 4)
+            self.assertEqual(manifest["unique_vector_ids"], 4)
+            self.assertEqual(manifest["unique_vector_linkages"], 4)
 
     def test_packaged_manifest_helper_negative_archive_cases(self):
         helper_path = BASE / "s3-soak/freeze_evidence_manifest.py"
@@ -511,7 +536,7 @@ class ExpandedGate7Tests(unittest.TestCase):
             )
             (generated / "query-specs.json").write_text("[]", encoding="utf-8")
             manifest_body = {
-                "version": "hardening-gate7-live-bulk-manifest-v2",
+                "version": "hardening-gate7-live-bulk-manifest-v3",
                 "campaign_id": campaign_id,
                 "counts": {"tasks": 1, "events": 1, "receipts": 1,
                            "vectors": 1, "vector_queries": 0},

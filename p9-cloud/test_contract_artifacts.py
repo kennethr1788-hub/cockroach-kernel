@@ -78,6 +78,17 @@ class TestDeploymentManifest(unittest.TestCase):
 
 
 class TestRuntimeGrantTemplate(unittest.TestCase):
+    def test_vector_digest_is_collision_safe_and_row_identity_is_separate(self):
+        schema = (ROOT / "migrations" / "001_cloud.sql").read_text(encoding="utf-8").lower()
+        transition = (
+            ROOT / "migrations" / "003_collision_safe_vector_digest.sql"
+        ).read_text(encoding="utf-8").lower()
+        self.assertIn("vector_digest bytes not null check", schema)
+        self.assertNotIn("vector_digest bytes not null unique", schema)
+        self.assertIn("unique (task_id, event_hash, namespace)", schema)
+        self.assertIn("drop constraint if exists context_vectors_vector_digest_key", transition)
+        self.assertIn("create index if not exists context_vectors_vector_digest_idx", transition)
+
     def test_no_identity_or_cluster_mutation(self):
         sql = (ROOT / "migrations" / "002_runtime_grants.sql").read_text(encoding="utf-8")
         stripped = re.sub(r"--[^\n]*", "", sql).lower()

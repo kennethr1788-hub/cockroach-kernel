@@ -50,17 +50,22 @@ CREATE TABLE IF NOT EXISTS ck.receipts (
 );
 
 -- Authoritative event linkage plus the deterministic VECTOR(64) context
--- projection. vector_digest binds the exact stored vector bytes; one row per
--- (task, event, namespace) keeps namespace projections isolated.
+-- projection. vector_digest binds the exact stored vector bytes and is
+-- intentionally non-unique: a many-to-one projection can produce the same
+-- vector for distinct authoritative events. vector_id and the unique
+-- (task, event, namespace) tuple provide row identity and linkage.
 CREATE TABLE IF NOT EXISTS ck.context_vectors (
   vector_id STRING PRIMARY KEY,
   task_id STRING NOT NULL REFERENCES ck.tasks (task_id),
   event_hash BYTES NOT NULL REFERENCES ck.trajectory_events (event_hash),
   namespace STRING NOT NULL,
   vector VECTOR(64) NOT NULL,
-  vector_digest BYTES NOT NULL UNIQUE CHECK (length(vector_digest) = 32),
+  vector_digest BYTES NOT NULL CHECK (length(vector_digest) = 32),
   UNIQUE (task_id, event_hash, namespace)
 );
+
+CREATE INDEX IF NOT EXISTS context_vectors_vector_digest_idx
+  ON ck.context_vectors (vector_digest);
 
 -- CockroachDB vector index over the deterministic context projection.
 -- Requires the vector index feature available in the declared v26.2 target;

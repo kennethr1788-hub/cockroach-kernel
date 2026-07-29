@@ -207,7 +207,9 @@ def build_sql(campaign_id: str, output: Path) -> dict[str, Any]:
     event_rows: list[str] = []
     receipt_rows: list[str] = []
     vector_rows: list[str] = []
-    vector_digests: set[str] = set()
+    vector_digest_counts: dict[str, int] = {}
+    vector_ids: set[str] = set()
+    vector_linkages: set[tuple[str, str, str]] = set()
     query_vectors: list[tuple[str, list[float]]] = []
     for task_index in range(TASKS):
         task_id = f"{prefix}task-{task_index:04d}"
@@ -240,11 +242,17 @@ def build_sql(campaign_id: str, output: Path) -> dict[str, Any]:
             text = vector_text(task_index, sequence)
             vector = context_vector.context_vector(text, campaign_id)
             vector_digest = context_vector.vector_digest(vector)
-            if vector_digest in vector_digests:
-                raise LiveBulkError("VECTOR_DIGEST_COLLISION")
-            vector_digests.add(vector_digest)
+            vector_id = task_id + '-vector-' + format(sequence, '02d')
+            linkage = (task_id, event_hash, campaign_id)
+            if vector_id in vector_ids:
+                raise LiveBulkError("VECTOR_ID_COLLISION")
+            if linkage in vector_linkages:
+                raise LiveBulkError("VECTOR_LINKAGE_COLLISION")
+            vector_ids.add(vector_id)
+            vector_linkages.add(linkage)
+            vector_digest_counts[vector_digest] = vector_digest_counts.get(vector_digest, 0) + 1
             vector_rows.append(
-                f"({sql_literal(task_id + '-vector-' + format(sequence, '02d'))},"
+                f"({sql_literal(vector_id)},"
                 f"{sql_literal(task_id)},{byte_literal(event_hash)},"
                 f"{sql_literal(campaign_id)},{vector_literal(vector)},"
                 f"{byte_literal(vector_digest)})"
@@ -377,7 +385,7 @@ def build_sql(campaign_id: str, output: Path) -> dict[str, Any]:
     )
     atomic_write(output / "cleanup-manifest.json", canonical(cleanup_manifest))
     manifest_body = {
-        "version": "hardening-gate7-live-bulk-manifest-v2",
+        "version": "hardening-gate7-live-bulk-manifest-v3",
         "campaign_id": campaign_id,
         "synthetic_only": True,
         "counts": {
@@ -391,7 +399,14 @@ def build_sql(campaign_id: str, output: Path) -> dict[str, Any]:
         "concurrency": CONCURRENCY,
         "batch_size": BATCH_SIZE,
         "batches": batch_files,
-        "unique_vector_digests": len(vector_digests),
+        "vector_digest_policy": "NON_UNIQUE_CONTENT_DIGEST_EXACT_ROW_LINKAGE",
+        "unique_vector_digests": len(vector_digest_counts),
+        "vector_digest_collisions": sum(
+            count - 1 for count in vector_digest_counts.values() if count > 1
+        ),
+        "max_vector_digest_multiplicity": max(vector_digest_counts.values()),
+        "unique_vector_ids": len(vector_ids),
+        "unique_vector_linkages": len(vector_linkages),
         "sql_files": sql_hashes,
         "query_specs_sha256": digest(query_path.read_bytes()),
         "cleanup_manifest_sha256": cleanup_manifest["cleanup_manifest_sha256"],
@@ -931,7 +946,11 @@ def main() -> int:
                 manifest = build_sql(args.campaign_id, args.generated_root.resolve())
                 journal.emit("STAGE_PASS", "GENERATE",
                              manifest_sha256=manifest["manifest_sha256"],
-                             unique_vector_digests=manifest["unique_vector_digests"])
+                             unique_vector_digests=manifest["unique_vector_digests"],
+                             vector_digest_collisions=manifest["vector_digest_collisions"],
+                             max_vector_digest_multiplicity=manifest["max_vector_digest_multiplicity"],
+                             unique_vector_ids=manifest["unique_vector_ids"],
+                             unique_vector_linkages=manifest["unique_vector_linkages"])
                 result = run_live(args.config, args.generated_root.resolve(), evidence, journal)
                 print(canonical({"status": "GREEN", "result_sha256": result["result_sha256"]}).decode("utf-8"))
                 return 0 if result["green"] else 2

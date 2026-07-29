@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Seal Track 1 evidence before later Run 4 tracks can begin."""
+"""Seal Track 1 evidence before later measured Gate 7 tracks can begin."""
 from __future__ import annotations
 
 import argparse
@@ -13,7 +13,7 @@ import time
 from typing import Any
 
 
-CAMPAIGN_RE = re.compile(r"^ck-g7r4-[A-Za-z0-9-]+$")
+CAMPAIGN_RE = re.compile(r"^ck-g7r[45]-[A-Za-z0-9-]+$")
 
 
 class CustodyError(RuntimeError):
@@ -68,7 +68,7 @@ def seal(archive: Path, receipt_path: Path, campaign_id: str) -> dict[str, Any]:
         raise CustodyError("CUSTODY_ROOT_MISMATCH")
     raw = archive.read_bytes()
     body = {
-        "version": "hardening-gate7-run4-track1-custody-v1",
+        "version": "hardening-gate7-track1-custody-v2",
         "campaign_id": campaign_id,
         "archive_name": archive.name,
         "archive_bytes": len(raw),
@@ -101,7 +101,7 @@ def unseal(archive: Path, receipt_path: Path, output: Path) -> dict[str, Any]:
     if len(raw) != receipt["archive_bytes"] or digest(raw) != receipt["archive_sha256"]:
         raise CustodyError("ARCHIVE_HASH_MISMATCH")
     body = {
-        "version": "hardening-gate7-run4-track1-unseal-v1",
+        "version": "hardening-gate7-track1-unseal-v2",
         "campaign_id": receipt["campaign_id"],
         "custody_receipt_sha256": receipt["receipt_sha256"],
         "archive_sha256": receipt["archive_sha256"],

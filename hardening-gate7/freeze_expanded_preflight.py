@@ -27,6 +27,7 @@ HARNESS_FILES = (
     "hardening-gate7/run_expanded_case.py",
     "hardening-gate7/run4_evidence_custody.py",
     "hardening-gate7/run4_track_gate.py",
+    "hardening-gate7/local_collision_migration_proof.sh",
     "hardening-gate7/score_expanded_campaign.py",
     "hardening-gate7/surface_cases.py",
     "hardening-gate7/prepare_hidden_campaign.py",
@@ -41,6 +42,9 @@ HARNESS_FILES = (
     "hardening-gate7/run_trial.py",
     "hardening-gate7/test_expanded_gate7.py",
     "hardening-gate7/test_gate7.py",
+    "p9-cloud/migrations/001_cloud.sql",
+    "p9-cloud/migrations/003_collision_safe_vector_digest.sql",
+    "p9-cloud/test_contract_artifacts.py",
     "hardening-gate6/seccomp_exec.py",
     "s2-soak/lifecycle_guard.py",
     "s2-soak/run_soak.py",
@@ -51,7 +55,7 @@ HARNESS_FILES = (
     "s3-soak/remote_bridge.py",
     "s3-soak/coordinator_guard.py",
     "HARDENING_GATE7_EXPANDED_THRESHOLDS_R1.json",
-    "HARDENING_GATE7_EXPANDED_RUNPOD_SCHEDULE_R1.json",
+    "HARDENING_GATE7_RUN5_SCHEDULE_R1.json",
     "HARDENING_GATE7_EXPANDED_EXECUTION_WIRING_R1.md",
 )
 PRODUCT_FILES = (
@@ -124,7 +128,7 @@ def contract_hash(plan: Path, prompt: Path) -> str:
         {"label": "plan", "sha256": digest(plan.read_bytes())},
         {"label": "prompt", "sha256": digest(prompt.read_bytes())},
         file_record("HARDENING_GATE7_EXPANDED_THRESHOLDS_R1.json"),
-        file_record("HARDENING_GATE7_EXPANDED_RUNPOD_SCHEDULE_R1.json"),
+        file_record("HARDENING_GATE7_RUN5_SCHEDULE_R1.json"),
     ]
     return digest(canonical(rows))
 
@@ -174,6 +178,16 @@ def main() -> int:
     ], timeout=180)
     atomic_write(output / "unit-tests-receipt.json", canonical(tests))
 
+    p9_tests = run([
+        sys.executable, "-m", "unittest", "p9-cloud/test_contract_artifacts.py", "-v",
+    ], timeout=120)
+    atomic_write(output / "p9-contract-tests-receipt.json", canonical(p9_tests))
+
+    migration_proof = run([
+        "/bin/bash", str(HERE / "local_collision_migration_proof.sh"),
+    ], timeout=180)
+    atomic_write(output / "collision-migration-proof-receipt.json", canonical(migration_proof))
+
     with tempfile.TemporaryDirectory(prefix="ck-g7-preflight-") as temporary:
         temporary_root = Path(temporary)
         seed = temporary_root / "public-seed.hex"
@@ -218,7 +232,7 @@ def main() -> int:
     bulk_root = output / "bulk-sql-public"
     run([
         sys.executable, str(HERE / "live_bulk_controller.py"),
-        "--campaign-id", "ck-g7r2-public-preflight",
+        "--campaign-id", "ck-g7r5-public-preflight",
         "--generated-root", str(bulk_root), "--generate-only",
     ])
 
@@ -317,7 +331,7 @@ def main() -> int:
 
     # Preserve the read-only cloud readiness receipt. An expired AWS session is
     # a launch-time human action, not permission to weaken or skip the live track.
-    live_readiness = BASE / ".hardening-runtime/gate7-r2/live-readiness.json"
+    live_readiness = BASE / ".hardening-runtime/gate7-r5/live-readiness-freeze.json"
     live_readiness.parent.mkdir(parents=True, exist_ok=True)
     live = run([
         sys.executable, str(HERE / "preflight_live_check.py"),
