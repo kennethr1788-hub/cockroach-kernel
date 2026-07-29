@@ -1,23 +1,12 @@
-# Gate 7 Run 5 Track-Gate Linkage Amendment Packet R2
+# Gate 7 Run 5 Track-Gate Linkage Amendment Packet R3
 
 ## Review authority
 
-This is a same-hash, non-authoring review packet for independent GLM 5.2 and
-AGY. The judges have no shell, write, browser, credential, deployment, or
-implementation authority. They must decide whether the proposed mechanical
-evidence-link repair preserves the frozen benchmark contract or constitutes
-impermissible post-reveal tuning.
-
-Return a verdict using the active judge lane's canonical validated output
-schema. The caller supplies the exact packet SHA-256 outside this packet. Any
-non-GREEN verdict, hash mismatch, identity mismatch, recusal, or refusal to
-authorize Track 2 after only the exact patch keeps Track 2 blocked.
-
-R1 received a substantive GLM 5.2 GREEN, but its AGY transport was invalid
-because R1 embedded a JSON output schema that conflicted with AGY's pinned
-verdict validator. R2 changes only this review-output instruction. The entire
-technical packet, artifact bindings, proposed patch, and invariants below are
-byte-identical to R1. R1's GLM verdict is stale for R2; both lanes must rerun.
+This is a same-hash, non-authoring technical review packet. The judges have no
+shell, write, browser, credential, deployment, or implementation authority.
+The review question is whether the proposed mechanical evidence-link repair
+preserves the frozen benchmark contract or constitutes impermissible
+post-reveal tuning. Track 2 remains blocked unless the review gate passes.
 
 ## Frozen state
 
@@ -146,5 +135,4 @@ The amendment does not:
 
 The only question is whether verifying the producer's actual canonical chain
 `terminal -> result -> cleanup` is an evidence-plumbing correction rather than
-post-reveal outcome tuning. If it is not, return `NOT_GREEN` and Track 2 must
-remain blocked.
+post-reveal outcome tuning.
