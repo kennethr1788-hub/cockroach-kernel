@@ -14,6 +14,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import signal
 import statistics
 import sys
@@ -39,8 +40,9 @@ VECTORS_PER_TASK = 10
 QUERY_SAMPLES = 200
 CONCURRENCY = 4
 AWS_CALLS_SEPARATE_TRACK = 12
-PREFIX = "ck-g7r3-"
+CAMPAIGN_RE = re.compile(r"^ck-g7r[0-9]+-[A-Za-z0-9-]+$")
 BATCH_SIZE = 250
+CLEANUP_TASK_BATCH_SIZE = 250
 MAX_SERIALIZATION_RETRIES = 3
 DATABASE_GROWTH_LIMIT = 536_870_912
 EVIDENCE_GROWTH_LIMIT = 67_108_864
@@ -181,7 +183,7 @@ def vector_text(task_index: int, sequence: int) -> str:
 
 
 def campaign_prefix(campaign_id: str) -> str:
-    if not campaign_id.startswith(PREFIX) or not campaign_id.replace("-", "").isalnum():
+    if not CAMPAIGN_RE.fullmatch(campaign_id):
         raise LiveBulkError("CAMPAIGN_ID_INVALID")
     return campaign_id + "-"
 
@@ -291,17 +293,71 @@ def build_sql(campaign_id: str, output: Path) -> dict[str, Any]:
         })
     query_path = output / "query-specs.json"
     atomic_write(query_path, canonical(query_specs))
-    cleanup = (
-        "BEGIN;"
-        f"DELETE FROM ck.projection_events WHERE source_key LIKE {sql_literal(prefix + '%')};"
-        f"DELETE FROM ck.worker_results WHERE task_id LIKE {sql_literal(prefix + '%')};"
-        f"DELETE FROM ck.context_vectors WHERE task_id LIKE {sql_literal(prefix + '%')};"
-        f"DELETE FROM ck.receipts WHERE task_id LIKE {sql_literal(prefix + '%')};"
-        f"DELETE FROM ck.trajectory_events WHERE task_id LIKE {sql_literal(prefix + '%')};"
-        f"DELETE FROM ck.tasks WHERE task_id LIKE {sql_literal(prefix + '%')};"
-        "COMMIT;"
+    cleanup_batches: list[dict[str, Any]] = []
+
+    def add_cleanup(stage: str, statement: str, *, task_count: int) -> None:
+        stage_index = 1 + sum(row["stage"] == stage for row in cleanup_batches)
+        raw = ("BEGIN;\n" + statement + "\nCOMMIT;\n").encode("utf-8")
+        path = output / f"cleanup-{stage}-batch-{stage_index:04d}.sql"
+        atomic_write(path, raw)
+        cleanup_batches.append({
+            "path": path.name,
+            "sha256": digest(raw),
+            "stage": stage,
+            "batch_index": stage_index,
+            "task_count": task_count,
+        })
+
+    add_cleanup(
+        "projection-events",
+        f"DELETE FROM ck.projection_events WHERE source_key LIKE {sql_literal(prefix + '%')};",
+        task_count=0,
     )
-    atomic_write(output / "cleanup.sql", cleanup.encode("utf-8"))
+    add_cleanup(
+        "worker-results",
+        f"DELETE FROM ck.worker_results WHERE task_id LIKE {sql_literal(prefix + '%')};",
+        task_count=0,
+    )
+    task_ids = [f"{prefix}task-{index:04d}" for index in range(TASKS)]
+    for table, stage in (
+        ("ck.context_vectors", "vectors"),
+        ("ck.receipts", "receipts"),
+        ("ck.trajectory_events", "events"),
+        ("ck.tasks", "tasks"),
+    ):
+        for group in batched(task_ids, CLEANUP_TASK_BATCH_SIZE):
+            identifiers = ",".join(sql_literal(item) for item in group)
+            add_cleanup(
+                stage,
+                f"DELETE FROM {table} WHERE task_id IN ({identifiers});",
+                task_count=len(group),
+            )
+    control_ids = [prefix + "rollback-control", prefix + "duplicate-control"]
+    controls = ",".join(sql_literal(item) for item in control_ids)
+    add_cleanup(
+        "controls",
+        "DELETE FROM ck.context_vectors WHERE task_id IN (" + controls + ");"
+        "DELETE FROM ck.receipts WHERE task_id IN (" + controls + ");"
+        "DELETE FROM ck.trajectory_events WHERE task_id IN (" + controls + ");"
+        "DELETE FROM ck.tasks WHERE task_id IN (" + controls + ");",
+        task_count=len(control_ids),
+    )
+    cleanup_plan = b"".join((output / row["path"]).read_bytes()
+                            for row in cleanup_batches)
+    atomic_write(output / "cleanup.sql", cleanup_plan)
+    cleanup_manifest_body = {
+        "version": "hardening-gate7-live-bulk-cleanup-manifest-v1",
+        "campaign_id": campaign_id,
+        "task_batch_size": CLEANUP_TASK_BATCH_SIZE,
+        "batch_count": len(cleanup_batches),
+        "batches": cleanup_batches,
+        "composed_cleanup_sha256": digest(cleanup_plan),
+    }
+    cleanup_manifest = dict(
+        cleanup_manifest_body,
+        cleanup_manifest_sha256=digest(cleanup_manifest_body),
+    )
+    atomic_write(output / "cleanup-manifest.json", canonical(cleanup_manifest))
     manifest_body = {
         "version": "hardening-gate7-live-bulk-manifest-v2",
         "campaign_id": campaign_id,
@@ -320,7 +376,9 @@ def build_sql(campaign_id: str, output: Path) -> dict[str, Any]:
         "unique_vector_digests": len(vector_digests),
         "sql_files": sql_hashes,
         "query_specs_sha256": digest(query_path.read_bytes()),
-        "cleanup_sha256": digest(cleanup.encode("utf-8")),
+        "cleanup_manifest_sha256": cleanup_manifest["cleanup_manifest_sha256"],
+        "cleanup_batch_count": len(cleanup_batches),
+        "cleanup_sha256": digest(cleanup_plan),
         "ceilings": {
             "database_growth_bytes": DATABASE_GROWTH_LIMIT,
             "evidence_growth_bytes": EVIDENCE_GROWTH_LIMIT,
@@ -346,6 +404,16 @@ def parse_count_row(raw: bytes, expected_fields: int = 4) -> tuple[int, ...]:
         if len(fields) == expected_fields and all(field.isdigit() for field in fields):
             return tuple(int(field) for field in fields)
     raise LiveBulkError("COUNT_OUTPUT_INVALID")
+
+
+def campaign_count_sql(prefix: str) -> str:
+    return (
+        "SELECT "
+        f"(SELECT count(*) FROM ck.tasks WHERE task_id LIKE {sql_literal(prefix + '%')}),"
+        f"(SELECT count(*) FROM ck.trajectory_events WHERE task_id LIKE {sql_literal(prefix + '%')}),"
+        f"(SELECT count(*) FROM ck.receipts WHERE task_id LIKE {sql_literal(prefix + '%')}),"
+        f"(SELECT count(*) FROM ck.context_vectors WHERE task_id LIKE {sql_literal(prefix + '%')});"
+    )
 
 
 def external_failure_fields(exc: BaseException) -> dict[str, Any]:
@@ -420,6 +488,69 @@ def execute_batches(config: dict[str, Any], sql_env: dict[str, str],
     return total_ms, output_hashes, retries
 
 
+def execute_cleanup_batches(config: dict[str, Any], sql_env: dict[str, str],
+                            generated: Path, manifest: dict[str, Any],
+                            journal: DurableJournal) -> tuple[int, list[str], int]:
+    cleanup_path = generated / "cleanup-manifest.json"
+    cleanup_manifest = json.loads(cleanup_path.read_bytes())
+    body = {key: value for key, value in cleanup_manifest.items()
+            if key != "cleanup_manifest_sha256"}
+    if cleanup_manifest.get("cleanup_manifest_sha256") != digest(body):
+        raise LiveBulkError("CLEANUP_MANIFEST_HASH_MISMATCH")
+    if manifest.get("cleanup_manifest_sha256") != cleanup_manifest["cleanup_manifest_sha256"]:
+        raise LiveBulkError("CLEANUP_MANIFEST_LINK_MISMATCH")
+    batches = cleanup_manifest.get("batches")
+    if not isinstance(batches, list) or len(batches) != manifest.get("cleanup_batch_count"):
+        raise LiveBulkError("CLEANUP_BATCH_COUNT_MISMATCH")
+    total_ms = 0
+    output_hashes: list[str] = []
+    retries = 0
+    for row in batches:
+        path = generated / row["path"]
+        if path.is_symlink() or not path.is_file() or digest(path.read_bytes()) != row["sha256"]:
+            raise LiveBulkError("CLEANUP_BATCH_HASH_MISMATCH")
+        attempt = 0
+        while True:
+            attempt += 1
+            journal.emit(
+                "CLEANUP_BATCH_START", "CLEANUP",
+                cleanup_stage=row["stage"], batch_index=row["batch_index"],
+                attempt=attempt, task_count=row["task_count"],
+                sql_sha256=row["sha256"],
+            )
+            try:
+                raw, elapsed = cloud_adapter._sql(
+                    config, sql_env, file=path, timeout=120,
+                )
+                total_ms += elapsed
+                output_hash = digest(raw)
+                output_hashes.append(output_hash)
+                journal.emit(
+                    "CLEANUP_BATCH_PASS", "CLEANUP",
+                    cleanup_stage=row["stage"], batch_index=row["batch_index"],
+                    attempt=attempt, task_count=row["task_count"],
+                    output_sha256=output_hash, elapsed_ms=elapsed,
+                )
+                break
+            except hardening.ExternalCommandFailure as exc:
+                journal.emit(
+                    "CLEANUP_BATCH_FAIL", "CLEANUP",
+                    cleanup_stage=row["stage"], batch_index=row["batch_index"],
+                    attempt=attempt, task_count=row["task_count"],
+                    **external_failure_fields(exc),
+                )
+                if exc.sqlstate == "40001" and attempt <= MAX_SERIALIZATION_RETRIES:
+                    retries += 1
+                    journal.emit(
+                        "CLEANUP_BATCH_RETRY", "CLEANUP",
+                        cleanup_stage=row["stage"], batch_index=row["batch_index"],
+                        attempt=attempt, sqlstate=exc.sqlstate,
+                    )
+                    continue
+                raise
+    return total_ms, output_hashes, retries
+
+
 def run_live(config_path: Path, generated: Path, evidence: Path,
              journal: DurableJournal) -> dict[str, Any]:
     config = cloud_adapter._read_config(config_path.resolve())
@@ -441,12 +572,15 @@ def run_live(config_path: Path, generated: Path, evidence: Path,
         sql_env = cloud_adapter._sql_env(config, bytes(secret))
         journal.emit("STAGE_PASS", "AUTH", credential_bytes_recorded=False)
         journal.emit("STAGE_START", "PRECLEAN")
-        cloud_adapter._sql(config, sql_env, file=generated / "cleanup.sql", timeout=180)
-        journal.emit("STAGE_PASS", "PRECLEAN")
-        before_raw, _ = cloud_adapter._sql(
-            config, sql_env,
-            execute="SELECT count(*) FROM ck.tasks WHERE task_id LIKE " + sql_literal(prefix + "%"),
+        count_sql = campaign_count_sql(prefix)
+        before_raw, preclean_ms = cloud_adapter._sql(
+            config, sql_env, execute=count_sql,
         )
+        before_counts = parse_count_row(before_raw)
+        if before_counts != (0, 0, 0, 0):
+            raise LiveBulkError("PRECLEAN_RESIDUE")
+        journal.emit("STAGE_PASS", "PRECLEAN", residue_counts=list(before_counts),
+                     elapsed_ms=preclean_ms)
         insert_latencies: dict[str, int] = {}
         insert_hashes: dict[str, str] = {}
         insert_batch_output_hashes: dict[str, list[str]] = {}
@@ -464,13 +598,6 @@ def run_live(config_path: Path, generated: Path, evidence: Path,
             journal.emit("STAGE_PASS", name.upper(),
                          batches=len(hashes), elapsed_ms=elapsed,
                          output_set_sha256=insert_hashes[name], retries=retries)
-        count_sql = (
-            "SELECT "
-            f"(SELECT count(*) FROM ck.tasks WHERE task_id LIKE {sql_literal(prefix + '%')}),"
-            f"(SELECT count(*) FROM ck.trajectory_events WHERE task_id LIKE {sql_literal(prefix + '%')}),"
-            f"(SELECT count(*) FROM ck.receipts WHERE task_id LIKE {sql_literal(prefix + '%')}),"
-            f"(SELECT count(*) FROM ck.context_vectors WHERE task_id LIKE {sql_literal(prefix + '%')});"
-        )
         counts_raw, counts_ms = cloud_adapter._sql(config, sql_env, execute=count_sql)
         actual_counts = parse_count_row(counts_raw)
         expected_counts = (
@@ -538,8 +665,8 @@ def run_live(config_path: Path, generated: Path, evidence: Path,
         )
         duplicate_raw, duplicate_ms = cloud_adapter._sql(config, sql_env, execute=duplicate_sql)
         journal.emit("STAGE_START", "CLEANUP")
-        cleanup_raw, cleanup_ms = cloud_adapter._sql(
-            config, sql_env, file=generated / "cleanup.sql", timeout=300,
+        cleanup_ms, cleanup_output_hashes, cleanup_retries = execute_cleanup_batches(
+            config, sql_env, generated, manifest, journal,
         )
         residue_raw, residue_ms = cloud_adapter._sql(config, sql_env, execute=count_sql)
         residue_counts = parse_count_row(residue_raw)
@@ -549,7 +676,9 @@ def run_live(config_path: Path, generated: Path, evidence: Path,
             evidence / "cleanup.json", "hardening-gate7-live-bulk-cleanup-v2", {
                 "campaign_id": campaign_id,
                 "status": "PASS",
-                "cleanup_output_sha256": digest(cleanup_raw),
+                "cleanup_output_set_sha256": digest(cleanup_output_hashes),
+                "cleanup_batches": len(cleanup_output_hashes),
+                "cleanup_retries": cleanup_retries,
                 "cleanup_ms": cleanup_ms,
                 "residue_output_sha256": digest(residue_raw),
                 "residue_ms": residue_ms,
@@ -589,7 +718,9 @@ def run_live(config_path: Path, generated: Path, evidence: Path,
             "rollback_ms": rollback_ms,
             "duplicate_output_sha256": digest(duplicate_raw),
             "duplicate_ms": duplicate_ms,
-            "cleanup_output_sha256": digest(cleanup_raw),
+            "cleanup_output_set_sha256": digest(cleanup_output_hashes),
+            "cleanup_batches": len(cleanup_output_hashes),
+            "cleanup_retries": cleanup_retries,
             "cleanup_ms": cleanup_ms,
             "residue_output_sha256": digest(residue_raw),
             "residue_ms": residue_ms,
@@ -643,16 +774,10 @@ def run_live(config_path: Path, generated: Path, evidence: Path,
                      **failure_fields)
         if sql_env is not None and cleanup_receipt is None:
             try:
-                cleanup_raw, cleanup_ms = cloud_adapter._sql(
-                    config, sql_env, file=generated / "cleanup.sql", timeout=300,
+                cleanup_ms, cleanup_output_hashes, cleanup_retries = execute_cleanup_batches(
+                    config, sql_env, generated, manifest, journal,
                 )
-                count_sql = (
-                    "SELECT "
-                    f"(SELECT count(*) FROM ck.tasks WHERE task_id LIKE {sql_literal(prefix + '%')}),"
-                    f"(SELECT count(*) FROM ck.trajectory_events WHERE task_id LIKE {sql_literal(prefix + '%')}),"
-                    f"(SELECT count(*) FROM ck.receipts WHERE task_id LIKE {sql_literal(prefix + '%')}),"
-                    f"(SELECT count(*) FROM ck.context_vectors WHERE task_id LIKE {sql_literal(prefix + '%')});"
-                )
+                count_sql = campaign_count_sql(prefix)
                 residue_raw, residue_ms = cloud_adapter._sql(
                     config, sql_env, execute=count_sql, timeout=120,
                 )
@@ -661,7 +786,9 @@ def run_live(config_path: Path, generated: Path, evidence: Path,
                     evidence / "cleanup.json", "hardening-gate7-live-bulk-cleanup-v2", {
                         "campaign_id": campaign_id,
                         "status": "PASS" if residue_counts == (0, 0, 0, 0) else "BLOCKED",
-                        "cleanup_output_sha256": digest(cleanup_raw),
+                        "cleanup_output_set_sha256": digest(cleanup_output_hashes),
+                        "cleanup_batches": len(cleanup_output_hashes),
+                        "cleanup_retries": cleanup_retries,
                         "cleanup_ms": cleanup_ms,
                         "residue_output_sha256": digest(residue_raw),
                         "residue_ms": residue_ms,

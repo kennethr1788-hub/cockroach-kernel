@@ -6,6 +6,7 @@ import io
 import json
 from pathlib import Path
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -36,6 +37,8 @@ generator = load("test_gate7_expanded_generator", HERE / "generate_expanded_inpu
 campaign = load("test_gate7_expanded_campaign", HERE / "run_expanded_campaign.py")
 bulk = load("test_gate7_live_bulk", HERE / "live_bulk_controller.py")
 bundle = load("test_gate7_bundle", HERE / "build_expanded_bundle.py")
+custody = load("test_gate7_run4_custody", HERE / "run4_evidence_custody.py")
+track_gate = load("test_gate7_run4_track_gate", HERE / "run4_track_gate.py")
 
 
 def canonical(value):
@@ -46,6 +49,129 @@ def canonical(value):
 
 
 class ExpandedGate7Tests(unittest.TestCase):
+    def test_run4_track1_custody_seal_and_unseal_are_hash_bound(self):
+        with tempfile.TemporaryDirectory(prefix="ck-g7r4-custody-") as temporary:
+            root = Path(temporary)
+            archive = root / "track1-evidence.tar.gz"
+            archive.write_bytes(b"synthetic-track1-evidence\n")
+            receipt_path = root / "track1-custody.json"
+            unseal_path = root / "track1-unseal.json"
+
+            receipt = custody.seal(
+                archive, receipt_path, "ck-g7r4-unit-custody",
+            )
+            self.assertEqual(receipt["status"], "SEALED")
+            self.assertEqual(stat.S_IMODE(archive.stat().st_mode), 0)
+            custody.validate_receipt(json.loads(receipt_path.read_bytes()))
+
+            result = custody.unseal(archive, receipt_path, unseal_path)
+            self.assertEqual(result["status"], "UNSEALED_HASH_VERIFIED")
+            self.assertEqual(stat.S_IMODE(archive.stat().st_mode), stat.S_IRUSR)
+            custody.validate_receipt(json.loads(unseal_path.read_bytes()))
+            self.assertEqual(result["archive_sha256"], receipt["archive_sha256"])
+
+    def test_run4_track2_gate_requires_green_sealed_and_zero_residue(self):
+        def hashed(body, field):
+            return dict(body, **{field: track_gate.digest(body)})
+
+        campaign_id = "ck-g7r4-unit-gate"
+        with tempfile.TemporaryDirectory(prefix="ck-g7r4-track-gate-") as temporary:
+            root = Path(temporary)
+            aggregate = hashed({
+                "version": "unit-track1",
+                "campaign_id": campaign_id + "-track1",
+                "green": True,
+                "pass_count": 84,
+                "scored_execution_count": 84,
+                "behavior_failure_count": 0,
+                "safety_failure_count": 0,
+                "false_promotions": 0,
+                "mutation_after_refusal_or_invalid": 0,
+                "residue_count": 0,
+                "post_reveal_tuning_events": 0,
+            }, "aggregate_sha256")
+            custody_record = hashed({
+                "version": "unit-custody",
+                "campaign_id": campaign_id,
+                "status": "SEALED",
+                "archive_mode_after": "0000",
+                "extracted_before_track2": False,
+            }, "receipt_sha256")
+            cleanup_record = hashed({
+                "version": "unit-cleanup",
+                "campaign_id": campaign_id + "-track3",
+                "status": "PASS",
+                "residue_counts": [0, 0, 0, 0],
+            }, "receipt_sha256")
+            result_record = hashed({
+                "version": "unit-result",
+                "campaign_id": campaign_id + "-track3",
+                "green": True,
+                "actual_counts": [2000, 20000, 4000, 20000],
+            }, "result_sha256")
+            terminal_record = hashed({
+                "version": "unit-terminal",
+                "campaign_id": campaign_id + "-track3",
+                "status": "GREEN",
+                "result_sha256": result_record["result_sha256"],
+                "cleanup_receipt_sha256": cleanup_record["receipt_sha256"],
+            }, "receipt_sha256")
+            records = {
+                "aggregate.json": aggregate,
+                "custody.json": custody_record,
+                "terminal.json": terminal_record,
+                "cleanup.json": cleanup_record,
+                "result.json": result_record,
+            }
+            for name, value in records.items():
+                (root / name).write_bytes(canonical(value))
+
+            marker = track_gate.evaluate(
+                campaign_id, root / "aggregate.json", root / "custody.json",
+                root / "terminal.json", root / "cleanup.json",
+                root / "result.json", root / "track2-start.json",
+            )
+            self.assertEqual(marker["status"], "TRACK2_START_AUTHORIZED")
+            self.assertFalse(marker["database_heavy_tracks_overlap"])
+
+            for field, replacement, expected in (
+                ("status", "BLOCKED", "TRACK3_TERMINAL_NOT_GREEN"),
+                ("cleanup_residue", [1, 0, 0, 0], "TRACK3_RESIDUE"),
+                ("custody_status", "UNSEALED", "TRACK1_CUSTODY_INVALID"),
+            ):
+                case_root = root / field
+                case_root.mkdir()
+                case_records = {name: dict(value) for name, value in records.items()}
+                if field == "status":
+                    body = {key: value for key, value in terminal_record.items()
+                            if key != "receipt_sha256"}
+                    body["status"] = replacement
+                    case_records["terminal.json"] = hashed(body, "receipt_sha256")
+                elif field == "cleanup_residue":
+                    body = {key: value for key, value in cleanup_record.items()
+                            if key != "receipt_sha256"}
+                    body["residue_counts"] = replacement
+                    changed_cleanup = hashed(body, "receipt_sha256")
+                    case_records["cleanup.json"] = changed_cleanup
+                    terminal_body = {key: value for key, value in terminal_record.items()
+                                     if key != "receipt_sha256"}
+                    terminal_body["cleanup_receipt_sha256"] = changed_cleanup["receipt_sha256"]
+                    case_records["terminal.json"] = hashed(terminal_body, "receipt_sha256")
+                else:
+                    body = {key: value for key, value in custody_record.items()
+                            if key != "receipt_sha256"}
+                    body["status"] = replacement
+                    case_records["custody.json"] = hashed(body, "receipt_sha256")
+                for name, value in case_records.items():
+                    (case_root / name).write_bytes(canonical(value))
+                with self.assertRaisesRegex(track_gate.TrackGateError, expected):
+                    track_gate.evaluate(
+                        campaign_id, case_root / "aggregate.json",
+                        case_root / "custody.json", case_root / "terminal.json",
+                        case_root / "cleanup.json", case_root / "result.json",
+                        case_root / "marker.json",
+                    )
+
     def test_schedule_thresholds_and_transfer_allowlist_are_exact(self):
         schedule = json.loads(
             (BASE / "HARDENING_GATE7_EXPANDED_RUNPOD_SCHEDULE_R1.json").read_bytes()
@@ -97,6 +223,15 @@ class ExpandedGate7Tests(unittest.TestCase):
             self.assertEqual(manifest["concurrency"], 4)
             self.assertEqual(manifest["unique_vector_digests"], 20000)
             self.assertEqual(sum(len(rows) for rows in manifest["batches"].values()), 184)
+            self.assertEqual(manifest["cleanup_batch_count"], 35)
+            cleanup_manifest = json.loads(
+                (generated_a / "cleanup-manifest.json").read_bytes()
+            )
+            self.assertEqual(cleanup_manifest["batch_count"], 35)
+            self.assertEqual(
+                cleanup_manifest["cleanup_manifest_sha256"],
+                manifest["cleanup_manifest_sha256"],
+            )
             self.assertEqual(
                 len(json.loads((generated_a / "query-specs.json").read_bytes())), 200
             )
@@ -119,7 +254,8 @@ class ExpandedGate7Tests(unittest.TestCase):
                     evidence / "journal.ndjson", campaign_id,
                 )
                 lock = bulk.threading.Lock()
-                calls = {"cleanup": 0, "batch_files": [], "queries": 0}
+                calls = {"cleanup": 0, "batch_files": [], "queries": 0,
+                         "counts": 0}
 
                 def fake_sql(_config, _env, *, execute=None, file=None,
                              timeout=60, fmt="tsv"):
@@ -127,7 +263,7 @@ class ExpandedGate7Tests(unittest.TestCase):
                     if file is not None:
                         filename = Path(file).name
                         with lock:
-                            if filename == "cleanup.sql":
+                            if filename.startswith("cleanup-") and filename.endswith(".sql"):
                                 calls["cleanup"] += 1
                             else:
                                 calls["batch_files"].append(filename)
@@ -154,8 +290,9 @@ class ExpandedGate7Tests(unittest.TestCase):
                         )
                     if "(SELECT count(*) FROM ck.tasks" in execute:
                         with lock:
-                            cleaned = calls["cleanup"] >= 2
-                        counts = [0, 0, 0, 0] if cleaned else expected_counts
+                            calls["counts"] += 1
+                            count_call = calls["counts"]
+                        counts = expected_counts if count_call == 2 else [0, 0, 0, 0]
                         return (
                             b"tasks\tevents\treceipts\tvectors\n" +
                             ("\t".join(str(value) for value in counts) + "\n").encode("utf-8"),
@@ -185,7 +322,7 @@ class ExpandedGate7Tests(unittest.TestCase):
                 self.assertEqual(result["actual_counts"], expected_counts)
                 self.assertEqual(result["query_count"], 200)
                 self.assertEqual(calls["queries"], 200)
-                self.assertEqual(calls["cleanup"], 2)
+                self.assertEqual(calls["cleanup"], manifest["cleanup_batch_count"])
                 self.assertEqual(len(calls["batch_files"]), 184)
                 self.assertEqual(
                     sorted(calls["batch_files"]),
@@ -326,6 +463,31 @@ class ExpandedGate7Tests(unittest.TestCase):
                     "rows": 1, "batch_index": 1,
                 }]
             (generated / "cleanup.sql").write_bytes(b"BEGIN; SELECT 1; COMMIT;\n")
+            cleanup_batch = generated / "cleanup-unit-batch-0001.sql"
+            cleanup_batch.write_bytes(b"BEGIN; SELECT 1; COMMIT;\n")
+            cleanup_manifest_body = {
+                "version": "hardening-gate7-live-bulk-cleanup-manifest-v1",
+                "campaign_id": campaign_id,
+                "task_batch_size": 1,
+                "batch_count": 1,
+                "batches": [{
+                    "path": cleanup_batch.name,
+                    "sha256": bulk.digest(cleanup_batch.read_bytes()),
+                    "stage": "unit",
+                    "batch_index": 1,
+                    "task_count": 1,
+                }],
+                "composed_cleanup_sha256": bulk.digest(
+                    (generated / "cleanup.sql").read_bytes()
+                ),
+            }
+            cleanup_manifest = {
+                **cleanup_manifest_body,
+                "cleanup_manifest_sha256": bulk.digest(cleanup_manifest_body),
+            }
+            (generated / "cleanup-manifest.json").write_bytes(
+                bulk.canonical(cleanup_manifest)
+            )
             (generated / "query-specs.json").write_text("[]", encoding="utf-8")
             manifest_body = {
                 "version": "hardening-gate7-live-bulk-manifest-v2",
@@ -333,6 +495,8 @@ class ExpandedGate7Tests(unittest.TestCase):
                 "counts": {"tasks": 1, "events": 1, "receipts": 1,
                            "vectors": 1, "vector_queries": 0},
                 "batches": batches,
+                "cleanup_manifest_sha256": cleanup_manifest["cleanup_manifest_sha256"],
+                "cleanup_batch_count": 1,
             }
             manifest = {**manifest_body, "manifest_sha256": bulk.digest(manifest_body)}
             (generated / "manifest.json").write_bytes(bulk.canonical(manifest))
@@ -344,7 +508,7 @@ class ExpandedGate7Tests(unittest.TestCase):
                 if file is not None and Path(file).name == "vectors.sql":
                     raise bulk.hardening.command_failure(
                         "cockroach", 1, b"duplicate\nSQLSTATE: 23505")
-                if file is not None and Path(file).name == "cleanup.sql":
+                if file is not None and Path(file).name == cleanup_batch.name:
                     calls["cleanup"] += 1
                     return b"COMMIT\n", 1
                 if execute is not None and "SELECT count" in execute:
@@ -360,7 +524,7 @@ class ExpandedGate7Tests(unittest.TestCase):
                         bulk.run_live(root / "config.json", generated, evidence, journal)
             finally:
                 journal.close()
-            self.assertEqual(calls["cleanup"], 2)
+            self.assertEqual(calls["cleanup"], 1)
             failure = json.loads((evidence / "failure.json").read_bytes())
             cleanup = json.loads((evidence / "cleanup.json").read_bytes())
             terminal = json.loads((evidence / "terminal.json").read_bytes())

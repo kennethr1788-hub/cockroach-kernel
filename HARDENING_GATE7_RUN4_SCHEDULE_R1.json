@@ -1,0 +1,64 @@
+{
+  "accepted_compute_rate_usd_per_hour_max": "0.10",
+  "accepted_container_disk_gb_max": 20,
+  "accepted_cpu_count": 2,
+  "accepted_gpu_count": 0,
+  "accepted_image": "runpod/base:1.0.2-ubuntu2204",
+  "accepted_memory_gib_values": [
+    4,
+    8
+  ],
+  "accepted_network_volume_gb": 0,
+  "accepted_template_id": "runpod-ubuntu-2204",
+  "accepted_total_active_rate_usd_per_hour_max": "0.12",
+  "aggregate_gate7_runpod_exposure_usd_max": "5.00",
+  "campaign_prefix": "ck-g7r4-",
+  "creation_attempts_max": 8,
+  "creation_retry_window_minutes": 120,
+  "database_heavy_tracks_may_overlap": false,
+  "execution_phases": [
+    {
+      "phase": 1,
+      "track": "TRACK1",
+      "requirement": "complete and score 84 fresh-process synthetic executions, retrieve as one opaque archive, hash it, and seal it without extraction"
+    },
+    {
+      "phase": 2,
+      "track": "TRACK3",
+      "requirement": "complete the 46000-row CockroachDB workload, 35 bounded cleanup batches, canonical GREEN terminal, and zero residue"
+    },
+    {
+      "phase": 3,
+      "track": "TRACK2_START_GATE",
+      "requirement": "bind the sealed Track1 aggregate and custody hashes plus Track3 result, cleanup, terminal, exact counts, and zero residue"
+    },
+    {
+      "phase": 4,
+      "track": "TRACK2",
+      "requirement": "run the bounded one-hour live AWS and CockroachDB continuity schedule only after the Track2 start gate exists"
+    },
+    {
+      "phase": 5,
+      "track": "CLOSEOUT",
+      "requirement": "retrieve and hash all evidence, teardown the worker, prove empty inventory, then unseal and verify Track1"
+    }
+  ],
+  "failed_worker_teardown_required_before_retry": true,
+  "hidden_input_policy": "new CSPRNG seed committed only after campaign readiness; Run3 seed and inputs forbidden; no post-reveal tuning",
+  "maximum_concurrent_workers": 1,
+  "maximum_measured_campaigns": 1,
+  "maximum_successful_worker_paid_hours": 7,
+  "provider_stop_offset_minutes": 390,
+  "provider_terminate_offset_minutes": 420,
+  "retry_backoff_seconds": [
+    15,
+    30,
+    60,
+    120,
+    180
+  ],
+  "run3_conservative_cost_usd_max": "0.031317",
+  "run4_conservative_remaining_envelope_usd_max": "4.968683",
+  "schema_version": "hardening-gate7-run4-schedule-v1",
+  "worker_volume_gb": 0
+}

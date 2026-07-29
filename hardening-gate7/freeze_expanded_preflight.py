@@ -25,6 +25,8 @@ HARNESS_FILES = (
     "hardening-gate7/generate_expanded_inputs.py",
     "hardening-gate7/run_expanded_campaign.py",
     "hardening-gate7/run_expanded_case.py",
+    "hardening-gate7/run4_evidence_custody.py",
+    "hardening-gate7/run4_track_gate.py",
     "hardening-gate7/score_expanded_campaign.py",
     "hardening-gate7/surface_cases.py",
     "hardening-gate7/prepare_hidden_campaign.py",
