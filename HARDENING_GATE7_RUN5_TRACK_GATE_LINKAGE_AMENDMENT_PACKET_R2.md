@@ -1,4 +1,4 @@
-# Gate 7 Run 5 Track-Gate Linkage Amendment Packet R1
+# Gate 7 Run 5 Track-Gate Linkage Amendment Packet R2
 
 ## Review authority
 
@@ -8,21 +8,16 @@ implementation authority. They must decide whether the proposed mechanical
 evidence-link repair preserves the frozen benchmark contract or constitutes
 impermissible post-reveal tuning.
 
-Return exactly one JSON object with keys:
+Return a verdict using the active judge lane's canonical validated output
+schema. The caller supplies the exact packet SHA-256 outside this packet. Any
+non-GREEN verdict, hash mismatch, identity mismatch, recusal, or refusal to
+authorize Track 2 after only the exact patch keeps Track 2 blocked.
 
-```json
-{
-  "verdict": "GREEN|NOT_GREEN|RECUSAL_REQUIRED",
-  "packet_sha256": "<exact packet hash supplied by caller>",
-  "identity": "<served model identity>",
-  "recusal_clear": true,
-  "track2_authorized_after_exact_patch": true,
-  "findings": ["<concise finding>"]
-}
-```
-
-Any non-GREEN verdict, hash mismatch, identity mismatch, recusal, or
-`track2_authorized_after_exact_patch=false` keeps Track 2 blocked.
+R1 received a substantive GLM 5.2 GREEN, but its AGY transport was invalid
+because R1 embedded a JSON output schema that conflicted with AGY's pinned
+verdict validator. R2 changes only this review-output instruction. The entire
+technical packet, artifact bindings, proposed patch, and invariants below are
+byte-identical to R1. R1's GLM verdict is stale for R2; both lanes must rerun.
 
 ## Frozen state
 
