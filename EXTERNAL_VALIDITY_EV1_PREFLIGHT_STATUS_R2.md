@@ -1,6 +1,6 @@
 # EV1 R2 Preflight Status
 
-- `STATUS`: `MECHANICAL_GREEN; IDENTICAL_PACKET_JUDGES_PENDING`
+- `STATUS`: `R2_PACKET_BLOCKED_PRESERVED; R3_PACKET_FROZEN_JUDGES_PENDING`
 - `PRODUCT_CANDIDATE`: `1c483b1930e629c9ecb6d73418b9554897dc08ad`
 - `BACKLOG_SHA256`: `6dfe194028739ba57b2eb35a8fbd112bde1569ccd76ca73d5ec7f949fb64a0b5`
 - `BREW_LEDGER_EXPORT_MANIFEST_SHA256`: `d78d1a589fe487368f797e3446ba8f1d7d22d7c08554ce91be2ece32cd8a2706`
@@ -14,10 +14,17 @@
 - `FRESH_PROCESS_ISOLATION`: `GREEN`
 - `GUARDED_DELETION_AND_RESIDUE`: `GREEN; ZERO_RESIDUE`
 - `OUTBOUND_PACKET_SCAN`: `GREEN; ZERO_FINDINGS`
-- `GLM_5_2`: `PENDING`
-- `AGY`: `PENDING`
+- `GLM_5_2`: `GREEN_ON_R2; STALE_AFTER_R3_PACKET_CHANGE`
+- `AGY`: `BLOCKED_ON_R2_STALE_PRE_CONFIRMATION_FOOTER`
+- `R3_PACKET_SHA256`: `a08bb6c49a64b293488d4c0ecc0357740f7e6187e963bc438d563db574b8f0a2`
+- `R3_ORDERED_TASK_HEADERS`: `12`
+- `R3_ORDERED_TASK_LIMITATIONS`: `12`
+- `R3_STALE_PRE_CONFIRMATION_FOOTER_LINES`: `0`
+- `R3_GLM_5_2`: `PENDING`
+- `R3_AGY`: `PENDING`
 - `MEASURED_TASKS_STARTED`: `0`
 - `MEASURED_CLOCK_STARTED`: `FALSE`
 
-EV1-T01 remains forbidden until both independent judges return valid GREEN
-verdicts over the exact same packet hash with clear recusal results.
+EV1-T01 remains forbidden. R2 packet results are preserved and cannot be reused.
+R3 constrains extraction to the ordered task section and is frozen on the hash
+above. Fresh valid GREEN results from both independent judges remain required.

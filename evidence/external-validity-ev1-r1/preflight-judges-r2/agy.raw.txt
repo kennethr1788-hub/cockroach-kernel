@@ -1,0 +1,11 @@
+PACKET_SHA256: cfc32c214a4034205b93e0143978348f30dfac1a9f53dd423bf0702505e6d69d
+AGY_VERDICT: BLOCKED
+BLOCKERS:
+- Kenneth's R1 confirmation does not cover the R2 sanitized export binding; fresh exact-hash review of the R2 export binding is explicitly required before T01 starts, as stated in the EV1-T12 limitations.
+NON_BLOCKING_RISKS:
+- NONE
+EVIDENCE_GAPS:
+- NONE
+RECUSAL_CHECK: clear
+REQUIRED_RERUNS:
+- NONE

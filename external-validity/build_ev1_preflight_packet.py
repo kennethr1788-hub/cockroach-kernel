@@ -16,7 +16,7 @@ HUMAN = ROOT / "EXTERNAL_VALIDITY_EV1_HUMAN_CONFIRMATION_RECEIPT_R2.md"
 HARNESS = ROOT / "external-validity" / "ev1_preflight.py"
 CHILD = ROOT / "external-validity" / "ev1_fresh_child.py"
 TESTS = ROOT / "external-validity" / "test_ev1_preflight.py"
-OUTPUT = ROOT / "EXTERNAL_VALIDITY_EV1_PREFLIGHT_PACKET_R2.md"
+OUTPUT = ROOT / "EXTERNAL_VALIDITY_EV1_PREFLIGHT_PACKET_R3.md"
 
 
 def digest(path: Path) -> str:
@@ -55,8 +55,12 @@ def main() -> int:
     if mechanical["protocol_sha256"] != digest(PROTOCOL):
         raise SystemExit("PROTOCOL_BINDING_MISMATCH")
 
+    backlog_text = BACKLOG.read_text(encoding="utf-8")
+    ordered_section = backlog_text.split("## Ordered backlog\n", 1)[1].split(
+        "## Aggregate candidate checks", 1
+    )[0]
     task_lines = []
-    for line in BACKLOG.read_text(encoding="utf-8").splitlines():
+    for line in ordered_section.splitlines():
         if line.startswith("### EV1-T") or any(
             token in line
             for token in (
@@ -73,6 +77,10 @@ def main() -> int:
             )
         ):
             task_lines.append(line)
+    if sum(line.startswith("### EV1-T") for line in task_lines) != 12:
+        raise SystemExit("TASK_SECTION_COUNT_MISMATCH")
+    if sum(line.startswith("- `LIMITATION`:") for line in task_lines) != 12:
+        raise SystemExit("TASK_LIMITATION_COUNT_MISMATCH")
 
     sources = "\n".join(
         f"- `{row['label']}@{row['commit']}`: {row['included_files']} included files, "
@@ -86,7 +94,7 @@ def main() -> int:
     scorer = mechanical["scorer"]
     isolation = mechanical["isolation"]
     regressions = mechanical["product_regressions"]
-    packet = f"""# EV1 Genuine-Use Preflight Packet R2
+    packet = f"""# EV1 Genuine-Use Preflight Packet R3
 
 ## Decision requested
 
