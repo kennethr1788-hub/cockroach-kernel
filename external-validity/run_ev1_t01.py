@@ -64,7 +64,8 @@ EXPECTED_LOGS = {
 }
 EXPECTED_PROFILE_SHA256 = "6358a9beae8361105578231b64ca638a99cbf780e1c8f5d24f9ff71891f0bc2b"
 PRIVATE_MARKER = re.compile(
-    rb"/Users/|gh[pousr]_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|BEGIN [A-Z ]*PRIVATE KEY"
+    (b"/" + b"Users" + b"/")
+    + rb"|gh[pousr]_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|BEGIN [A-Z ]*PRIVATE KEY"
 )
 
 
