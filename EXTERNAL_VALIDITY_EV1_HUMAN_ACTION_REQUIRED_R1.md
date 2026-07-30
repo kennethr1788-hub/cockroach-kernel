@@ -1,6 +1,6 @@
 # EV1 Human Action Required R1
 
-- `STATUS`: `EV1_T01_CLOSED_INFRASTRUCTURE_INVALID_NON_SCORING; EV1_T02_CLOSED_EVALUABLE_PASS; EV1_T03_CLOSED_EVALUABLE_PASS; EV1_T04_CLOSED_EVALUABLE_PASS; EV1_T05_CLOSED_EVALUABLE_PASS; EV1_T06_CLOSED_EVALUABLE_PASS; EV1_T07_CLOSED_EXPECTED_INVALID; EV1_T08_CLOSED_EXPECTED_INVALID; EV1_T09_HUMAN_EDIT_REQUIRED`
+- `STATUS`: `EV1_T01_CLOSED_INFRASTRUCTURE_INVALID_NON_SCORING; EV1_T02_CLOSED_EVALUABLE_PASS; EV1_T03_CLOSED_EVALUABLE_PASS; EV1_T04_CLOSED_EVALUABLE_PASS; EV1_T05_CLOSED_EVALUABLE_PASS; EV1_T06_CLOSED_EVALUABLE_PASS; EV1_T07_CLOSED_EXPECTED_INVALID; EV1_T08_CLOSED_EXPECTED_INVALID; EV1_T09_MODEL_ASSISTED_CAPTURE_DECLARATION_REQUIRED`
 - `LAST_GREEN_GATE`: `LIVE_CONTINUITY_EVIDENCE_GREEN`
 - `BACKLOG_CANDIDATE_SHA256`: `34ffed70e3d52cde2e94e5f3b66dd96cdac1f2aa7de757b11bf6580bb5e536e4`
 - `R2_BACKLOG_CANDIDATE_SHA256`: `6dfe194028739ba57b2eb35a8fbd112bde1569ccd76ca73d5ec7f949fb64a0b5`
@@ -9,7 +9,7 @@
 - `MEASURED_CLOCK_STARTED`: `TRUE; 2026-07-30T14:10:38Z`
 - `CLOSED_FACT`: `Kenneth confirmed EV1-T01 through EV1-T04 may use the deterministic 76-file Brew Ledger export excluding CLAUDE.md and bound by manifest SHA-256 d78d1a589fe487368f797e3446ba8f1d7d22d7c08554ce91be2ece32cd8a2706.`
 - `EVIDENCE`: `EXTERNAL_VALIDITY_EV1_HUMAN_CONFIRMATION_RECEIPT_R2.md`
-- `NEXT_SAFE_ACTION`: `Kenneth personally replaces the one bracketed marker in .ev1-runtime/EV1-T09/workspace/docs/RELEASE.md with exactly one sentence in his own words, visibly saves, and confirms the action.`
+- `NEXT_SAFE_ACTION`: `Kenneth declares the exact current model-assisted EV1-T09 state and explicitly authorizes capture, guarded disposable-workspace deletion, and fresh-process recovery while acknowledging that T09 cannot support an independently human-edited claim.`
 - `FORBIDDEN`: `Fabricating or replacing Kenneth's observations; relabeling the infrastructure-invalid full acceptance as GREEN; rerunning recovery; changing recovered source, task order, product candidate, thresholds, or public claims.`
 
 R1 authenticity and its blocked preflight remain preserved. Kenneth closed the
@@ -174,11 +174,12 @@ T08 is closed as expected-invalid safety evidence, not continuation evidence;
 its workspace and synthetic target remain preserved. EV1-T09 preparation is
 next, followed by Kenneth's required independent saved edit.
 
-EV1-T09 is now prepared from the exact 410-file public MIT source commit. Its
-release-policy validator is committed, the policy document is modified, and
-its cases file is untracked. Pinned campaign-local `pnpm 10.17.0` and Prettier
-3.8.1 pass the formatting check under network denial, and the structural policy
-passes with the frozen placeholder. The exact acceptance path fails closed with
-`HUMAN_RELEASE_PRINCIPLE_REQUIRED`. Kenneth must personally replace the marker
-with one sentence in his own words and visibly save it. Capture, deletion, and
-recovery have not started.
+EV1-T09 is prepared from the exact 410-file public MIT source commit. Kenneth
+explicitly chose Option 2, authorizing Codex to author and apply the release
+principle. That amendment permanently excludes T09 from any independently
+human-edited claim; the original contract and missed human gate remain
+preserved. Pinned campaign-local `pnpm 10.17.0` and Prettier 3.8.1 now pass the
+exact acceptance checks under network denial, and the package remains private.
+Capture, deletion, and recovery have not started. The next human gate is an
+exact-state declaration that honestly identifies the release principle as
+model-assisted and explicitly authorizes the guarded loss/recovery execution.
