@@ -41,7 +41,7 @@ def main() -> int:
     parser.add_argument("--plan", type=Path, required=True)
     args = parser.parse_args()
     plan = args.plan.resolve()
-    output = ROOT / "EXTERNAL_VALIDITY_EV3_PREFLIGHT_PACKET_R3.md"
+    output = ROOT / "EXTERNAL_VALIDITY_EV3_PREFLIGHT_PACKET_R4.md"
     if output.exists():
         raise SystemExit("OUTPUT_EXISTS")
     if digest(plan) != PLAN_HASH:
@@ -55,8 +55,8 @@ def main() -> int:
     if digest(ROOT / ".hardening-runtime/external-validity-r1/official-rules.html") != RULES_HASH:
         raise SystemExit("RULES_SNAPSHOT_HASH_MISMATCH")
     actor_canary_path = ROOT / "evidence/external-validity-ev3-r1/public-canary-r2/FINAL_SUMMARY.json"
-    scenario_canary_path = ROOT / "evidence/external-validity-ev3-r1/scenario-canary-r6/FINAL_SUMMARY.json"
-    mechanical_path = ROOT / "evidence/external-validity-ev3-r1/mechanical-r4/FINAL_RECEIPT.json"
+    scenario_canary_path = ROOT / "evidence/external-validity-ev3-r1/scenario-canary-r7/FINAL_SUMMARY.json"
+    mechanical_path = ROOT / "evidence/external-validity-ev3-r1/mechanical-r5/FINAL_RECEIPT.json"
     failed_mechanical_path = ROOT / "evidence/external-validity-ev3-r1/mechanical-r1/FINAL_RECEIPT.json"
     sanitization_path = ROOT / "evidence/external-validity-ev3-r1/mechanical-r1/SANITIZATION_RECEIPT.json"
     actor_canary = load(actor_canary_path)
@@ -75,14 +75,15 @@ def main() -> int:
     if (ROOT / "evidence/external-validity-ev3-r1/HIDDEN_EXECUTION_LOCK.json").exists():
         raise SystemExit("HIDDEN_SEED_ALREADY_EXISTS")
     utc = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-    header = f"""# External Validity EV3 Cross-Model Preflight Packet R3
+    header = f"""# External Validity EV3 Cross-Model Preflight Packet R4
 
 ## Decision requested
 
-Return `GREEN` or `BLOCKED` for permission to generate one fresh hidden seed and
-execute exactly 24 stateless actor invocations under the frozen EV3 contract.
-Judge this exact packet hash. Do not write code, direct implementation, use
-tools, request credentials, or expand scope.
+Decide whether to permit one fresh hidden seed and exactly 24 stateless actor
+invocations under the frozen EV3 contract. Return the complete five-field block
+under `Required judge output`; never return a bare verdict token. Judge the
+packet SHA-256 supplied by the trusted invocation envelope. Do not write code,
+direct implementation, use tools, request credentials, or expand scope.
 
 ## Frozen lineage
 
@@ -116,6 +117,12 @@ was rejected locally by the outbound sanitizer before provider execution because
 it embedded byte-complete source. R3 replaces source bodies with source hashes
 and measured receipts. No product, actor, scenario, threshold, or hidden input
 was changed, and no hidden seed exists.
+
+R3 packet SHA-256 `a3f4c0ffed5323eca2d2c5238c99c93934c8fa0d8aafcf7740c4338f94a862cc`
+reached exact GLM 5.2 but exposed an output-contract ambiguity: its opening
+sentence allowed a bare verdict while the closing schema required five fields.
+The resulting bare `BLOCKED` token is invalid and carries no substantive judge
+finding. R4 removes that ambiguity. No campaign semantic changed.
 
 ## Actor selection and binding
 
@@ -152,11 +159,11 @@ boundary. GLM and AGY are reserved as judges and cannot act as campaign actors.
 - actor canary R2: `GREEN`; two exact served-model responses; tools exposed `0`;
   tool calls `0`; context reuse `FALSE`; path authority `FALSE`; file SHA-256
   `{digest(actor_canary_path)}`; internal summary `{actor_canary['summary_sha256']}`.
-- materialized-candidate scenario canary R6: `7/7 PASS`; all six classes plus
+- materialized-candidate scenario canary R7: `7/7 PASS`; all six classes plus
   separate unsupported and stale variants; no model calls; runtime teardown
   `TRUE`; file SHA-256 `{digest(scenario_canary_path)}`; internal summary
   `{scenario_canary['summary_sha256']}`.
-- valid mechanical R4: `85` tests, zero command failures, Gitleaks zero,
+- valid mechanical R5: `85` tests, zero command failures, Gitleaks zero,
   detect-secrets zero, private-path/credential markers zero, scan teardown
   `TRUE`; file SHA-256 `{digest(mechanical_path)}`; internal receipt
   `{mechanical['receipt_sha256']}`.
@@ -233,7 +240,10 @@ non-authoring and have no tools, shell, filesystem, browser, credentials,
 deployment, or public-action authority. Both must return explicit GREEN with
 hash match and recusal clear before the hidden lock or seed may exist.
 
-Return exactly:
+## Required judge output
+
+Return exactly this complete block. Replace the placeholders; do not omit a
+field and do not return a bare verdict:
 
 ```text
 VERDICT: GREEN|BLOCKED
