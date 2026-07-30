@@ -1,6 +1,6 @@
 # EV1 R2 Preflight Status
 
-- `STATUS`: `R2_PACKET_BLOCKED_PRESERVED; R3_PACKET_FROZEN_JUDGES_PENDING`
+- `STATUS`: `BLACK_BOX_R3_PREFLIGHT_GREEN`
 - `PRODUCT_CANDIDATE`: `1c483b1930e629c9ecb6d73418b9554897dc08ad`
 - `BACKLOG_SHA256`: `6dfe194028739ba57b2eb35a8fbd112bde1569ccd76ca73d5ec7f949fb64a0b5`
 - `BREW_LEDGER_EXPORT_MANIFEST_SHA256`: `d78d1a589fe487368f797e3446ba8f1d7d22d7c08554ce91be2ece32cd8a2706`
@@ -20,11 +20,12 @@
 - `R3_ORDERED_TASK_HEADERS`: `12`
 - `R3_ORDERED_TASK_LIMITATIONS`: `12`
 - `R3_STALE_PRE_CONFIRMATION_FOOTER_LINES`: `0`
-- `R3_GLM_5_2`: `PENDING`
-- `R3_AGY`: `PENDING`
+- `R3_GLM_5_2`: `GREEN; HASH_MATCH; RECUSAL_CLEAR; NO_BLOCKERS; NO_EVIDENCE_GAPS`
+- `R3_AGY`: `GREEN; HASH_MATCH; RECUSAL_CLEAR; NO_BLOCKERS; NO_EVIDENCE_GAPS`
 - `MEASURED_TASKS_STARTED`: `0`
 - `MEASURED_CLOCK_STARTED`: `FALSE`
 
 EV1-T01 remains forbidden. R2 packet results are preserved and cannot be reused.
 R3 constrains extraction to the ordered task section and is frozen on the hash
-above. Fresh valid GREEN results from both independent judges remain required.
+above. Both required independent judge results are valid and GREEN. T01 may now
+be prepared, but its human edit remains prospective.
