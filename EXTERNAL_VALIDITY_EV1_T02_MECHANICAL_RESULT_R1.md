@@ -7,7 +7,8 @@
 - `EXECUTION_RECEIPT_SHA256`: `fe18b5b10cb4d2174ff8fefc3b9dfd606bc59470a356aca93fad880cd4f846cf`
 - `PRODUCT_VERDICT`: `PROMOTE`
 - `PRODUCT_REASON`: `MAX_PROVEN_PREFIX`
-- `CAMPAIGN_TEARDOWN_PENDING`: `TRUE`
+- `CAMPAIGN_TEARDOWN_PENDING`: `FALSE`
+- `TEMPORARY_SUCCESSOR_TEARDOWN`: `GREEN; EXTERNAL_VALIDITY_EV1_T02_TEARDOWN_RECEIPT_R1.md`
 
 ## Direct mechanical result
 
@@ -41,7 +42,8 @@ nanoseconds.
 | `scripts/run-storage-contract.mjs` | `92148e576b4a1415d6b5a23169d384b6262de3b8878b5dfbcabae6ca56f6e65c` |
 | `scripts/storage-contract-cases.cjs` | `e402403a667ec1c4d889bddb181f34d2c98890ddb3b1bf8a823b0cc13584dc25` |
 
-This is mechanical evidence, not a completed EV1 task classification. Kenneth's
-two immediate operator observations remain required. The successor and custody
-state remain preserved under the bounded temporary campaign root; teardown and
-final independent review have not started.
+Kenneth subsequently gave qualified confirmation of both required observations.
+Independent GLM 5.2 review returned GREEN on their objective premises while
+preserving the human-only subjective boundary. The exact temporary successor
+was then torn down; the project-local snapshot, receipts, raw logs, capture, and
+next-task dependency runtime remain intact.
