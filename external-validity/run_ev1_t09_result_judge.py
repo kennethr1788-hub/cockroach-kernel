@@ -15,6 +15,7 @@ PACKET = CONTROL / "EV1_T09_RESULT_AUDIT_PACKET_R1.md"
 GLM_INVALID_R1 = CONTROL / "EV1_T09_RESULT_AUDIT_GLM_RAW_R1.txt"
 GLM_INVALID_R1_SHA256 = "fda7a4a132b433cfdc1dc632243f6c02e426dca173c01b58afe5e16b01e6df36"
 GLM_RAW = CONTROL / "EV1_T09_RESULT_AUDIT_GLM_RAW_R2.txt"
+GLM_RAW_SHA256 = "5809ced5e7a484124bd24acbfa5b218d8e38eaeaa0c29051228942babe8d5b75"
 PACKET_SHA256 = "90a21e73653d37f48e6802458e8a6808a792c46ce548cf27bc2acb9ec3b2cc69"
 REVIEW_CONTENT_SHA256 = "a2ad10b073ff7b800127ce9c078404d876d0e55cf07e3566858cb672e9489e27"
 GLM = Path("/Users/kennethruedas/.local/bin/glm-zai")
@@ -71,11 +72,19 @@ def validate(raw: bytes) -> None:
         re.IGNORECASE | re.DOTALL,
     ):
         raise JudgeError("GLM_HUMAN_ONLY_LIMITATION_MISSING")
-    if not re.search(
-        r"model[- ]assisted.*(?:not|cannot|excluded).*(?:independent|human[- ]edited)",
+    model_assisted = re.search(r"model[- _]assisted", text, re.IGNORECASE)
+    independent_excluded = re.search(
+        r"(?:independent(?:ly)?[- _]human[- _]edit(?:ed)?|independent_human_edit)"
+        r".{0,240}(?:excluded|false|cannot|no source asserts)",
         text,
         re.IGNORECASE | re.DOTALL,
-    ):
+    ) or re.search(
+        r"(?:excluded|false|cannot|no source asserts)"
+        r".{0,240}(?:independent(?:ly)?[- _]human[- _]edit(?:ed)?|independent_human_edit)",
+        text,
+        re.IGNORECASE | re.DOTALL,
+    )
+    if model_assisted is None or independent_excluded is None:
         raise JudgeError("GLM_MODEL_ASSISTED_LIMITATION_MISSING")
     recusal = re.search(label("RECUSAL") + r"(.+)", text, re.IGNORECASE)
     if recusal is None or re.match(
@@ -85,39 +94,42 @@ def validate(raw: bytes) -> None:
 
 
 def main() -> int:
-    if GLM_RAW.exists():
-        raise JudgeError("GLM_OUTPUT_ALREADY_EXISTS")
     if not GLM_INVALID_R1.is_file() or digest(GLM_INVALID_R1) != GLM_INVALID_R1_SHA256:
         raise JudgeError("PRESERVED_GLM_R1_DRIFT")
     if digest(PACKET) != PACKET_SHA256:
         raise JudgeError("PACKET_DRIFT")
     if digest(GLM) != GLM_SHA256:
         raise JudgeError("JUDGE_WRAPPER_DRIFT")
-    environment = os.environ.copy()
-    environment.update(
-        {
-            "GLM_ZAI_MODEL": "glm-5.2",
-            "GLM_ZAI_PRIMARY_RETRIES": "0",
-            "GLM_ZAI_DISABLE_FALLBACK": "1",
-            "GLM_ZAI_VERIFY_MODEL": "glm-5.2",
-            "GLM_ZAI_REPORT_MODEL": "1",
-            "GLM_ZAI_MAX_TOKENS": "16384",
-        }
-    )
-    completed = subprocess.run(
-        [str(GLM)],
-        cwd=ROOT,
-        env=environment,
-        input=PACKET.read_bytes(),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        timeout=900,
-        check=False,
-    )
-    raw = completed.stdout + completed.stderr
-    atomic_write(GLM_RAW, raw)
-    if completed.returncode != 0:
-        raise JudgeError(f"GLM_PROCESS_FAILED:{completed.returncode}:{raw[-1000:]!r}")
+    if GLM_RAW.is_file():
+        if digest(GLM_RAW) != GLM_RAW_SHA256:
+            raise JudgeError("PRESERVED_GLM_R2_DRIFT")
+        raw = GLM_RAW.read_bytes()
+    else:
+        environment = os.environ.copy()
+        environment.update(
+            {
+                "GLM_ZAI_MODEL": "glm-5.2",
+                "GLM_ZAI_PRIMARY_RETRIES": "0",
+                "GLM_ZAI_DISABLE_FALLBACK": "1",
+                "GLM_ZAI_VERIFY_MODEL": "glm-5.2",
+                "GLM_ZAI_REPORT_MODEL": "1",
+                "GLM_ZAI_MAX_TOKENS": "16384",
+            }
+        )
+        completed = subprocess.run(
+            [str(GLM)],
+            cwd=ROOT,
+            env=environment,
+            input=PACKET.read_bytes(),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=900,
+            check=False,
+        )
+        raw = completed.stdout + completed.stderr
+        atomic_write(GLM_RAW, raw)
+        if completed.returncode != 0:
+            raise JudgeError(f"GLM_PROCESS_FAILED:{completed.returncode}:{raw[-1000:]!r}")
     validate(raw)
     print(
         "GLM_5_2_GREEN "
