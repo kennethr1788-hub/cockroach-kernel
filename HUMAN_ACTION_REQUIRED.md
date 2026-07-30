@@ -2,17 +2,19 @@
 
 ## Current EV1-T02 gate
 
-- `BLOCKER`: `INDEPENDENT_EXECUTION_PREFLIGHT_PENDING`
+- `BLOCKER`: `NONE_BEFORE_MECHANICAL_EXECUTION`
 - `HUMAN_CAPTURE_AUTHORIZATION`: `RECORDED`
 - `TASK_COMMIT`: `769321ec9828948afdacc7856321495c0ffd40a6`
 - `DELETION_STARTED`: `FALSE`
 - `RECOVERY_STARTED`: `FALSE`
-- `UTC_RECORDED`: `2026-07-30T16:46:26Z`
+- `EXECUTION_PREFLIGHT`: `GLM_5_2_GREEN_AND_AGY_GREEN_SAME_TRANSPORT`
+- `UTC_RECORDED`: `2026-07-30T16:54:28Z`
 
-Kenneth's exact three-file capture declaration is recorded. No further human
-action is currently required. The T02 runner must first pass its local canaries
-and an identical-packet GLM 5.2 plus AGY preflight. Guarded deletion remains
-forbidden until both independent lanes return valid GREEN verdicts.
+Kenneth's exact three-file capture declaration is recorded. The runner passed
+its local canaries and identical-packet GLM 5.2 plus AGY preflight. No further
+human action is required before exactly one guarded execution. After that
+execution, Kenneth must provide the two immediate operator observations before
+campaign teardown or final task classification.
 
 ## Current Hardening Gate 2 CockroachDB identity gate
 
