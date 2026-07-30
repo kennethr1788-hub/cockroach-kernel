@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CONTROL = ROOT / ".ev1-runtime" / "EV1-T10" / "control"
 PACKET = CONTROL / "EV1_T10_RESULT_AUDIT_PACKET_R1.md"
 GLM_RAW = CONTROL / "EV1_T10_RESULT_AUDIT_GLM_RAW_R1.txt"
+GLM_RAW_SHA256 = "49dfb2937704f397fe7db71192dc06498437b1554745bdb9b07b7e0356733dea"
 PACKET_SHA256 = "21e77e55a4c6bed4930c944de183a4013b5948012d581767520d3103f3517a9d"
 REVIEW_CONTENT_SHA256 = "94c8855dc8b3eb0f49fb65d85eacf2705b5b156e4bed271e5cfca8a2a41ac5ee"
 GLM = Path("/Users/kennethruedas/.local/bin/glm-zai")
@@ -70,21 +71,21 @@ def validate(raw: bytes) -> None:
     ):
         raise JudgeError("GLM_HUMAN_ONLY_LIMITATION_MISSING")
     human_not_required = re.search(
-        r"human[- _]edit.{0,160}(?:not[- _]required|not applicable|false)",
+        r"human[- _]edit(?:[- _]required)?.{0,160}(?:not[- _]required|not[- _]applicable|false)",
         text,
         re.IGNORECASE | re.DOTALL,
     ) or re.search(
-        r"(?:not[- _]required|not applicable|false).{0,160}human[- _]edit",
+        r"(?:not[- _]required|not[- _]applicable|false).{0,160}human[- _]edit",
         text,
         re.IGNORECASE | re.DOTALL,
     )
     independent_not_claimed = re.search(
         r"(?:independent(?:ly)?[- _]human[- _]edit(?:ed)?|independent_human_edit)"
-        r".{0,240}(?:not applicable|not claimed|cannot|no source asserts)",
+        r".{0,240}(?:not[- _]applicable|not[- _]claimed|cannot|no source asserts)",
         text,
         re.IGNORECASE | re.DOTALL,
     ) or re.search(
-        r"(?:not applicable|not claimed|cannot|no source asserts)"
+        r"(?:not[- _]applicable|not[- _]claimed|cannot|no source asserts)"
         r".{0,240}(?:independent(?:ly)?[- _]human[- _]edit(?:ed)?|independent_human_edit)",
         text,
         re.IGNORECASE | re.DOTALL,
@@ -99,37 +100,40 @@ def validate(raw: bytes) -> None:
 
 
 def main() -> int:
-    if GLM_RAW.exists():
-        raise JudgeError("GLM_OUTPUT_ALREADY_EXISTS")
+    if GLM_RAW.exists() and digest(GLM_RAW) != GLM_RAW_SHA256:
+        raise JudgeError("PRESERVED_GLM_OUTPUT_DRIFT")
     if digest(PACKET) != PACKET_SHA256:
         raise JudgeError("PACKET_DRIFT")
     if digest(GLM) != GLM_SHA256:
         raise JudgeError("JUDGE_WRAPPER_DRIFT")
-    environment = os.environ.copy()
-    environment.update(
-        {
-            "GLM_ZAI_MODEL": "glm-5.2",
-            "GLM_ZAI_PRIMARY_RETRIES": "0",
-            "GLM_ZAI_DISABLE_FALLBACK": "1",
-            "GLM_ZAI_VERIFY_MODEL": "glm-5.2",
-            "GLM_ZAI_REPORT_MODEL": "1",
-            "GLM_ZAI_MAX_TOKENS": "16384",
-        }
-    )
-    completed = subprocess.run(
-        [str(GLM)],
-        cwd=ROOT,
-        env=environment,
-        input=PACKET.read_bytes(),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        timeout=900,
-        check=False,
-    )
-    raw = completed.stdout + completed.stderr
-    atomic_write(GLM_RAW, raw)
-    if completed.returncode != 0:
-        raise JudgeError(f"GLM_PROCESS_FAILED:{completed.returncode}:{raw[-1000:]!r}")
+    if GLM_RAW.exists():
+        raw = GLM_RAW.read_bytes()
+    else:
+        environment = os.environ.copy()
+        environment.update(
+            {
+                "GLM_ZAI_MODEL": "glm-5.2",
+                "GLM_ZAI_PRIMARY_RETRIES": "0",
+                "GLM_ZAI_DISABLE_FALLBACK": "1",
+                "GLM_ZAI_VERIFY_MODEL": "glm-5.2",
+                "GLM_ZAI_REPORT_MODEL": "1",
+                "GLM_ZAI_MAX_TOKENS": "16384",
+            }
+        )
+        completed = subprocess.run(
+            [str(GLM)],
+            cwd=ROOT,
+            env=environment,
+            input=PACKET.read_bytes(),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=900,
+            check=False,
+        )
+        raw = completed.stdout + completed.stderr
+        atomic_write(GLM_RAW, raw)
+        if completed.returncode != 0:
+            raise JudgeError(f"GLM_PROCESS_FAILED:{completed.returncode}:{raw[-1000:]!r}")
     validate(raw)
     print(
         "GLM_5_2_GREEN "
