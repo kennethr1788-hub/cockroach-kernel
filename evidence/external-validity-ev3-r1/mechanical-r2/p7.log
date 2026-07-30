@@ -1,0 +1,34 @@
+test_canonical_sorted_compact (test_records.TestCanonicalAndPaths.test_canonical_sorted_compact) ... ok
+test_fixtures_are_canonical (test_records.TestCanonicalAndPaths.test_fixtures_are_canonical) ... ok
+test_loss_receipt_exact_manifest_link (test_records.TestCanonicalAndPaths.test_loss_receipt_exact_manifest_link) ... ok
+test_record_cap (test_records.TestCanonicalAndPaths.test_record_cap) ... ok
+test_symlink_and_executable_flags (test_records.TestCanonicalAndPaths.test_symlink_and_executable_flags) ... ok
+test_unknown_field (test_records.TestCanonicalAndPaths.test_unknown_field) ... ok
+test_unsafe_path_classes (test_records.TestCanonicalAndPaths.test_unsafe_path_classes) ... ok
+test_exact_receipt_chain (test_records.TestLinkageAndFreshContext.test_exact_receipt_chain) ... ok
+test_five_repeat_fresh_context (test_records.TestLinkageAndFreshContext.test_five_repeat_fresh_context) ... ok
+test_fresh_context_passes_without_hidden_state (test_records.TestLinkageAndFreshContext.test_fresh_context_passes_without_hidden_state) ... ok
+test_fresh_context_refuses_feature_drift (test_records.TestLinkageAndFreshContext.test_fresh_context_refuses_feature_drift) ... ok
+test_fresh_context_refuses_wrong_candidate (test_records.TestLinkageAndFreshContext.test_fresh_context_refuses_wrong_candidate) ... ok
+test_fresh_process_workspace_bytes (test_records.TestLinkageAndFreshContext.test_fresh_process_workspace_bytes) ... ok
+test_unrecovered_items_are_explicit (test_records.TestLinkageAndFreshContext.test_unrecovered_items_are_explicit) ... ok
+test_canonical_id_tiebreak (test_records.TestSelection.test_canonical_id_tiebreak) ... ok
+test_each_refusal_vector (test_records.TestSelection.test_each_refusal_vector) ... ok
+test_five_repeat_semantics (test_records.TestSelection.test_five_repeat_semantics) ... ok
+test_malformed_candidate_refuses (test_records.TestSelection.test_malformed_candidate_refuses) ... ok
+test_malformed_context_fails_closed (test_records.TestSelection.test_malformed_context_fails_closed) ... ok
+test_maximum_prefix_wins (test_records.TestSelection.test_maximum_prefix_wins) ... ok
+test_no_candidate_refuses (test_records.TestSelection.test_no_candidate_refuses) ... ok
+test_order_independent (test_records.TestSelection.test_order_independent) ... ok
+test_stale_source_receipt_refuses (test_records.TestSelection.test_stale_source_receipt_refuses) ... ok
+test_surviving_content_hash_drift_refuses (test_records.TestSelection.test_surviving_content_hash_drift_refuses) ... ok
+test_consumption_precedes_promotion (test_records.TestWarrant.test_consumption_precedes_promotion) ... ok
+test_duplicate_warrant_rejected (test_records.TestWarrant.test_duplicate_warrant_rejected) ... ok
+test_interrupt_consumes_without_promotion (test_records.TestWarrant.test_interrupt_consumes_without_promotion) ... ok
+test_replay_refuses (test_records.TestWarrant.test_replay_refuses) ... ok
+test_tampered_decision_does_not_consume (test_records.TestWarrant.test_tampered_decision_does_not_consume) ... ok
+
+----------------------------------------------------------------------
+Ran 29 tests in 0.010s
+
+OK

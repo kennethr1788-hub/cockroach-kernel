@@ -1,0 +1,65 @@
+test_actor_route_is_exact_local_model (test_r3_hidden_campaign.HiddenCampaignContractTests.test_actor_route_is_exact_local_model) ... ok
+test_actor_schema_accepts_exact_stop (test_r3_hidden_campaign.HiddenCampaignContractTests.test_actor_schema_accepts_exact_stop) ... ok
+test_actor_schema_rejects_extra_fields (test_r3_hidden_campaign.HiddenCampaignContractTests.test_actor_schema_rejects_extra_fields) ... ok
+test_derivation_is_deterministic_and_index_bound (test_r3_hidden_campaign.HiddenCampaignContractTests.test_derivation_is_deterministic_and_index_bound) ... ok
+test_expected_argv_is_exact_public_surface (test_r3_hidden_campaign.HiddenCampaignContractTests.test_expected_argv_is_exact_public_surface) ... ok
+test_matrix_and_run_count (test_r3_hidden_campaign.HiddenCampaignContractTests.test_matrix_and_run_count) ... ok
+test_preflight_does_not_create_seed (test_r3_hidden_campaign.HiddenCampaignContractTests.test_preflight_does_not_create_seed) ... ok
+test_unsafe_prompt_labels_injection_as_data (test_r3_hidden_campaign.HiddenCampaignContractTests.test_unsafe_prompt_labels_injection_as_data) ... ok
+test_candidate_bindings_are_current (test_r3_preflight.R3PreflightUnitTests.test_candidate_bindings_are_current) ... ok
+test_clean_ledger_and_all_required_faults (test_r3_preflight.R3PreflightUnitTests.test_clean_ledger_and_all_required_faults) ... ok
+test_profile_is_deny_default_and_network_denied (test_r3_preflight.R3PreflightUnitTests.test_profile_is_deny_default_and_network_denied) ... ok
+test_residue_mutations_and_clean_control (test_r3_preflight.R3PreflightUnitTests.test_residue_mutations_and_clean_control) ... ok
+test_scorer_rejects_all_faults_and_allows_public_discovery (test_r3_preflight.R3PreflightUnitTests.test_scorer_rejects_all_faults_and_allows_public_discovery) ... ok
+test_actor_schema_has_no_authority_bearing_fields (test_r4_hidden_campaign.R4HiddenCampaignTests.test_actor_schema_has_no_authority_bearing_fields) ... ok
+test_decoder_rejects_mismatched_exit (test_r4_hidden_campaign.R4HiddenCampaignTests.test_decoder_rejects_mismatched_exit) ... ok
+test_expected_exit_verdict_contract (test_r4_hidden_campaign.R4HiddenCampaignTests.test_expected_exit_verdict_contract) ... ok
+test_injection_prompt_has_no_paths_or_expected_verdict (test_r4_hidden_campaign.R4HiddenCampaignTests.test_injection_prompt_has_no_paths_or_expected_verdict) ... ok
+test_preflight_functions_do_not_create_seed_or_lock (test_r4_hidden_campaign.R4HiddenCampaignTests.test_preflight_functions_do_not_create_seed_or_lock) ... ok
+test_sequence_is_balanced_deterministic_and_seed_dependent (test_r4_hidden_campaign.R4HiddenCampaignTests.test_sequence_is_balanced_deterministic_and_seed_dependent) ... ok
+test_validator_accepts_exact_invocation (test_r4_hidden_campaign.R4HiddenCampaignTests.test_validator_accepts_exact_invocation) ... ok
+test_validator_rejects_extra_path (test_r4_hidden_campaign.R4HiddenCampaignTests.test_validator_rejects_extra_path) ... ok
+test_validator_rejects_wrong_invocation (test_r4_hidden_campaign.R4HiddenCampaignTests.test_validator_rejects_wrong_invocation) ... ok
+test_controller_constructs_frozen_argv (test_r4_public_canary.R4PublicCanaryContractTests.test_controller_constructs_frozen_argv) ... ok
+test_exactly_three_fixed_public_cases (test_r4_public_canary.R4PublicCanaryContractTests.test_exactly_three_fixed_public_cases) ... ok
+test_typed_fields_have_no_argv_or_verdict (test_r4_public_canary.R4PublicCanaryContractTests.test_typed_fields_have_no_argv_or_verdict) ... ok
+test_validator_accepts_exact_typed_proposal (test_r4_public_canary.R4PublicCanaryContractTests.test_validator_accepts_exact_typed_proposal) ... ok
+test_validator_rejects_extra_field (test_r4_public_canary.R4PublicCanaryContractTests.test_validator_rejects_extra_field) ... ok
+test_validator_rejects_path_mismatch (test_r4_public_canary.R4PublicCanaryContractTests.test_validator_rejects_path_mismatch) ... ok
+test_actor_schema_has_no_authority_bearing_fields (test_r4_public_canary_r2.R4PublicCanaryR2ContractTests.test_actor_schema_has_no_authority_bearing_fields) ... ok
+test_decoder_accepts_documented_exit_pairs (test_r4_public_canary_r2.R4PublicCanaryR2ContractTests.test_decoder_accepts_documented_exit_pairs) ... ok
+test_decoder_rejects_exit_verdict_mismatch (test_r4_public_canary_r2.R4PublicCanaryR2ContractTests.test_decoder_rejects_exit_verdict_mismatch) ... ok
+test_exactly_three_fixed_cases_and_exit_verdict_pairs (test_r4_public_canary_r2.R4PublicCanaryR2ContractTests.test_exactly_three_fixed_cases_and_exit_verdict_pairs) ... ok
+test_prompt_injection_is_present_but_paths_are_not_declared (test_r4_public_canary_r2.R4PublicCanaryR2ContractTests.test_prompt_injection_is_present_but_paths_are_not_declared) ... ok
+test_validator_accepts_exact_action_and_case (test_r4_public_canary_r2.R4PublicCanaryR2ContractTests.test_validator_accepts_exact_action_and_case) ... ok
+test_validator_rejects_extra_path (test_r4_public_canary_r2.R4PublicCanaryR2ContractTests.test_validator_rejects_extra_path) ... ok
+test_validator_rejects_wrong_case (test_r4_public_canary_r2.R4PublicCanaryR2ContractTests.test_validator_rejects_wrong_case) ... ok
+test_frozen_candidate_has_no_hidden_scenario_binding (test_surface_probe.SurfaceProbeTests.test_frozen_candidate_has_no_hidden_scenario_binding) ... ERROR
+test_hash_constants_match_frozen_candidate_files (test_surface_probe.SurfaceProbeTests.test_hash_constants_match_frozen_candidate_files) ... FAIL
+
+======================================================================
+ERROR: test_frozen_candidate_has_no_hidden_scenario_binding (test_surface_probe.SurfaceProbeTests.test_frozen_candidate_has_no_hidden_scenario_binding)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<REDACTED_LOCAL_PATH>", line 20, in test_frozen_candidate_has_no_hidden_scenario_binding
+    result = surface_probe.probe()
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "<REDACTED_LOCAL_PATH>", line 106, in probe
+    raise RuntimeError("FROZEN_CANDIDATE_HASH_MISMATCH")
+RuntimeError: FROZEN_CANDIDATE_HASH_MISMATCH
+
+======================================================================
+FAIL: test_hash_constants_match_frozen_candidate_files (test_surface_probe.SurfaceProbeTests.test_hash_constants_match_frozen_candidate_files)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<REDACTED_LOCAL_PATH>", line 31, in test_hash_constants_match_frozen_candidate_files
+    self.assertEqual(
+AssertionError: '5aec830e88570393e087b0b9f8b4d1217ef8879cb5c0c643e74a1a2e2e5625e7' != 'ca8d0a873ddfa1d628f54ef5ca989b88e087b967f7d366bca66d8b59249b6dbd'
+- 5aec830e88570393e087b0b9f8b4d1217ef8879cb5c0c643e74a1a2e2e5625e7
++ ca8d0a873ddfa1d628f54ef5ca989b88e087b967f7d366bca66d8b59249b6dbd
+
+
+----------------------------------------------------------------------
+Ran 38 tests in 0.013s
+
+FAILED (failures=1, errors=1)
