@@ -70,7 +70,7 @@ def validate_glm(raw: bytes) -> None:
     text = raw.decode("utf-8", "strict")
     required_patterns = (
         r"glm-zai:\s*served by glm-5\.2",
-        rf"review[- _]content(?:\s+sha-256)?\**:\s*`?{REVIEW_CONTENT_SHA256}`?",
+        rf"review[- _]content(?:[- _]+sha-256)?\**:\s*`?{REVIEW_CONTENT_SHA256}`?",
         r"recusal(?:[- ]status|[- ]check)?\**:\s*`?(?:NOT_RECUSED|clear)`?",
         r"verdict\**:\s*`?GREEN`?",
     )

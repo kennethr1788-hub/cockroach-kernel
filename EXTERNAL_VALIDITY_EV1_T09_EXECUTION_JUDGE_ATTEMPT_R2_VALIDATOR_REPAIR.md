@@ -15,7 +15,10 @@
 - `DELETION_STARTED`: `FALSE`
 
 The local validator expected a space or hyphen between `REVIEW` and `CONTENT`,
-while the valid GLM response used `REVIEW_CONTENT_SHA-256`. The repair permits
-an underscore in that label, binds the preserved R2 output by SHA-256, and
-resumes at AGY without rerunning or rewriting the GLM result. No product,
-packet, task, threshold, evidence, or verdict content changed.
+and initially still expected whitespace before `SHA-256`, while the valid GLM
+response used `REVIEW_CONTENT_SHA-256`. The completed repair permits underscore
+separators in both positions, binds the preserved R2 output by SHA-256, and
+resumes at AGY without rerunning or rewriting the GLM result. The incomplete
+first parser edit is preserved in commit
+`7eec77bbad56aa51882304eac6c143dfabe96d78`. No product, packet, task,
+threshold, evidence, or verdict content changed.
