@@ -36,8 +36,17 @@ REQUEST = RECOVERY / "request.json"
 PRODUCT_RUNTIME = CONTROL / "product-runtime"
 DEPENDENCY_RUNTIME = CAMPAIGN / "dependency-runtime"
 PREPARE_RECEIPT = CONTROL / "CAPTURE_PREPARE_RECEIPT.json"
+PREPARE_R2_RECEIPT = CONTROL / "CAPTURE_PREPARE_RECEIPT_R2.json"
 TASK_RECEIPT = CONTROL / "TASK_EXECUTION_RECEIPT.json"
 FAILURE_RECEIPT = CONTROL / "TASK_FAILURE_RECEIPT.json"
+EXECUTION_CAMPAIGN = Path("/private/tmp/ck-ev1-t01-r2")
+EXECUTION_RECOVERY = EXECUTION_CAMPAIGN / "recovery"
+EXECUTION_SUCCESSOR = EXECUTION_RECOVERY / "workspace"
+EXECUTION_REPRESENTATIONS = EXECUTION_RECOVERY / "representations"
+EXECUTION_CUSTODY = EXECUTION_RECOVERY / "custody"
+EXECUTION_OUTPUT = EXECUTION_RECOVERY / "output"
+EXECUTION_TEMP = EXECUTION_RECOVERY / "tmp"
+EXECUTION_REQUEST = EXECUTION_RECOVERY / "request.json"
 SOURCE_REPO = Path.home() / "master-vault" / "coffee"
 SOURCE_COMMIT = "1a92380a9edf12337f80b3c42ba098a7c1724664"
 SOURCE_MANIFEST_SHA256 = "d78d1a589fe487368f797e3446ba8f1d7d22d7c08554ce91be2ece32cd8a2706"
@@ -384,6 +393,99 @@ def prepare() -> int:
     return 0
 
 
+def prepare_r2() -> int:
+    """Bind the repaired temp-root execution topology and prove its strict canary."""
+    if PREPARE_R2_RECEIPT.exists() or TASK_RECEIPT.exists():
+        raise T01Error("T01_PREPARE_R2_ALREADY_EXISTS")
+    prepared = load_receipt(PREPARE_RECEIPT)
+    if verify_declared_state() != prepared["declared_state"]:
+        raise T01Error("POST_PREPARE_STATE_DRIFT")
+    if digest(REQUEST) != prepared["request_sha256"]:
+        raise T01Error("CAPTURE_REQUEST_DRIFT")
+    if tree_hashes(REPRESENTATIONS) != prepared["representation_hashes"]:
+        raise T01Error("CAPTURE_REPRESENTATION_DRIFT")
+    if EXECUTION_CAMPAIGN.exists():
+        raise T01Error("EXECUTION_TEMP_ROOT_PREEXISTS")
+    r3 = load_r3()
+    toolchain, venv, entrypoint = stage_product(r3)
+    canary = EXECUTION_CAMPAIGN / "canary"
+    canary.mkdir(parents=True, mode=0o700)
+    r3.make_fixture(canary, "ev1-t01-r2-predelete")
+    before = r3.tree(canary / "representations")
+    public_root = CONTROL / "public"
+    public_root.mkdir(exist_ok=True)
+    (EXECUTION_CAMPAIGN / "empty-home").mkdir(mode=0o700)
+    args = [
+        "recover",
+        "--request", str(canary / "request.json"),
+        "--sandbox-root", str(canary),
+        "--workspace", str(canary / "workspace"),
+        "--representation-root", str(canary / "representations"),
+        "--custody-root", str(canary / "custody"),
+        "--output-root", str(canary / "output"),
+    ]
+    command = r3.seatbelt_command(entrypoint, toolchain, venv, public_root, canary, args)
+    env = {
+        "HOME": str(EXECUTION_CAMPAIGN / "empty-home"),
+        "LANG": "C",
+        "LC_ALL": "C",
+        "PATH": "/usr/bin:/bin",
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "PYTHONHASHSEED": "0",
+        "TMPDIR": str(canary / "tmp"),
+    }
+    start = time.monotonic_ns()
+    completed = run(command, cwd=ROOT, env=env, timeout=120)
+    elapsed = time.monotonic_ns() - start
+    canary_record = record_command("t01-r2-predelete-canary", completed)
+    if completed.returncode != 0:
+        raise T01Error(f"R2_STRICT_CANARY_FAILED:{completed.returncode}")
+    summary = json.loads(completed.stdout)
+    if summary.get("verdict") != "PROMOTE" or summary.get("fresh_context_continued") is not True:
+        raise T01Error("R2_STRICT_CANARY_NOT_PROMOTED")
+    if r3.tree(canary / "representations") != before:
+        raise T01Error("R2_STRICT_CANARY_REPRESENTATION_MUTATED")
+    shutil.rmtree(EXECUTION_CAMPAIGN)
+    if EXECUTION_CAMPAIGN.exists():
+        raise T01Error("R2_STRICT_CANARY_TEARDOWN_FAILED")
+    body = {
+        "version": "ev1-t01-capture-prepare-v2",
+        "status": "CAPTURE_PREPARED_R2_STRICT_CANARY_GREEN_EXECUTION_NOT_STARTED",
+        "task_id": "EV1-T01",
+        "parent_prepare_file_sha256": digest(PREPARE_RECEIPT),
+        "parent_prepare_receipt_sha256": prepared["receipt_sha256"],
+        "runner_sha256": digest(Path(__file__).resolve()),
+        "execution_root_class": "BOUNDED_PRIVATE_TMP",
+        "execution_root_label": "ck-ev1-t01-r2",
+        "source_capture_remains_project_local": True,
+        "source_capture_representation_hashes": prepared["representation_hashes"],
+        "execution_copy_required_before_deletion": True,
+        "seatbelt_profile_sha256": digest(r3.PROFILE),
+        "offline_profile_sha256": digest(CONTROL / "offline.sb"),
+        "strict_canary": {
+            **canary_record,
+            "elapsed_monotonic_ns": elapsed,
+            "summary": summary,
+            "representation_unchanged": True,
+            "teardown_verified": True,
+        },
+        "historical_project_path_canary": {
+            "result": "BLOCKED_PRESERVED",
+            "reason": "ROOT_TOPOLOGY_UNSAFE",
+            "strict_log_sha256": digest(CONTROL / "predelete-canary.log"),
+            "unsandboxed_diagnostic_exit": 0,
+            "unsandboxed_diagnostic_log_sha256": digest(
+                CONTROL / "predelete-canary-unsandboxed-diagnostic.log"
+            ),
+        },
+        "deletion_started": False,
+        "recovery_started": False,
+    }
+    receipt_hash, file_hash = atomic_record(PREPARE_R2_RECEIPT, body)
+    print(canonical({"file_sha256": file_hash, "receipt_sha256": receipt_hash, "status": body["status"]}).decode())
+    return 0
+
+
 def load_receipt(path: Path) -> dict[str, Any]:
     raw = path.read_bytes()
     if not raw.endswith(b"\n"):
@@ -451,10 +553,41 @@ def execute() -> int:
         raise T01Error("POST_PREPARE_STATE_DRIFT")
     if digest(REQUEST) != prepared["request_sha256"] or tree_hashes(REPRESENTATIONS) != prepared["representation_hashes"]:
         raise T01Error("CAPTURE_EVIDENCE_DRIFT")
+    prepared_r2 = load_receipt(PREPARE_R2_RECEIPT)
+    if prepared_r2["status"] != "CAPTURE_PREPARED_R2_STRICT_CANARY_GREEN_EXECUTION_NOT_STARTED":
+        raise T01Error("PREPARE_R2_STATUS_INVALID")
+    if prepared_r2["parent_prepare_file_sha256"] != digest(PREPARE_RECEIPT):
+        raise T01Error("PREPARE_R2_PARENT_DRIFT")
+    if prepared_r2["runner_sha256"] != digest(Path(__file__).resolve()):
+        raise T01Error("RUNNER_DRIFT")
+    if prepared_r2["offline_profile_sha256"] != digest(CONTROL / "offline.sb"):
+        raise T01Error("OFFLINE_PROFILE_DRIFT")
     r3 = load_r3()
     toolchain, venv, entrypoint = stage_product(r3)
     if digest(entrypoint) != prepared["product_entrypoint_sha256"]:
         raise T01Error("PRODUCT_ENTRYPOINT_DRIFT")
+
+    if EXECUTION_CAMPAIGN.exists():
+        raise T01Error("EXECUTION_TEMP_ROOT_PREEXISTS")
+    for path in (
+        EXECUTION_REPRESENTATIONS,
+        EXECUTION_CUSTODY,
+        EXECUTION_OUTPUT,
+        EXECUTION_TEMP,
+    ):
+        path.mkdir(parents=True, mode=0o700)
+    (EXECUTION_CAMPAIGN / "empty-home").mkdir(mode=0o700)
+    shutil.copytree(
+        REPRESENTATIONS,
+        EXECUTION_REPRESENTATIONS,
+        dirs_exist_ok=True,
+        copy_function=shutil.copy2,
+    )
+    atomic_bytes(EXECUTION_REQUEST, REQUEST.read_bytes(), 0o600)
+    if tree_hashes(EXECUTION_REPRESENTATIONS) != prepared["representation_hashes"]:
+        raise T01Error("EXECUTION_REPRESENTATION_COPY_MISMATCH")
+    if digest(EXECUTION_REQUEST) != prepared["request_sha256"]:
+        raise T01Error("EXECUTION_REQUEST_COPY_MISMATCH")
 
     node_modules = ORIGINAL / "node_modules"
     if node_modules.is_symlink() or not node_modules.is_dir():
@@ -472,26 +605,28 @@ def execute() -> int:
     kill = guarded_destroy()
 
     omitted = {"src/app/page.tsx", "scripts/verify-home-tagline.mjs"}
-    baseline_files = export_baseline(SUCCESSOR, omit=omitted)
-    if (SUCCESSOR / ".git").exists() or baseline_files != 75:
+    baseline_files = export_baseline(EXECUTION_SUCCESSOR, omit=omitted)
+    if (EXECUTION_SUCCESSOR / ".git").exists() or baseline_files != 75:
         raise T01Error("SUCCESSOR_BASELINE_INVALID")
     empty_history = True
 
     public_root = CONTROL / "public"
     public_root.mkdir(exist_ok=True)
-    empty_home = CAMPAIGN / "empty-home"
-    empty_home.mkdir(exist_ok=True)
+    empty_home = EXECUTION_CAMPAIGN / "empty-home"
     args = [
         "recover",
-        "--request", str(REQUEST),
-        "--sandbox-root", str(RECOVERY),
-        "--workspace", str(SUCCESSOR),
-        "--representation-root", str(REPRESENTATIONS),
-        "--custody-root", str(CUSTODY),
-        "--output-root", str(OUTPUT),
+        "--request", str(EXECUTION_REQUEST),
+        "--sandbox-root", str(EXECUTION_RECOVERY),
+        "--workspace", str(EXECUTION_SUCCESSOR),
+        "--representation-root", str(EXECUTION_REPRESENTATIONS),
+        "--custody-root", str(EXECUTION_CUSTODY),
+        "--output-root", str(EXECUTION_OUTPUT),
     ]
-    command = r3.seatbelt_command(entrypoint, toolchain, venv, public_root, RECOVERY, args)
-    recovery_env = minimal_env(path="/usr/bin:/bin", tmpdir=TEMP)
+    command = r3.seatbelt_command(
+        entrypoint, toolchain, venv, public_root, EXECUTION_RECOVERY, args
+    )
+    recovery_env = minimal_env(path="/usr/bin:/bin", tmpdir=EXECUTION_TEMP)
+    recovery_env["HOME"] = str(empty_home)
     invocation_start = time.monotonic_ns()
     recovered = run(command, cwd=ROOT, env=recovery_env, timeout=120)
     productive_ns = time.monotonic_ns() - invocation_start
@@ -501,8 +636,10 @@ def execute() -> int:
     summary = json.loads(recovered.stdout)
     if summary.get("verdict") != "PROMOTE" or summary.get("fresh_context_continued") is not True:
         raise T01Error("PRODUCT_RECOVERY_NOT_PROMOTED")
-    if tree_hashes(REPRESENTATIONS) != prepared["representation_hashes"]:
+    if tree_hashes(EXECUTION_REPRESENTATIONS) != prepared["representation_hashes"]:
         raise T01Error("REPRESENTATION_MUTATED")
+    if tree_hashes(REPRESENTATIONS) != prepared["representation_hashes"]:
+        raise T01Error("AUTHORITATIVE_CAPTURE_MUTATED")
 
     npm = shutil.which("npm")
     node = shutil.which("node")
@@ -511,7 +648,7 @@ def execute() -> int:
     bins = DEPENDENCY_RUNTIME / "node_modules" / ".bin"
     acceptance_env = minimal_env(
         path=f"{bins}:{Path(npm).parent}:/usr/bin:/bin",
-        tmpdir=TEMP,
+        tmpdir=EXECUTION_TEMP,
         npm_cache=CONTROL / "npm-cache",
     )
     acceptance: dict[str, Any] = {}
@@ -524,7 +661,7 @@ def execute() -> int:
     for name, argv, timeout in commands:
         completed = run(
             ["/usr/bin/sandbox-exec", "-f", str(offline_profile), *argv],
-            cwd=SUCCESSOR,
+            cwd=EXECUTION_SUCCESSOR,
             env=acceptance_env,
             timeout=timeout,
         )
@@ -533,13 +670,16 @@ def execute() -> int:
             raise T01Error(f"SUCCESSOR_ACCEPTANCE_FAILED:{name}")
     acceptance_ns = time.monotonic_ns() - invocation_start
 
-    restored = {relative: digest(safe_file(SUCCESSOR, relative)) for relative in DECLARED}
+    restored = {
+        relative: digest(safe_file(EXECUTION_SUCCESSOR, relative))
+        for relative in DECLARED
+    }
     if restored != EXPECTED_HASHES:
         raise T01Error("SUCCESSOR_WORK_UNITS_MISMATCH")
     process_scan = run(["ps", "-axo", "pid=,command="], cwd=ROOT, timeout=30)
     if process_scan.returncode != 0:
         raise T01Error("PROCESS_RESIDUE_SCAN_FAILED")
-    markers = (str(ORIGINAL), str(RECOVERY))
+    markers = (str(ORIGINAL), str(EXECUTION_RECOVERY))
     residue_processes: list[str] = []
     for raw_line in process_scan.stdout.splitlines():
         line = raw_line.decode("utf-8", "replace").strip()
@@ -551,8 +691,18 @@ def execute() -> int:
     if residue_processes:
         raise T01Error("TASK_PROCESS_RESIDUE")
 
-    output_hashes = tree_hashes(OUTPUT)
-    custody_hashes = tree_hashes(CUSTODY)
+    output_hashes = tree_hashes(EXECUTION_OUTPUT)
+    custody_hashes = tree_hashes(EXECUTION_CUSTODY)
+    snapshot = CONTROL / "POST_RECOVERY_SNAPSHOT"
+    if snapshot.exists():
+        raise T01Error("POST_RECOVERY_SNAPSHOT_PREEXISTS")
+    shutil.copytree(EXECUTION_OUTPUT, snapshot / "output", copy_function=shutil.copy2)
+    shutil.copytree(EXECUTION_CUSTODY, snapshot / "custody", copy_function=shutil.copy2)
+    for relative in DECLARED:
+        target = snapshot / "restored" / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        atomic_bytes(target, safe_file(EXECUTION_SUCCESSOR, relative).read_bytes())
+    snapshot_hashes = tree_hashes(snapshot)
     body = {
         "version": "ev1-task-execution-receipt-v1",
         "status": "MECHANICAL_TASK_COMPLETE_OPERATOR_OBSERVATION_REQUIRED",
@@ -564,6 +714,8 @@ def execute() -> int:
         "project_class": "SMALL_SINGLE_PACKAGE",
         "capture_prepare_file_sha256": digest(PREPARE_RECEIPT),
         "capture_prepare_receipt_sha256": prepared["receipt_sha256"],
+        "capture_prepare_r2_file_sha256": digest(PREPARE_R2_RECEIPT),
+        "capture_prepare_r2_receipt_sha256": prepared_r2["receipt_sha256"],
         "capture_declaration": CAPTURE_DECLARATION,
         "capture_declaration_utc": CAPTURE_DECLARATION_UTC,
         "state_mix": {"committed": True, "uncommitted": True, "untracked": True, "human_edit": True},
@@ -571,12 +723,15 @@ def execute() -> int:
         "usable_work_units_after_continuation": 2,
         "kill": kill,
         "empty_history_successor": empty_history,
+        "execution_root_class": "BOUNDED_PRIVATE_TMP",
+        "recovery_home_root_class": "EMPTY_EXECUTION_TEMP",
         "baseline_files_recreated": baseline_files,
         "dependency_runtime_tree_sha256": dependency_tree_hash,
         "recovery": recovery_record,
         "recovery_summary": summary,
         "output_hashes": output_hashes,
         "custody_hashes": custody_hashes,
+        "post_recovery_snapshot_hashes": snapshot_hashes,
         "acceptance_command": "npm run typecheck && npm run build && node scripts/verify-home-tagline.mjs",
         "acceptance": acceptance,
         "invocation_to_productive_continuation_monotonic_ns": productive_ns,
@@ -605,10 +760,14 @@ def execute() -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("phase", choices=("prepare", "execute"))
+    parser.add_argument("phase", choices=("prepare", "prepare-r2", "execute"))
     args = parser.parse_args()
     try:
-        return prepare() if args.phase == "prepare" else execute()
+        if args.phase == "prepare":
+            return prepare()
+        if args.phase == "prepare-r2":
+            return prepare_r2()
+        return execute()
     except (OSError, ValueError, json.JSONDecodeError, subprocess.TimeoutExpired, T01Error) as exc:
         reason = str(exc) or exc.__class__.__name__
         result = {"status": "EV1_T01_BLOCKED", "reason": reason}
@@ -622,7 +781,7 @@ def main() -> int:
                         "phase": getattr(args, "phase", "ARGUMENT_PARSE"),
                         "reason": reason,
                         "original_workspace_exists": ORIGINAL.exists(),
-                        "successor_workspace_exists": SUCCESSOR.exists(),
+                        "successor_workspace_exists": EXECUTION_SUCCESSOR.exists(),
                         "capture_prepare_exists": PREPARE_RECEIPT.exists(),
                         "task_execution_receipt_exists": TASK_RECEIPT.exists(),
                         "utc_recorded": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
