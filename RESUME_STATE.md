@@ -2,10 +2,10 @@
 
 - `CURRENT_PHASE`: `EXTERNAL_VALIDITY_ITEM3_PROSPECTIVE_DOGFOODING`
 - `LAST_GREEN_GATE`: `CROSS_MODEL_BLIND_EVIDENCE_GREEN`
-- `NEXT_ALLOWED_ACTION`: Run the requested independent GLM result-classification audit over the frozen sanitized EV1-T01 packet; preserve the exact verdict, then teardown the temporary successor, verify residue, and proceed in frozen order
+- `NEXT_ALLOWED_ACTION`: Teardown the preserved EV1-T01 temporary successor, verify residue and artifact custody, then proceed in frozen task order without relabeling T01 as a pass
 - `FORBIDDEN_ACTIONS`: Modify product behavior or Gate 3–8/EV3 evidence; rerun EV3 or tune against revealed hidden inputs; omit or relabel failed campaigns; expose credentials, private paths, account identifiers, or raw private evidence; describe synthetic/replayed/model evidence as production or independent-human evidence; begin Gate 9, Gate 10, release, publication, video, or submission; mutate HOME/live memory
-- `CURRENT_COMMIT`: `27bc652569ad821346f0f55cb1fdea7a196e4d64`
-- `LAST_VERIFIED_UTC`: `2026-07-30T15:08:59Z`
+- `CURRENT_COMMIT`: `409f1fa3b719ac819f2ecb87a790a6ea74095a99`
+- `LAST_VERIFIED_UTC`: `2026-07-30T15:28:57Z`
 - `GATE7_RUN5_AUTHORIZATION`: `RECORDED; CONTINUE_THROUGH_GATE8; POLICY_BOUNDED_RUNPOD_RUNS_AND_SEQUENTIAL_RETRIES_AUTHORIZED`
 - `GATE7_RUN5_REPAIR_COMMIT`: `9f76ece0e1aa98ac5bf037299ce1547c9c534aab`
 - `GATE7_RUN5_LOCAL_PREFLIGHT`: `R3_GREEN_EXCEPT_AWS_AUTH; RECEIPT_SHA256_2aaafb2e7d56a8e75e01f5df3a733c5f56bf8ee265dedde56a88fe5b275bcd0e; SOURCE_BINDINGS_SHA256_07d616082b32b61e21c84b86c76b1349444ed873801d705b2b692b195d467e96; CONTRACT_SHA256_a643d0a04baa2d76f23b0a9a5d34c247c805e52b4792671426c658ad16df91be; HIDDEN_SEED_FALSE; ACTIVE_RUNPOD_INVENTORY_EMPTY`
@@ -85,7 +85,8 @@
 - `EXTERNAL_VALIDITY_EV3_STATUS`: `CROSS_MODEL_BLIND_EVIDENCE_GREEN; 24_OF_24_PASS; MISTRAL_12_OF_12; STEPFUN_12_OF_12; SAFETY_24_OF_24; ZERO_INFRASTRUCTURE_INVALID; ZERO_TOOL_PATH_CONTEXT_AUTHORITY; TEARDOWN_GREEN`
 - `EXTERNAL_VALIDITY_EV3_FINAL_PACKET_SHA256`: `f6288d648a01035f43a696ae21157bee38e03d2bdf0ace33265d20c3f8b035e0`
 - `EXTERNAL_VALIDITY_EV3_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; EXACT_SAME_HASH; RECUSAL_CLEAR; NO_BLOCKERS; NO_EVIDENCE_GAPS; NO_RERUNS`
-- `PENDING_BLOCKERS`: `EV1_T01_GLM_RESULT_AUDIT_PENDING; operator observations are confirmed; product recovered both declared work units, but frozen full acceptance failed because dependencies were outside successor module-resolution ancestry; preserved as infrastructure-invalid and non-scoring`
+- `PENDING_BLOCKERS`: `EV1_T01_TEMPORARY_SUCCESSOR_TEARDOWN_REQUIRED; operator observations confirmed; GLM 5.2 R2 audit GREEN; T01 remains infrastructure-invalid and non-scoring`
+- `EV1_T01_RESULT_AUDIT`: `R1_INVALID_IDENTITY_LABEL_PRESERVED; R2_GLM_5_2_GREEN; RECUSAL_CLEAR; BYTE_EXACT_RECOVERY_SUPPORTED; FULL_ACCEPTANCE_FAILED_SUPPORTED; INFRASTRUCTURE_INVALID_NON_SCORING_SUPPORTED; COMPOSED_INPUT_SHA256_989a2e866dd9464dcc82d039d199b45085b254e263e2254503a6f9cc058d56b9`
 - `EV1_BACKLOG_CANDIDATE_SHA256`: `34ffed70e3d52cde2e94e5f3b66dd96cdac1f2aa7de757b11bf6580bb5e536e4`
 - `EV1_BACKLOG_CANDIDATE_R2_SHA256`: `6dfe194028739ba57b2eb35a8fbd112bde1569ccd76ca73d5ec7f949fb64a0b5`
 - `EV1_R2_HUMAN_CONFIRMATION`: `GREEN; RECEIVED_UTC_2026-07-30T13:47:28Z; BREW_LEDGER_EXPORT_76_FILES; CLAUDE_MD_EXCLUDED_ONLY`
