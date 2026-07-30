@@ -648,7 +648,7 @@ def preflight() -> int:
 
     dependency_workspace = PREFLIGHT_CAMPAIGN / "dependency-canary" / "workspace"
     baseline_files = restore_baseline(dependency_workspace, set(DECLARED))
-    if baseline_files != 408 or (dependency_workspace / ".git").exists():
+    if baseline_files != 409 or (dependency_workspace / ".git").exists():
         raise T10Error("DEPENDENCY_CANARY_BASELINE_INVALID")
     copy_representations_into(dependency_workspace)
     dependency = clone_dependencies(dependency_workspace / "node_modules")
@@ -784,7 +784,7 @@ def execute() -> int:
         raise T10Error("DEPENDENCY_RUNTIME_DRIFT")
     kill = guarded_destroy()
     baseline_files = restore_baseline(EXECUTION_SUCCESSOR, set(DECLARED))
-    if baseline_files != 408 or (EXECUTION_SUCCESSOR / ".git").exists():
+    if baseline_files != 409 or (EXECUTION_SUCCESSOR / ".git").exists():
         raise T10Error("SUCCESSOR_BASELINE_INVALID")
     successor_dependency = clone_dependencies(EXECUTION_SUCCESSOR / "node_modules")
     if successor_dependency != dependency:
