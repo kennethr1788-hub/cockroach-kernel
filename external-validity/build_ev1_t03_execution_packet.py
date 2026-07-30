@@ -16,8 +16,8 @@ CAPTURE = CONTROL / "CAPTURE_RECEIPT.json"
 PREFLIGHT = CONTROL / "EXECUTION_PREFLIGHT_RECEIPT.json"
 PRODUCT_LOG = CONTROL / "t03-product-preflight.log"
 DEPENDENCY_LOG = CONTROL / "t03-dependency-topology-preflight.log"
-BODY = CONTROL / "EV1_T03_EXECUTION_PREFLIGHT_BODY_R1.md"
-PACKET = CONTROL / "EV1_T03_EXECUTION_PREFLIGHT_PACKET_R1.md"
+BODY = CONTROL / "EV1_T03_EXECUTION_PREFLIGHT_BODY_R2.md"
+PACKET = CONTROL / "EV1_T03_EXECUTION_PREFLIGHT_PACKET_R2.md"
 
 
 def sha256(raw: bytes) -> str:
@@ -113,11 +113,12 @@ def main() -> int:
         "- Deletion started: `FALSE`\n"
         "- Recovery started: `FALSE`\n"
         "- Operator observations and campaign teardown: `PENDING_AFTER_MECHANICAL_EXECUTION`\n",
-        "## Required verdict content\n\n"
-        "Return exactly one verdict block with: review-content hash; recusal status; `GREEN`, "
-        "`NOT_GREEN`, `BLOCKED`, or `INSUFFICIENT_EVIDENCE`; concrete blockers; non-blocking risks; "
-        "evidence gaps; and the specific mechanisms supporting the verdict. Do not include praise, "
-        "code, patches, or implementation directions.\n",
+        "## Verdict content\n\n"
+        "The transport wrapper's output contract is authoritative. If no wrapper supplies one, "
+        "return: review-content hash; recusal status; `GREEN`, `NOT_GREEN`, `BLOCKED`, or "
+        "`INSUFFICIENT_EVIDENCE`; concrete blockers; non-blocking risks; evidence gaps; and the "
+        "specific mechanisms supporting the verdict. Do not include praise, code, patches, or "
+        "implementation directions.\n",
         fenced("Exact operator authorization", "markdown", AUTHORIZATION.read_text()),
         fenced("Canonical capture receipt", "json", canonical_json_file(CAPTURE)),
         fenced("Canonical local execution-preflight receipt", "json", canonical_json_file(PREFLIGHT)),
@@ -129,8 +130,9 @@ def main() -> int:
     body_hash = sha256(body_raw)
     packet_header = (
         "REVIEW_CONTENT_SHA256: " + body_hash + "\n"
-        "Every judge receives the byte-identical review body below. Return this exact value as "
-        "REVIEW_CONTENT_SHA256. The transport wrapper may separately bind the full input-file hash.\n\n"
+        "Every judge receives the byte-identical review body below. This value identifies that "
+        "body; the transport wrapper may separately bind the full input-file hash and controls "
+        "the exact output schema.\n\n"
     ).encode("utf-8")
     packet_raw = packet_header + body_raw
     atomic_write(BODY, body_raw)
@@ -152,4 +154,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
