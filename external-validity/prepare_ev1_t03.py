@@ -201,7 +201,6 @@ def main() -> int:
     t02 = load_frozen(T02_RUNNER, T02_RUNNER_SHA256, "T02")
 
     CONTROL.mkdir(parents=True, mode=0o700)
-    WORKSPACE.mkdir(parents=True, mode=0o700)
     baseline_files = t01.export_baseline(WORKSPACE, omit=set())
     if baseline_files != 76:
         raise PreparationError("SOURCE_FILE_COUNT_MISMATCH")
