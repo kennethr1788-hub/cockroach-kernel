@@ -1,10 +1,11 @@
 # Resume State
 
-- `CURRENT_PHASE`: `HARDENING_8_EVIDENCE_PACKAGE`
-- `LAST_GREEN_GATE`: `HARDENING_7_EXPANDED_GREEN`
-- `NEXT_ALLOWED_ACTION`: Build the one-page official-criteria scorecard, canonical claim-to-evidence manifest, complete private raw-evidence index, sanitized public subset, and architecture boundary diagram; run all Gate 8 mechanical checks and independent review
-- `FORBIDDEN_ACTIONS`: Modify product behavior or Gate 7 evidence; omit or relabel failed campaigns; expose hidden inputs, credentials, private paths, account identifiers, or raw private evidence in the public subset; describe synthetic/replayed evidence as live or user evidence; begin Gate 9, S3-R2, release, publication, video, or submission; mutate HOME/live memory
-- `CURRENT_COMMIT`: `760fb8cbeccef40c3460b9e2e53a7319dd78c441`
+- `CURRENT_PHASE`: `HARDENING_9_EXACT_CLAIMS`
+- `LAST_GREEN_GATE`: `HARDENING_8_EVIDENCE_PACKAGE_GREEN`
+- `NEXT_ALLOWED_ACTION`: Gate 9 may derive exact public wording only from the canonical Gate 8 claim manifest, preserve every limitation, run claim contradiction and replay/live checks, and obtain fresh same-hash independent review
+- `FORBIDDEN_ACTIONS`: Modify product behavior or Gate 3–8 evidence; omit or relabel failed campaigns; expose hidden inputs, credentials, private paths, account identifiers, or raw private evidence; describe synthetic/replayed/model evidence as production or independent-human evidence; begin Gate 10, release, publication, video, or submission; mutate HOME/live memory
+- `CURRENT_COMMIT`: `667132a5e6f88456604c15eb37daacaffd151923`
+- `LAST_VERIFIED_UTC`: `2026-07-30T06:54:00Z`
 - `GATE7_RUN5_AUTHORIZATION`: `RECORDED; CONTINUE_THROUGH_GATE8; POLICY_BOUNDED_RUNPOD_RUNS_AND_SEQUENTIAL_RETRIES_AUTHORIZED`
 - `GATE7_RUN5_REPAIR_COMMIT`: `9f76ece0e1aa98ac5bf037299ce1547c9c534aab`
 - `GATE7_RUN5_LOCAL_PREFLIGHT`: `R3_GREEN_EXCEPT_AWS_AUTH; RECEIPT_SHA256_2aaafb2e7d56a8e75e01f5df3a733c5f56bf8ee265dedde56a88fe5b275bcd0e; SOURCE_BINDINGS_SHA256_07d616082b32b61e21c84b86c76b1349444ed873801d705b2b692b195d467e96; CONTRACT_SHA256_a643d0a04baa2d76f23b0a9a5d34c247c805e52b4792671426c658ad16df91be; HIDDEN_SEED_FALSE; ACTIVE_RUNPOD_INVENTORY_EMPTY`
@@ -46,6 +47,12 @@
 - `GATE7_RUN6_FINAL_PACKET_SHA256`: `1f9fa31524fb857a37b444df4b5ff7f1aa79847e941c863ffd1a993566efa89a`
 - `GATE7_RUN6_FINAL_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; EXACT_SAME_HASH; RECUSAL_CLEAR; NO_BLOCKERS; NO_EVIDENCE_GAPS`
 - `HARDENING_GATE7_STATUS`: `HARDENING_7_EXPANDED_GREEN`
+- `HARDENING_GATE8_STATUS`: `HARDENING_8_EVIDENCE_PACKAGE_GREEN`
+- `HARDENING_GATE8_PACKET_SHA256`: `887cc444cb94ec94c2e9ffeed71f8f1113656e8cb799aa190687d592790fe0aa`
+- `HARDENING_GATE8_CLAIM_MANIFEST_SHA256`: `11afb9f54906b625de82947cf27aebd0a548655c926a598bdca2921b17976921`
+- `HARDENING_GATE8_PRIVATE_ARCHIVE_SHA256`: `717636adba545315e13930e331b4024c44c787f0b130532ad3f827ba8388837d`
+- `HARDENING_GATE8_MECHANICAL_STATE`: `GREEN; ALL_SEVEN_REQUIRED_COUNTERS_ZERO; PUBLIC_SECRET_SCANS_GREEN; PRIVATE_ARCHIVE_613_OF_613_VERIFIED`
+- `HARDENING_GATE8_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; EXACT_SAME_HASH; RECUSAL_CLEAR; NO_BLOCKERS; NO_EVIDENCE_GAPS; NO_RERUNS`
 - `GATE7_RUN4_PREFLIGHT_PACKET_SHA256`: `e7f4d8723b49f422bf31e0f264d49432c5735054ed7d45fdb48666a78e55a7e4`
 - `GATE7_RUN4_PREFLIGHT_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; EXACT_SAME_HASH; RECUSAL_CLEAR`
 - `GATE7_RUN3_AUTHORIZATION_PROMPT_SHA256`: `a941c6e85d021d2ec77ea442765f4df724283af76f74c8b7f19ed91d077f8d30`
@@ -75,8 +82,8 @@
 - `S3_PREFLIGHT_R4_REPAIR_COMMIT`: `06b54e8f61bf0fa227af3de2377a462e369d7d74`
 - `S3_PREFLIGHT_R6_REPAIR_COMMIT`: `8b1d5bd1038588527bd994eb8fcb5467cac47eac`
 - `S3_PREFLIGHT_R8_REPAIR_COMMIT`: `95408fb9386ced25b468c0957e86e8f73cb123e9`
-- `PENDING_BLOCKERS`: `RUN3_IMMUTABLY_BLOCKED`; `RUN4_IMMUTABLY_BLOCKED`; `RUN5_IMMUTABLY_BLOCKED_TRACK2_10_OF_12_AND_REQUIRED_EVIDENCE_MISSING`; no current Gate 7 blocker; Gate 8 packaging remains open
-- `REQUIRED_JUDGE_STATE`: Gate 8 requires independent review of one exact sanitized package packet after all mechanical checks pass
+- `PENDING_BLOCKERS`: `none current`; historical Gate 7 Runs 3–5 remain immutable blocked evidence and cannot be pooled into Run 6
+- `REQUIRED_JUDGE_STATE`: Gate 9 requires fresh same-hash independent claim review; Gate 8 exact GLM 5.2 and AGY review is complete
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
 - `P9_FINAL_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; RECUSAL_CLEAR`
@@ -85,7 +92,7 @@
 - `P9_JUDGE_EVIDENCE`: `evidence/p9-final-judges-r1/`
 - `RUNPOD_ATTEMPTS`: `8`
 - `RUNPOD_EXPOSURE`: `PRIOR_RECORDED_$1.189989_PLUS_GATE6_R3_THREE_ATTEMPTS_BILLING_PENDING_BOUNDED_MAX_$0.0393356667`
-- `LATEST_CHECKPOINT`: `HARDENING_GATE7_RUN6_GREEN_CHECKPOINT_R1.md`
+- `LATEST_CHECKPOINT`: `HARDENING_GATE8_GREEN_CHECKPOINT_R1.md`
 - `BLACK_BOX_R3_STATUS`: `BLACK_BOX_R3_PREFLIGHT_GREEN`
 - `BLACK_BOX_R3_PRODUCT_CANDIDATE`: `1c483b1930e629c9ecb6d73418b9554897dc08ad`
 - `BLACK_BOX_R3_PLAN_SHA256`: `92f17ed947e874538b991f6281a3e4b67818a5a28820f07f7a12fbf3f5269adf`

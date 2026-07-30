@@ -1,6 +1,6 @@
 # Hardening Gate 8 Evidence Package Report R1
 
-- `STATUS`: `AWAITING_INDEPENDENT_REVIEW`
+- `STATUS`: `HARDENING_8_EVIDENCE_PACKAGE_GREEN`
 - `PARENT_GATE`: `HARDENING_7_EXPANDED_GREEN`
 - `TARGET_GATE`: `HARDENING_8_EVIDENCE_PACKAGE_GREEN`
 - `PRODUCT_CANDIDATE`: `1c483b1930e629c9ecb6d73418b9554897dc08ad`
@@ -46,5 +46,8 @@ workflow. It preserves the failed Gate 7 Runs 3–5 and does not use those
 partial results as Gate 7 success. It makes no independent-human,
 production-scale, arbitrary-undelete, or first-ever claim.
 
-This report does not self-approve Gate 8. One exact sanitized packet must
-receive independent same-hash GREEN review before the gate can close.
+The R1 judge attempts were invalid and do not count. The corrected R2 packet,
+SHA-256 `887cc444cb94ec94c2e9ffeed71f8f1113656e8cb799aa190687d592790fe0aa`,
+received exact GLM 5.2 GREEN and AGY GREEN on that same hash with clear recusal
+checks, no blockers, no evidence gaps, and no rerun request. Gate 8 is GREEN;
+this does not approve Gate 9 or any public action.
