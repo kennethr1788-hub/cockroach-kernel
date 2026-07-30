@@ -3,8 +3,8 @@
 - `CURRENT_PHASE`: `HARDENING_8_EVIDENCE_PACKAGE`
 - `LAST_GREEN_GATE`: `HARDENING_7_EXPANDED_GREEN`
 - `NEXT_ALLOWED_ACTION`: Build the one-page official-criteria scorecard, canonical claim-to-evidence manifest, complete private raw-evidence index, sanitized public subset, and architecture boundary diagram; run all Gate 8 mechanical checks and independent review
-- `FORBIDDEN_ACTIONS`: Create a Run 6 worker before same-hash GLM 5.2 and AGY GREEN; create a hidden seed before CAMPAIGN_READY; reuse Run 3, Run 4, or Run 5 hidden seeds/inputs; tune against revealed hidden inputs; relabel partial sub-results as Gate 7 GREEN; begin Gate 8 before Gate 7 final independent GREEN; begin Gate 9, S3-R2, release, publication, video, or submission; mutate HOME/live memory; expose credentials
-- `CURRENT_COMMIT`: `e2340669d071291b8e421607264e535d7cc47fd6`
+- `FORBIDDEN_ACTIONS`: Modify product behavior or Gate 7 evidence; omit or relabel failed campaigns; expose hidden inputs, credentials, private paths, account identifiers, or raw private evidence in the public subset; describe synthetic/replayed evidence as live or user evidence; begin Gate 9, S3-R2, release, publication, video, or submission; mutate HOME/live memory
+- `CURRENT_COMMIT`: `760fb8cbeccef40c3460b9e2e53a7319dd78c441`
 - `GATE7_RUN5_AUTHORIZATION`: `RECORDED; CONTINUE_THROUGH_GATE8; POLICY_BOUNDED_RUNPOD_RUNS_AND_SEQUENTIAL_RETRIES_AUTHORIZED`
 - `GATE7_RUN5_REPAIR_COMMIT`: `9f76ece0e1aa98ac5bf037299ce1547c9c534aab`
 - `GATE7_RUN5_LOCAL_PREFLIGHT`: `R3_GREEN_EXCEPT_AWS_AUTH; RECEIPT_SHA256_2aaafb2e7d56a8e75e01f5df3a733c5f56bf8ee265dedde56a88fe5b275bcd0e; SOURCE_BINDINGS_SHA256_07d616082b32b61e21c84b86c76b1349444ed873801d705b2b692b195d467e96; CONTRACT_SHA256_a643d0a04baa2d76f23b0a9a5d34c247c805e52b4792671426c658ad16df91be; HIDDEN_SEED_FALSE; ACTIVE_RUNPOD_INVENTORY_EMPTY`
