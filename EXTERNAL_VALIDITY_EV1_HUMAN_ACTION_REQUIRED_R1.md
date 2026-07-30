@@ -1,6 +1,6 @@
 # EV1 Human Action Required R1
 
-- `STATUS`: `EV1_T01_INFRASTRUCTURE_INVALID_PRESERVED; OPERATOR_OBSERVATIONS_REQUIRED`
+- `STATUS`: `EV1_T01_INFRASTRUCTURE_INVALID_PRESERVED; OPERATOR_OBSERVATIONS_CONFIRMED; INDEPENDENT_RESULT_AUDIT_PENDING`
 - `LAST_GREEN_GATE`: `LIVE_CONTINUITY_EVIDENCE_GREEN`
 - `BACKLOG_CANDIDATE_SHA256`: `34ffed70e3d52cde2e94e5f3b66dd96cdac1f2aa7de757b11bf6580bb5e536e4`
 - `R2_BACKLOG_CANDIDATE_SHA256`: `6dfe194028739ba57b2eb35a8fbd112bde1569ccd76ca73d5ec7f949fb64a0b5`
@@ -9,7 +9,7 @@
 - `MEASURED_CLOCK_STARTED`: `TRUE; 2026-07-30T14:10:38Z`
 - `CLOSED_FACT`: `Kenneth confirmed EV1-T01 through EV1-T04 may use the deterministic 76-file Brew Ledger export excluding CLAUDE.md and bound by manifest SHA-256 d78d1a589fe487368f797e3446ba8f1d7d22d7c08554ce91be2ece32cd8a2706.`
 - `EVIDENCE`: `EXTERNAL_VALIDITY_EV1_HUMAN_CONFIRMATION_RECEIPT_R2.md`
-- `NEXT_SAFE_ACTION`: `Kenneth records one immediate qualitative observation and one Git/backup counterfactual note for the preserved T01 outcome.`
+- `NEXT_SAFE_ACTION`: `Run the requested independent GLM result-classification audit over the frozen sanitized packet, preserve its exact output, then teardown the temporary successor and verify residue.`
 - `FORBIDDEN`: `Fabricating or replacing Kenneth's observations; relabeling the infrastructure-invalid full acceptance as GREEN; rerunning recovery; changing recovered source, task order, product candidate, thresholds, or public claims.`
 
 R1 authenticity and its blocked preflight remain preserved. Kenneth closed the
@@ -34,3 +34,8 @@ successor's module-resolution ancestry. The failure, recovered bytes, product
 receipts, and non-scoring standalone verifier diagnostic are preserved. The
 temporary successor remains only until Kenneth supplies the two required
 operator observations.
+
+Kenneth confirmed both required observation statements as accurate. They are
+preserved in `EXTERNAL_VALIDITY_EV1_T01_OPERATOR_OBSERVATION_RECEIPT_R1.md` and
+do not override the mechanical failure. Kenneth then requested an independent
+GLM audit of the result classification before teardown.

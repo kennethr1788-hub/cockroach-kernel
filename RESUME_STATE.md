@@ -2,7 +2,7 @@
 
 - `CURRENT_PHASE`: `EXTERNAL_VALIDITY_ITEM3_PROSPECTIVE_DOGFOODING`
 - `LAST_GREEN_GATE`: `CROSS_MODEL_BLIND_EVIDENCE_GREEN`
-- `NEXT_ALLOWED_ACTION`: Kenneth records the required immediate qualitative observation and Git/backup counterfactual for the preserved EV1-T01 infrastructure-invalid outcome; then teardown the temporary successor, verify residue, and proceed in frozen order
+- `NEXT_ALLOWED_ACTION`: Run the requested independent GLM result-classification audit over the frozen sanitized EV1-T01 packet; preserve the exact verdict, then teardown the temporary successor, verify residue, and proceed in frozen order
 - `FORBIDDEN_ACTIONS`: Modify product behavior or Gate 3–8/EV3 evidence; rerun EV3 or tune against revealed hidden inputs; omit or relabel failed campaigns; expose credentials, private paths, account identifiers, or raw private evidence; describe synthetic/replayed/model evidence as production or independent-human evidence; begin Gate 9, Gate 10, release, publication, video, or submission; mutate HOME/live memory
 - `CURRENT_COMMIT`: `27bc652569ad821346f0f55cb1fdea7a196e4d64`
 - `LAST_VERIFIED_UTC`: `2026-07-30T15:08:59Z`
@@ -85,7 +85,7 @@
 - `EXTERNAL_VALIDITY_EV3_STATUS`: `CROSS_MODEL_BLIND_EVIDENCE_GREEN; 24_OF_24_PASS; MISTRAL_12_OF_12; STEPFUN_12_OF_12; SAFETY_24_OF_24; ZERO_INFRASTRUCTURE_INVALID; ZERO_TOOL_PATH_CONTEXT_AUTHORITY; TEARDOWN_GREEN`
 - `EXTERNAL_VALIDITY_EV3_FINAL_PACKET_SHA256`: `f6288d648a01035f43a696ae21157bee38e03d2bdf0ace33265d20c3f8b035e0`
 - `EXTERNAL_VALIDITY_EV3_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; EXACT_SAME_HASH; RECUSAL_CLEAR; NO_BLOCKERS; NO_EVIDENCE_GAPS; NO_RERUNS`
-- `PENDING_BLOCKERS`: `EV1_T01_OPERATOR_OBSERVATIONS_REQUIRED; product recovered both declared work units, but frozen full acceptance failed because dependencies were outside successor module-resolution ancestry; preserved as infrastructure-invalid and non-scoring`
+- `PENDING_BLOCKERS`: `EV1_T01_GLM_RESULT_AUDIT_PENDING; operator observations are confirmed; product recovered both declared work units, but frozen full acceptance failed because dependencies were outside successor module-resolution ancestry; preserved as infrastructure-invalid and non-scoring`
 - `EV1_BACKLOG_CANDIDATE_SHA256`: `34ffed70e3d52cde2e94e5f3b66dd96cdac1f2aa7de757b11bf6580bb5e536e4`
 - `EV1_BACKLOG_CANDIDATE_R2_SHA256`: `6dfe194028739ba57b2eb35a8fbd112bde1569ccd76ca73d5ec7f949fb64a0b5`
 - `EV1_R2_HUMAN_CONFIRMATION`: `GREEN; RECEIVED_UTC_2026-07-30T13:47:28Z; BREW_LEDGER_EXPORT_76_FILES; CLAUDE_MD_EXCLUDED_ONLY`
