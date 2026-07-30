@@ -2,10 +2,10 @@
 
 - `CURRENT_PHASE`: `EXTERNAL_VALIDITY_ITEM3_PROSPECTIVE_DOGFOODING`
 - `LAST_GREEN_GATE`: `CROSS_MODEL_BLIND_EVIDENCE_GREEN`
-- `NEXT_ALLOWED_ACTION`: Kenneth personally types and visibly saves the declared EV1-T01 tagline in src/app/page.tsx inside the generated disposable workspace; after Kenneth confirms the save, verify the exact diff and continue capture
+- `NEXT_ALLOWED_ACTION`: Kenneth explicitly declares the exact current EV1-T01 state permitted for capture; after that declaration, capture the verified two-file task state, destroy only the guarded disposable workspace, and invoke the frozen product from a fresh process
 - `FORBIDDEN_ACTIONS`: Modify product behavior or Gate 3–8/EV3 evidence; rerun EV3 or tune against revealed hidden inputs; omit or relabel failed campaigns; expose credentials, private paths, account identifiers, or raw private evidence; describe synthetic/replayed/model evidence as production or independent-human evidence; begin Gate 9, Gate 10, release, publication, video, or submission; mutate HOME/live memory
-- `CURRENT_COMMIT`: `0ff9877e528237e6a1aad50b86cc6489599747b8`
-- `LAST_VERIFIED_UTC`: `2026-07-30T13:29:40Z`
+- `CURRENT_COMMIT`: `776b1918ba1a27890b1ceb5aa9201209d9488337`
+- `LAST_VERIFIED_UTC`: `2026-07-30T14:26:25Z`
 - `GATE7_RUN5_AUTHORIZATION`: `RECORDED; CONTINUE_THROUGH_GATE8; POLICY_BOUNDED_RUNPOD_RUNS_AND_SEQUENTIAL_RETRIES_AUTHORIZED`
 - `GATE7_RUN5_REPAIR_COMMIT`: `9f76ece0e1aa98ac5bf037299ce1547c9c534aab`
 - `GATE7_RUN5_LOCAL_PREFLIGHT`: `R3_GREEN_EXCEPT_AWS_AUTH; RECEIPT_SHA256_2aaafb2e7d56a8e75e01f5df3a733c5f56bf8ee265dedde56a88fe5b275bcd0e; SOURCE_BINDINGS_SHA256_07d616082b32b61e21c84b86c76b1349444ed873801d705b2b692b195d467e96; CONTRACT_SHA256_a643d0a04baa2d76f23b0a9a5d34c247c805e52b4792671426c658ad16df91be; HIDDEN_SEED_FALSE; ACTIVE_RUNPOD_INVENTORY_EMPTY`
@@ -85,7 +85,7 @@
 - `EXTERNAL_VALIDITY_EV3_STATUS`: `CROSS_MODEL_BLIND_EVIDENCE_GREEN; 24_OF_24_PASS; MISTRAL_12_OF_12; STEPFUN_12_OF_12; SAFETY_24_OF_24; ZERO_INFRASTRUCTURE_INVALID; ZERO_TOOL_PATH_CONTEXT_AUTHORITY; TEARDOWN_GREEN`
 - `EXTERNAL_VALIDITY_EV3_FINAL_PACKET_SHA256`: `f6288d648a01035f43a696ae21157bee38e03d2bdf0ace33265d20c3f8b035e0`
 - `EXTERNAL_VALIDITY_EV3_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; EXACT_SAME_HASH; RECUSAL_CLEAR; NO_BLOCKERS; NO_EVIDENCE_GAPS; NO_RERUNS`
-- `PENDING_BLOCKERS`: `EV1_T01_HUMAN_EDIT_REQUIRED — credential rotated by Kenneth and recorded exposing process tree terminated; 48 inherited process environments retain the revoked variable name and host is not claimed scrubbed; task environment excludes it; human edit, capture, and recovery have not started`
+- `PENDING_BLOCKERS`: `EV1_T01_CAPTURE_DECLARATION_REQUIRED — credential rotated by Kenneth and recorded exposing process tree terminated; task environment excludes the revoked variable; independently saved human edit and offline acceptance are verified; capture, deletion, and recovery have not started`
 - `EV1_BACKLOG_CANDIDATE_SHA256`: `34ffed70e3d52cde2e94e5f3b66dd96cdac1f2aa7de757b11bf6580bb5e536e4`
 - `EV1_BACKLOG_CANDIDATE_R2_SHA256`: `6dfe194028739ba57b2eb35a8fbd112bde1569ccd76ca73d5ec7f949fb64a0b5`
 - `EV1_R2_HUMAN_CONFIRMATION`: `GREEN; RECEIVED_UTC_2026-07-30T13:47:28Z; BREW_LEDGER_EXPORT_76_FILES; CLAUDE_MD_EXCLUDED_ONLY`
@@ -94,7 +94,7 @@
 - `EV1_R2_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_BLOCKED; PACKET_SCOPE_EXTRACTION_DEFECT; PRESERVED_STALE`
 - `EV1_R3_PREFLIGHT_PACKET_SHA256`: `a08bb6c49a64b293488d4c0ecc0357740f7e6187e963bc438d563db574b8f0a2`
 - `EV1_R3_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; EXACT_SAME_HASH; RECUSAL_CLEAR; NO_BLOCKERS; NO_EVIDENCE_GAPS; NO_RERUNS`
-- `EV1_T01_PREPARATION`: `GREEN_THEN_SECURITY_BLOCKED; RECEIPT_SHA256_094a37908ec2282a05174d4a13f9d13d7ed621fad2ab1aebf48cb884bf9bbc19; START_UTC_2026-07-30T14:10:38Z; HUMAN_EDIT_FALSE; CAPTURE_FALSE; RECOVERY_FALSE`
+- `EV1_T01_PREPARATION`: `GREEN_THEN_SECURITY_BLOCKED_THEN_CLOSED; RECEIPT_SHA256_094a37908ec2282a05174d4a13f9d13d7ed621fad2ab1aebf48cb884bf9bbc19; START_UTC_2026-07-30T14:10:38Z; HUMAN_EDIT_TRUE; PRE_LOSS_ACCEPTANCE_GREEN; HUMAN_EDIT_RUNTIME_RECEIPT_SHA256_b01dde8b1af6692ef74da308813406e8ce810913bfac89d29e884a7f1ea9561f; CAPTURE_FALSE; RECOVERY_FALSE`
 - `EV1_T01_SECURITY_CLOSURE`: `CLOSED_WITH_REVOKED_ENVIRONMENT_RESIDUAL; OPERATOR_ROTATION_CONFIRMED; RECORDED_PARENT_AND_CHILD_TERMINATED; 48_INHERITED_VARIABLE_NAME_ENTRIES; TASK_ENVIRONMENT_EXCLUDES_VARIABLE`
 - `REQUIRED_JUDGE_STATE`: `EV1 requires fresh identical-packet GLM 5.2 and AGY GREEN before EV1-T01; Item 5 final GLM 5.2 and AGY review remains complete`
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
