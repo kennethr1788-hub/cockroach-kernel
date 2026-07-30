@@ -366,6 +366,31 @@ def export_baseline_snapshot() -> dict[str, str]:
     return tree_hashes(BASELINE_SNAPSHOT)
 
 
+def verify_existing_baseline_snapshot() -> dict[str, str]:
+    if BASELINE_SNAPSHOT.is_symlink() or not BASELINE_SNAPSHOT.is_dir():
+        raise T09Error("BASELINE_SNAPSHOT_INVALID")
+    actual = tree_hashes(BASELINE_SNAPSHOT)
+    listed = git("ls-tree", "-r", "-z", BASELINE_COMMIT)
+    if listed.returncode != 0:
+        raise T09Error("BASELINE_TREE_LIST_FAILED")
+    expected: dict[str, str] = {}
+    for record in listed.stdout.split(b"\0"):
+        if not record:
+            continue
+        metadata, raw_path = record.split(b"\t", 1)
+        mode, object_type, object_id = metadata.decode("ascii").split()
+        relative = raw_path.decode("utf-8")
+        if object_type != "blob" or mode == "120000":
+            raise T09Error("BASELINE_ENTRY_NOT_REGULAR_FILE")
+        blob = git("cat-file", "blob", object_id)
+        if blob.returncode != 0:
+            raise T09Error("BASELINE_BLOB_READ_FAILED")
+        expected[relative] = digest(blob.stdout)
+    if len(expected) != BASELINE_FILE_COUNT or actual != expected:
+        raise T09Error("PRESERVED_BASELINE_SNAPSHOT_DRIFT")
+    return actual
+
+
 def restore_baseline(destination: Path, omit: set[str]) -> int:
     if destination.exists() or destination.is_symlink():
         raise T09Error("SUCCESSOR_BASELINE_DESTINATION_PREEXISTS")
@@ -392,17 +417,59 @@ def copy_representations_into(destination: Path) -> None:
 
 
 def clone_dependencies(destination: Path) -> dict[str, Any]:
-    try:
-        return BASE.clone_dependencies(DEPENDENCY_RUNTIME, destination)
-    except RuntimeError as exc:
-        raise T09Error(f"DEPENDENCY_CLONE_INVALID:{exc}") from exc
+    if destination.exists() or destination.is_symlink():
+        raise T09Error("DEPENDENCY_DESTINATION_PREEXISTS")
+    source_shape = dependency_shape(DEPENDENCY_RUNTIME)
+    completed = run(["cp", "-cR", str(DEPENDENCY_RUNTIME), str(destination)], cwd=ROOT, timeout=600)
+    if completed.returncode != 0:
+        raise T09Error("DEPENDENCY_CLONE_FAILED")
+    destination_shape = dependency_shape(destination)
+    if destination_shape != source_shape:
+        raise T09Error("DEPENDENCY_CLONE_SHAPE_MISMATCH")
+    return source_shape
 
 
 def dependency_shape(root: Path) -> dict[str, Any]:
-    try:
-        return BASE.dependency_shape(root)
-    except RuntimeError as exc:
-        raise T09Error(f"DEPENDENCY_SHAPE_INVALID:{exc}") from exc
+    if root.is_symlink() or not root.is_dir():
+        raise T09Error("DEPENDENCY_ROOT_INVALID")
+    resolved_root = root.resolve(strict=True)
+    files = [path for path in root.rglob("*") if path.is_file() and not path.is_symlink()]
+    directories = [path for path in root.rglob("*") if path.is_dir() and not path.is_symlink()]
+    symlinks: list[dict[str, str]] = []
+    for path in sorted(candidate for candidate in root.rglob("*") if candidate.is_symlink()):
+        raw_target = os.readlink(path)
+        if Path(raw_target).is_absolute():
+            raise T09Error("DEPENDENCY_ABSOLUTE_SYMLINK")
+        try:
+            resolved_target = path.resolve(strict=True)
+        except OSError as exc:
+            raise T09Error("DEPENDENCY_BROKEN_SYMLINK") from exc
+        if resolved_target != resolved_root and resolved_root not in resolved_target.parents:
+            raise T09Error("DEPENDENCY_SYMLINK_ESCAPE")
+        symlinks.append(
+            {
+                "path": path.relative_to(root).as_posix(),
+                "target": raw_target,
+                "resolved_path": resolved_target.relative_to(resolved_root).as_posix(),
+            }
+        )
+    special = [
+        path.relative_to(root).as_posix()
+        for path in root.rglob("*")
+        if not path.is_file() and not path.is_dir() and not path.is_symlink()
+    ]
+    if special:
+        raise T09Error("DEPENDENCY_SPECIAL_FILE")
+    prettier = root / "prettier" / "bin" / "prettier.cjs"
+    if not prettier.is_file() or digest(prettier) != PRETTIER_SHA256:
+        raise T09Error("DEPENDENCY_PRETTIER_DRIFT")
+    return {
+        "file_count": len(files),
+        "directory_count": len(directories),
+        "file_bytes": sum(path.stat().st_size for path in files),
+        "symlinks": symlinks,
+        "prettier_sha256": digest(prettier),
+    }
 
 
 def run_acceptance(workspace: Path, prefix: str, tmpdir: Path) -> dict[str, Any]:
@@ -453,12 +520,16 @@ def run_acceptance(workspace: Path, prefix: str, tmpdir: Path) -> dict[str, Any]
 def capture() -> int:
     if any(path.exists() for path in (CAPTURE_RECEIPT, TASK_RECEIPT, FAILURE_RECEIPT)):
         raise T09Error("CAPTURE_ALREADY_STARTED")
-    if any(path.exists() for path in (RECOVERY, BASELINE_SNAPSHOT, EXECUTION_CAMPAIGN, PREFLIGHT_CAMPAIGN)):
+    if any(path.exists() for path in (RECOVERY, EXECUTION_CAMPAIGN, PREFLIGHT_CAMPAIGN)):
         raise T09Error("PREEXISTING_CAMPAIGN_ROOT")
     state = verify_work_state()
     r3 = BASE.load_r3()
     toolchain, _venv, entrypoint = verify_product(r3)
-    baseline_hashes = export_baseline_snapshot()
+    baseline_hashes = (
+        verify_existing_baseline_snapshot()
+        if BASELINE_SNAPSHOT.exists()
+        else export_baseline_snapshot()
+    )
     dependency = dependency_shape(DEPENDENCY_RUNTIME)
     for path in (REPRESENTATIONS, CUSTODY, OUTPUT, TEMP):
         path.mkdir(parents=True, mode=0o700)
