@@ -390,8 +390,13 @@ def main() -> int:
     }
     receipt = dict(receipt_body, receipt_sha256=digest(canonical(receipt_body)))
     atomic_write(args.receipt.resolve(), canonical(receipt))
+    console_status = (
+        "GATE7B_LOCAL_GREEN"
+        if readiness_record.get("status") == "GREEN"
+        else "GATE7B_LOCAL_GREEN_AWS_LOGIN_PENDING"
+    )
     print(canonical({
-        "status": "GATE7B_LOCAL_GREEN_AWS_LOGIN_PENDING",
+        "status": console_status,
         "receipt_sha256": receipt["receipt_sha256"],
         "source_bindings_sha256": source["source_bindings_sha256"],
         "preflight_contract_sha256": frozen_contract,
