@@ -36,21 +36,12 @@ def load(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def block(path: Path) -> str:
-    relative = path.relative_to(ROOT).as_posix()
-    return (
-        f"\n## BYTE-COMPLETE `{relative}`\n\n"
-        f"SHA-256: `{digest(path)}`\n\n"
-        f"```python\n{path.read_text(encoding='utf-8')}```\n"
-    )
-
-
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--plan", type=Path, required=True)
     args = parser.parse_args()
     plan = args.plan.resolve()
-    output = ROOT / "EXTERNAL_VALIDITY_EV3_PREFLIGHT_PACKET_R2.md"
+    output = ROOT / "EXTERNAL_VALIDITY_EV3_PREFLIGHT_PACKET_R3.md"
     if output.exists():
         raise SystemExit("OUTPUT_EXISTS")
     if digest(plan) != PLAN_HASH:
@@ -64,8 +55,8 @@ def main() -> int:
     if digest(ROOT / ".hardening-runtime/external-validity-r1/official-rules.html") != RULES_HASH:
         raise SystemExit("RULES_SNAPSHOT_HASH_MISMATCH")
     actor_canary_path = ROOT / "evidence/external-validity-ev3-r1/public-canary-r2/FINAL_SUMMARY.json"
-    scenario_canary_path = ROOT / "evidence/external-validity-ev3-r1/scenario-canary-r5/FINAL_SUMMARY.json"
-    mechanical_path = ROOT / "evidence/external-validity-ev3-r1/mechanical-r3/FINAL_RECEIPT.json"
+    scenario_canary_path = ROOT / "evidence/external-validity-ev3-r1/scenario-canary-r6/FINAL_SUMMARY.json"
+    mechanical_path = ROOT / "evidence/external-validity-ev3-r1/mechanical-r4/FINAL_RECEIPT.json"
     failed_mechanical_path = ROOT / "evidence/external-validity-ev3-r1/mechanical-r1/FINAL_RECEIPT.json"
     sanitization_path = ROOT / "evidence/external-validity-ev3-r1/mechanical-r1/SANITIZATION_RECEIPT.json"
     actor_canary = load(actor_canary_path)
@@ -84,7 +75,7 @@ def main() -> int:
     if (ROOT / "evidence/external-validity-ev3-r1/HIDDEN_EXECUTION_LOCK.json").exists():
         raise SystemExit("HIDDEN_SEED_ALREADY_EXISTS")
     utc = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-    header = f"""# External Validity EV3 Cross-Model Preflight Packet R2
+    header = f"""# External Validity EV3 Cross-Model Preflight Packet R3
 
 ## Decision requested
 
@@ -119,6 +110,12 @@ contract without prior project context or tools.
 This is machine evidence, not independent-human evidence. It does not test
 production scale, multi-user behavior, arbitrary uncaptured-byte recovery, or
 long-term degradation. Gate 8 remains unchanged. Gate 9 remains paused.
+
+R2 packet SHA-256 `39978c2c0b51b46089979a9a39ac4d543fedd1e9c803323f20e7866f3072bbfc`
+was rejected locally by the outbound sanitizer before provider execution because
+it embedded byte-complete source. R3 replaces source bodies with source hashes
+and measured receipts. No product, actor, scenario, threshold, or hidden input
+was changed, and no hidden seed exists.
 
 ## Actor selection and binding
 
@@ -155,11 +152,11 @@ boundary. GLM and AGY are reserved as judges and cannot act as campaign actors.
 - actor canary R2: `GREEN`; two exact served-model responses; tools exposed `0`;
   tool calls `0`; context reuse `FALSE`; path authority `FALSE`; file SHA-256
   `{digest(actor_canary_path)}`; internal summary `{actor_canary['summary_sha256']}`.
-- materialized-candidate scenario canary R5: `7/7 PASS`; all six classes plus
+- materialized-candidate scenario canary R6: `7/7 PASS`; all six classes plus
   separate unsupported and stale variants; no model calls; runtime teardown
   `TRUE`; file SHA-256 `{digest(scenario_canary_path)}`; internal summary
   `{scenario_canary['summary_sha256']}`.
-- valid mechanical R3: `85` tests, zero command failures, Gitleaks zero,
+- valid mechanical R4: `85` tests, zero command failures, Gitleaks zero,
   detect-secrets zero, private-path/credential markers zero, scan teardown
   `TRUE`; file SHA-256 `{digest(mechanical_path)}`; internal receipt
   `{mechanical['receipt_sha256']}`.
@@ -246,8 +243,21 @@ RECUSAL: CLEAR|REQUIRED
 BLOCKERS:
 - <none or concrete blocker>
 ```
+
+## Frozen source manifest
+
+- `external-validity/ev3_actor_routes.py`: `{digest(SOURCES[0])}`
+- `external-validity/ev3_campaign.py`: `{digest(SOURCES[1])}`
+- `external-validity/run_ev3_mechanical.py`: `{digest(SOURCES[2])}`
+- `external-validity/test_ev3_campaign.py`: `{digest(SOURCES[3])}`
+
+The R2 fail-closed repair removed a reference to a nonexistent exception
+attribute. The replacement classifier maps known bounded campaign errors to a
+behavioral failure and every other exception to infrastructure-invalid with an
+abort signal. Two direct unit assertions cover both branches. The current
+mechanical receipt reports 85 passing tests and zero command failures.
 """
-    output.write_text(header + "".join(block(path) for path in SOURCES), encoding="utf-8")
+    output.write_text(header, encoding="utf-8")
     print(digest(output))
     return 0
 
