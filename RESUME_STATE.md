@@ -4,7 +4,7 @@
 - `LAST_GREEN_GATE`: `CROSS_MODEL_BLIND_EVIDENCE_GREEN`
 - `NEXT_ALLOWED_ACTION`: Kenneth explicitly declares the exact EV1-T07 state permitted for capture under the frozen expected-invalid oversized-state contract; capture, deletion, and recovery remain forbidden until that declaration is recorded
 - `FORBIDDEN_ACTIONS`: Modify product behavior or Gate 3–8/EV3 evidence; rerun EV3 or tune against revealed hidden inputs; omit or relabel failed campaigns; expose credentials, private paths, account identifiers, or raw private evidence; describe synthetic/replayed/model evidence as production or independent-human evidence; begin Gate 9, Gate 10, release, publication, video, or submission; mutate HOME/live memory
-- `CURRENT_COMMIT`: `42556d82b5bac14e690ab24b418e74d4225b27aa`
+- `CURRENT_COMMIT`: `42556d893ae5c22c88f703af9a42a70b2126bed7`
 - `LAST_VERIFIED_UTC`: `2026-07-30T20:05:36Z`
 - `GATE7_RUN5_AUTHORIZATION`: `RECORDED; CONTINUE_THROUGH_GATE8; POLICY_BOUNDED_RUNPOD_RUNS_AND_SEQUENTIAL_RETRIES_AUTHORIZED`
 - `GATE7_RUN5_REPAIR_COMMIT`: `9f76ece0e1aa98ac5bf037299ce1547c9c534aab`
@@ -131,7 +131,7 @@
 - `P9_JUDGE_EVIDENCE`: `evidence/p9-final-judges-r1/`
 - `RUNPOD_ATTEMPTS`: `8`
 - `RUNPOD_EXPOSURE`: `PRIOR_RECORDED_$1.189989_PLUS_GATE6_R3_THREE_ATTEMPTS_BILLING_PENDING_BOUNDED_MAX_$0.0393356667`
-- `LATEST_CHECKPOINT`: `EXTERNAL_VALIDITY_EV1_T07_WORK_R1.md; commit 42556d82b5bac14e690ab24b418e74d4225b27aa`
+- `LATEST_CHECKPOINT`: `EXTERNAL_VALIDITY_EV1_T07_WORK_R1.md; commit 42556d893ae5c22c88f703af9a42a70b2126bed7`
 - `BLACK_BOX_R3_STATUS`: `BLACK_BOX_R3_PREFLIGHT_GREEN`
 - `BLACK_BOX_R3_PRODUCT_CANDIDATE`: `1c483b1930e629c9ecb6d73418b9554897dc08ad`
 - `BLACK_BOX_R3_PLAN_SHA256`: `92f17ed947e874538b991f6281a3e4b67818a5a28820f07f7a12fbf3f5269adf`
