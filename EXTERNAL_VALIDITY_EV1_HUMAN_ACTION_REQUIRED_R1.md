@@ -1,6 +1,6 @@
 # EV1 Human Action Required R1
 
-- `STATUS`: `EV1_T01_CLOSED_INFRASTRUCTURE_INVALID_NON_SCORING; EV1_T02_CLOSED_EVALUABLE_PASS; EV1_T03_CLOSED_EVALUABLE_PASS; EV1_T04_CLOSED_EVALUABLE_PASS; EV1_T05_CLOSED_EVALUABLE_PASS; EV1_T06_CLOSED_EVALUABLE_PASS; EV1_T07_CLOSED_EXPECTED_INVALID; EV1_T08_CAPTURE_DECLARATION_REQUIRED`
+- `STATUS`: `EV1_T01_CLOSED_INFRASTRUCTURE_INVALID_NON_SCORING; EV1_T02_CLOSED_EVALUABLE_PASS; EV1_T03_CLOSED_EVALUABLE_PASS; EV1_T04_CLOSED_EVALUABLE_PASS; EV1_T05_CLOSED_EVALUABLE_PASS; EV1_T06_CLOSED_EVALUABLE_PASS; EV1_T07_CLOSED_EXPECTED_INVALID; EV1_T08_CAPTURE_DECLARATION_RECEIVED_INDEPENDENT_PREFLIGHT_REQUIRED`
 - `LAST_GREEN_GATE`: `LIVE_CONTINUITY_EVIDENCE_GREEN`
 - `BACKLOG_CANDIDATE_SHA256`: `34ffed70e3d52cde2e94e5f3b66dd96cdac1f2aa7de757b11bf6580bb5e536e4`
 - `R2_BACKLOG_CANDIDATE_SHA256`: `6dfe194028739ba57b2eb35a8fbd112bde1569ccd76ca73d5ec7f949fb64a0b5`
@@ -9,7 +9,7 @@
 - `MEASURED_CLOCK_STARTED`: `TRUE; 2026-07-30T14:10:38Z`
 - `CLOSED_FACT`: `Kenneth confirmed EV1-T01 through EV1-T04 may use the deterministic 76-file Brew Ledger export excluding CLAUDE.md and bound by manifest SHA-256 d78d1a589fe487368f797e3446ba8f1d7d22d7c08554ce91be2ece32cd8a2706.`
 - `EVIDENCE`: `EXTERNAL_VALIDITY_EV1_HUMAN_CONFIRMATION_RECEIPT_R2.md`
-- `NEXT_SAFE_ACTION`: `Kenneth explicitly declares the exact EV1-T08 regular-file state and untracked escape symlink permitted for capture only; the synthetic target may not be read, modified, or deleted.`
+- `NEXT_SAFE_ACTION`: `Run the frozen EV1-T08 capture-only local preflight and identical-packet GLM 5.2/AGY review; invoke capture only if both are GREEN.`
 - `FORBIDDEN`: `Fabricating or replacing Kenneth's observations; relabeling the infrastructure-invalid full acceptance as GREEN; rerunning recovery; changing recovered source, task order, product candidate, thresholds, or public claims.`
 
 R1 authenticity and its blocked preflight remain preserved. Kenneth closed the
@@ -159,3 +159,9 @@ proved zero reader calls on the escape path, and canary metadata remained
 unchanged. Capture remains unstarted pending Kenneth's distinct exact-state
 declaration. The expected result is INVALID; target access, workspace deletion,
 and recovery remain forbidden after it.
+
+Kenneth supplied the exact T08 declaration. It authorizes capture only over the
+four regular files and exact symlink entry. It does not authorize following or
+reading the synthetic target, target mutation or deletion, workspace deletion,
+successor creation, or recovery. The capture-only runner and its independent
+same-packet preflight are now the next gate; there is no open T08 human action.
