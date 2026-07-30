@@ -236,11 +236,18 @@ def _count(connection, run_id: str) -> int:
     return int(cursor.fetchone()[0])
 
 
+def _validate_bound_response(response: dict[str, Any], request: dict[str, Any]) -> None:
+    """Validate the current product response schema and exact request linkage."""
+    cloud_records.validate_response(response)
+    if not cloud_records.response_matches_request(request, response):
+        raise cloud_records.CloudError("STALE_RESPONSE")
+
+
 def _normal_lambda(config: dict[str, str], run_id: str, output: Path) -> dict:
     request = _make_request(run_id)
     metadata = _invoke(config, "ck-p9-evaluator", request, output)
     response = json.loads(output.read_bytes())
-    cloud_records.validate_response(response, request)
+    _validate_bound_response(response, request)
     if response["status"] != "ADVISORY":
         raise CampaignError("LAMBDA_AUTHORITY_VIOLATION")
     return metadata
@@ -375,7 +382,7 @@ def _scenario_stale_lambda(config, secret, run_id, repetition, root) -> dict:
     request = _make_request(run_id)
     reason = None
     try:
-        cloud_records.validate_response(response, request)
+        _validate_bound_response(response, request)
     except cloud_records.CloudError as exc:
         reason = str(exc)
     if not reason:
