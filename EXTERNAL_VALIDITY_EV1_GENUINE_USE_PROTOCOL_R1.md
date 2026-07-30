@@ -2,7 +2,7 @@
 
 ## Status
 
-- `STATUS`: `PREFLIGHT_R1_BLOCKED_SOURCE_PRIVATE_PATH_MARKER; R2_HUMAN_REBIND_REQUIRED`
+- `STATUS`: `R2_MECHANICAL_PREFLIGHT_GREEN; IDENTICAL_PACKET_JUDGES_PENDING`
 - `PARENT_GATE`: `LIVE_CONTINUITY_EVIDENCE_GREEN`
 - `PRODUCT_CANDIDATE`: `1c483b1930e629c9ecb6d73418b9554897dc08ad`
 - `OFFICIAL_RULES_URL`: `https://cockroachdb-ai.devpost.com/rules`
@@ -14,6 +14,10 @@
 - `HUMAN_CONFIRMATION_RECEIVED_UTC`: `2026-07-30T13:35:47Z`
 - `R1_PREFLIGHT_RESULT`: `BLOCKED_BEFORE_MEASUREMENT_OR_JUDGING`
 - `R2_BACKLOG_CANDIDATE_SHA256`: `6dfe194028739ba57b2eb35a8fbd112bde1569ccd76ca73d5ec7f949fb64a0b5`
+- `R2_HUMAN_CONFIRMATION_RECEIVED_UTC`: `2026-07-30T13:47:28Z`
+- `R2_BREW_LEDGER_EXPORT_MANIFEST_SHA256`: `d78d1a589fe487368f797e3446ba8f1d7d22d7c08554ce91be2ece32cd8a2706`
+- `R2_MECHANICAL_RECEIPT_SHA256`: `f5ac6ee37c04214a7dfee101268f18410ac265d44d4e3f888166c000a35775ca`
+- `R2_PREFLIGHT_PACKET_SHA256`: `cfc32c214a4034205b93e0143978348f30dfac1a9f53dd423bf0702505e6d69d`
 
 This protocol operationalizes EV1 from the independently reviewed
 external-validity plan. It is not genuine-use evidence. Task execution remains
@@ -150,8 +154,8 @@ failure.
 
 ## Gate sequence
 
-1. Kenneth completes and confirms all 12 backlog rows. `R1_COMPLETE; R2_REBIND_REQUIRED`
-2. Freeze the ordered backlog and its SHA-256. `R1_SUPERSEDED_BEFORE_MEASUREMENT`
+1. Kenneth completes and confirms all 12 backlog rows. `R2_COMPLETE`
+2. Freeze the ordered backlog and its SHA-256. `R2_COMPLETE; BYTE_IDENTICAL`
 3. Build a sanitized EV1 execution packet containing this protocol and the
    confirmed backlog, with no private paths or task content beyond what is
    required for judging.

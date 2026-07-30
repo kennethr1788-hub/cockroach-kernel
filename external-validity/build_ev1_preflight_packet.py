@@ -10,13 +10,13 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-BACKLOG = ROOT / "EXTERNAL_VALIDITY_EV1_BACKLOG_R1.md"
+BACKLOG = ROOT / "EXTERNAL_VALIDITY_EV1_BACKLOG_R2.md"
 PROTOCOL = ROOT / "EXTERNAL_VALIDITY_EV1_GENUINE_USE_PROTOCOL_R1.md"
-HUMAN = ROOT / "EXTERNAL_VALIDITY_EV1_HUMAN_CONFIRMATION_RECEIPT_R1.md"
+HUMAN = ROOT / "EXTERNAL_VALIDITY_EV1_HUMAN_CONFIRMATION_RECEIPT_R2.md"
 HARNESS = ROOT / "external-validity" / "ev1_preflight.py"
 CHILD = ROOT / "external-validity" / "ev1_fresh_child.py"
 TESTS = ROOT / "external-validity" / "test_ev1_preflight.py"
-OUTPUT = ROOT / "EXTERNAL_VALIDITY_EV1_PREFLIGHT_PACKET_R1.md"
+OUTPUT = ROOT / "EXTERNAL_VALIDITY_EV1_PREFLIGHT_PACKET_R2.md"
 
 
 def digest(path: Path) -> str:
@@ -75,7 +75,8 @@ def main() -> int:
             task_lines.append(line)
 
     sources = "\n".join(
-        f"- `{row['label']}@{row['commit']}`: {row['tracked_files']} tracked files; tree listing SHA-256 `{row['tree_listing_sha256']}`"
+        f"- `{row['label']}@{row['commit']}`: {row['included_files']} included files, "
+        f"{row['excluded_file_count']} excluded; canonical export manifest SHA-256 `{row['manifest_sha256']}`"
         for row in mechanical["source_bindings"]
     )
     source_hashes = "\n".join(
@@ -84,7 +85,8 @@ def main() -> int:
     )
     scorer = mechanical["scorer"]
     isolation = mechanical["isolation"]
-    packet = f"""# EV1 Genuine-Use Preflight Packet R1
+    regressions = mechanical["product_regressions"]
+    packet = f"""# EV1 Genuine-Use Preflight Packet R2
 
 ## Decision requested
 
@@ -117,6 +119,11 @@ replace them. Public actions, paid infrastructure, credentials, client or
 production data, HOME runtime, live memory, Qdrant, StateV2, launchd, and source
 working-tree mutation remain forbidden.
 
+For EV1-T01 through EV1-T04, Kenneth also confirmed the exact deterministic
+76-file export manifest. The sole excluded file is a non-application instruction
+file containing local absolute paths. No excluded file may enter a task root,
+acceptance check, judge packet, or evidence receipt.
+
 ## Sample and acceptance
 
 - 12 ordered tasks over seven calendar days; minimum 8 evaluable
@@ -137,14 +144,18 @@ working-tree mutation remain forbidden.
 
 {sources}
 
-Only the exact commits above may seed generated roots. Current working-tree
-changes and remotes are excluded. The source-binding canary found no forbidden
-tracked credential files or high-confidence private-path/credential markers.
+Only the exact commit plus manifest pairs above may seed generated roots.
+Current working-tree changes and remotes are excluded. The source-binding
+canary proved that all permitted exported files contain no forbidden tracked
+credential file or high-confidence private-path or credential marker. Excluded
+source content is never copied into the packet.
 
 ## Mechanical preflight evidence
 
 - backlog: `{mechanical['backlog']['task_count']}` tasks in exact order; 2 human edits; 2 expected-invalid cases
 - source bindings: `{len(mechanical['source_bindings'])}` exact commits GREEN
+- product candidate unchanged across product paths: `{str(regressions['candidate_unchanged']).upper()}`
+- current frozen regressions: `{regressions['total_tests']}` of `{regressions['total_tests']}` GREEN across Gate 7, P9 cloud contract, and S3 protocol suites
 - receipt chain: `{mechanical['receipt_chain']['events']}` canonical linked events GREEN
 - scorer positive control: `{scorer['positive']['status']}` at `{scorer['positive']['acceptance_pass_rate']:.3f}` pass rate
 - scorer low-pass negative control: `{scorer['low_pass_negative']['status']}`
@@ -186,17 +197,12 @@ before T01 starts. Otherwise return BLOCKED with concrete blockers.
 
 ## Required judge output
 
-Return exactly this complete block. Replace placeholders and do not add patches,
-implementation steps, or builder direction:
-
-```text
-VERDICT: GREEN|BLOCKED
-PACKET_SHA256: <exact hash from trusted invocation envelope>
-HASH_MATCH: true|false
-RECUSAL: CLEAR|REQUIRED
-BLOCKERS:
-- <none or concrete blocker>
-```
+Follow the trusted outer judge route's validated verdict schema. The output must
+bind the exact packet SHA-256 from that route's invocation envelope, state a
+GREEN or non-GREEN verdict, provide a clear recusal result, and enumerate any
+blockers or evidence gaps. Do not add patches, implementation steps, or builder
+direction. A bare verdict or an output that omits the exact packet hash is
+invalid.
 """
     raw = packet.encode("utf-8")
     if b"/Users/" in raw or b"$HOME" in raw or b"~/" in raw:

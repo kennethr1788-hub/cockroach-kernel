@@ -29,6 +29,17 @@ class EV1PreflightTests(unittest.TestCase):
         self.assertEqual([row["label"] for row in results], [
             "brew-ledger", "ai-signal-dashboard", "step-realtime-cli"
         ])
+        brew = results[0]
+        self.assertEqual(brew["included_files"], 76)
+        self.assertEqual(brew["excluded_file_count"], 1)
+        self.assertEqual(brew["manifest_sha256"], ev1.BREW_LEDGER_MANIFEST_SHA256)
+        self.assertNotIn("CLAUDE.md", repr(brew))
+
+    def test_product_candidate_and_regressions(self) -> None:
+        result = ev1.validate_product_candidate_and_regressions()
+        self.assertEqual(result["status"], "GREEN")
+        self.assertTrue(result["candidate_unchanged"])
+        self.assertEqual(result["total_tests"], 51)
 
     def test_scorer_positive_and_negative_controls(self) -> None:
         result = ev1.scorer_canary()
