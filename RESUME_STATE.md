@@ -2,10 +2,10 @@
 
 - `CURRENT_PHASE`: `EXTERNAL_VALIDITY_ITEM3_PROSPECTIVE_DOGFOODING`
 - `LAST_GREEN_GATE`: `CROSS_MODEL_BLIND_EVIDENCE_GREEN`
-- `NEXT_ALLOWED_ACTION`: Execute Item 3 prospective dogfooding under its separate frozen protocol; preserve the frozen product candidate and EV3 evidence; do not begin Gate 9 until the external-validity sequence is closed
+- `NEXT_ALLOWED_ACTION`: Mechanically validate and hash EXTERNAL_VALIDITY_EV1_BACKLOG_CANDIDATE_R1.md, obtain Kenneth's new explicit confirmation over that exact populated hash, then freeze the byte-identical backlog and build the EV1 preflight packet; do not begin EV1-T01 before same-hash GLM 5.2 and AGY GREEN
 - `FORBIDDEN_ACTIONS`: Modify product behavior or Gate 3–8/EV3 evidence; rerun EV3 or tune against revealed hidden inputs; omit or relabel failed campaigns; expose credentials, private paths, account identifiers, or raw private evidence; describe synthetic/replayed/model evidence as production or independent-human evidence; begin Gate 9, Gate 10, release, publication, video, or submission; mutate HOME/live memory
-- `CURRENT_COMMIT`: `f2df034f26400e10317d02bd33edd6c84045a44d`
-- `LAST_VERIFIED_UTC`: `2026-07-30T12:51:07Z`
+- `CURRENT_COMMIT`: `0ff9877e528237e6a1aad50b86cc6489599747b8`
+- `LAST_VERIFIED_UTC`: `2026-07-30T13:29:40Z`
 - `GATE7_RUN5_AUTHORIZATION`: `RECORDED; CONTINUE_THROUGH_GATE8; POLICY_BOUNDED_RUNPOD_RUNS_AND_SEQUENTIAL_RETRIES_AUTHORIZED`
 - `GATE7_RUN5_REPAIR_COMMIT`: `9f76ece0e1aa98ac5bf037299ce1547c9c534aab`
 - `GATE7_RUN5_LOCAL_PREFLIGHT`: `R3_GREEN_EXCEPT_AWS_AUTH; RECEIPT_SHA256_2aaafb2e7d56a8e75e01f5df3a733c5f56bf8ee265dedde56a88fe5b275bcd0e; SOURCE_BINDINGS_SHA256_07d616082b32b61e21c84b86c76b1349444ed873801d705b2b692b195d467e96; CONTRACT_SHA256_a643d0a04baa2d76f23b0a9a5d34c247c805e52b4792671426c658ad16df91be; HIDDEN_SEED_FALSE; ACTIVE_RUNPOD_INVENTORY_EMPTY`
@@ -85,8 +85,9 @@
 - `EXTERNAL_VALIDITY_EV3_STATUS`: `CROSS_MODEL_BLIND_EVIDENCE_GREEN; 24_OF_24_PASS; MISTRAL_12_OF_12; STEPFUN_12_OF_12; SAFETY_24_OF_24; ZERO_INFRASTRUCTURE_INVALID; ZERO_TOOL_PATH_CONTEXT_AUTHORITY; TEARDOWN_GREEN`
 - `EXTERNAL_VALIDITY_EV3_FINAL_PACKET_SHA256`: `f6288d648a01035f43a696ae21157bee38e03d2bdf0ace33265d20c3f8b035e0`
 - `EXTERNAL_VALIDITY_EV3_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; EXACT_SAME_HASH; RECUSAL_CLEAR; NO_BLOCKERS; NO_EVIDENCE_GAPS; NO_RERUNS`
-- `PENDING_BLOCKERS`: `none for Item 5`; Item 3 prospective dogfooding remains open; historical failed campaigns remain immutable and cannot be pooled into successful evidence
-- `REQUIRED_JUDGE_STATE`: Item 5 final GLM 5.2 and AGY review is complete; Item 3 and later Gate 9 require their own frozen same-hash independent review
+- `PENDING_BLOCKERS`: `EV1_HUMAN_TASK_AUTHENTICITY_BLOCKED — populated candidate exists but Kenneth has not yet reviewed and confirmed its exact hash; two prospective human edits and per-task operator observations remain required; historical failed campaigns remain immutable and cannot be pooled into successful evidence`
+- `EV1_BACKLOG_CANDIDATE_SHA256`: `34ffed70e3d52cde2e94e5f3b66dd96cdac1f2aa7de757b11bf6580bb5e536e4`
+- `REQUIRED_JUDGE_STATE`: `After Kenneth's exact-hash confirmation, EV1 requires fresh same-hash GLM 5.2 and AGY GREEN before EV1-T01; Item 5 final GLM 5.2 and AGY review remains complete`
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
 - `P9_FINAL_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; RECUSAL_CLEAR`
