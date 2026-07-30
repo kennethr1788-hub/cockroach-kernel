@@ -2,10 +2,10 @@
 
 - `CURRENT_PHASE`: `EXTERNAL_VALIDITY_ITEM3_PROSPECTIVE_DOGFOODING`
 - `LAST_GREEN_GATE`: `CROSS_MODEL_BLIND_EVIDENCE_GREEN`
-- `NEXT_ALLOWED_ACTION`: Prepare EV1-T03 from the frozen manifest-bound source in the next generated disposable root; preserve task order and do not modify the product candidate
+- `NEXT_ALLOWED_ACTION`: Record Kenneth's exact EV1-T03 capture declaration, then build the task-specific guarded execution packet and obtain independent same-packet preflight before any deletion
 - `FORBIDDEN_ACTIONS`: Modify product behavior or Gate 3–8/EV3 evidence; rerun EV3 or tune against revealed hidden inputs; omit or relabel failed campaigns; expose credentials, private paths, account identifiers, or raw private evidence; describe synthetic/replayed/model evidence as production or independent-human evidence; begin Gate 9, Gate 10, release, publication, video, or submission; mutate HOME/live memory
-- `CURRENT_COMMIT`: `84737610b9b5a606e5a31dfae31b9cb3c8da32a2`
-- `LAST_VERIFIED_UTC`: `2026-07-30T17:03:20Z`
+- `CURRENT_COMMIT`: `7c01eff96d61e2eb0d13d0c3a211ae1c6dc31a99`
+- `LAST_VERIFIED_UTC`: `2026-07-30T17:27:52Z`
 - `GATE7_RUN5_AUTHORIZATION`: `RECORDED; CONTINUE_THROUGH_GATE8; POLICY_BOUNDED_RUNPOD_RUNS_AND_SEQUENTIAL_RETRIES_AUTHORIZED`
 - `GATE7_RUN5_REPAIR_COMMIT`: `9f76ece0e1aa98ac5bf037299ce1547c9c534aab`
 - `GATE7_RUN5_LOCAL_PREFLIGHT`: `R3_GREEN_EXCEPT_AWS_AUTH; RECEIPT_SHA256_2aaafb2e7d56a8e75e01f5df3a733c5f56bf8ee265dedde56a88fe5b275bcd0e; SOURCE_BINDINGS_SHA256_07d616082b32b61e21c84b86c76b1349444ed873801d705b2b692b195d467e96; CONTRACT_SHA256_a643d0a04baa2d76f23b0a9a5d34c247c805e52b4792671426c658ad16df91be; HIDDEN_SEED_FALSE; ACTIVE_RUNPOD_INVENTORY_EMPTY`

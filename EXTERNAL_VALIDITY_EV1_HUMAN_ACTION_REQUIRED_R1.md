@@ -1,6 +1,6 @@
 # EV1 Human Action Required R1
 
-- `STATUS`: `EV1_T01_CLOSED_INFRASTRUCTURE_INVALID_NON_SCORING; EV1_T02_CAPTURE_DECLARATION_REQUIRED`
+- `STATUS`: `EV1_T01_CLOSED_INFRASTRUCTURE_INVALID_NON_SCORING; EV1_T02_CLOSED_EVALUABLE_PASS; EV1_T03_CAPTURE_DECLARATION_REQUIRED`
 - `LAST_GREEN_GATE`: `LIVE_CONTINUITY_EVIDENCE_GREEN`
 - `BACKLOG_CANDIDATE_SHA256`: `34ffed70e3d52cde2e94e5f3b66dd96cdac1f2aa7de757b11bf6580bb5e536e4`
 - `R2_BACKLOG_CANDIDATE_SHA256`: `6dfe194028739ba57b2eb35a8fbd112bde1569ccd76ca73d5ec7f949fb64a0b5`
@@ -9,7 +9,7 @@
 - `MEASURED_CLOCK_STARTED`: `TRUE; 2026-07-30T14:10:38Z`
 - `CLOSED_FACT`: `Kenneth confirmed EV1-T01 through EV1-T04 may use the deterministic 76-file Brew Ledger export excluding CLAUDE.md and bound by manifest SHA-256 d78d1a589fe487368f797e3446ba8f1d7d22d7c08554ce91be2ece32cd8a2706.`
 - `EVIDENCE`: `EXTERNAL_VALIDITY_EV1_HUMAN_CONFIRMATION_RECEIPT_R2.md`
-- `NEXT_SAFE_ACTION`: `Kenneth explicitly declares the exact frozen EV1-T02 three-file state permitted for capture, guarded disposable-workspace deletion, and fresh-process recovery.`
+- `NEXT_SAFE_ACTION`: `Kenneth explicitly declares the exact frozen EV1-T03 three-file state permitted for capture, guarded disposable-workspace deletion, and fresh-process recovery.`
 - `FORBIDDEN`: `Fabricating or replacing Kenneth's observations; relabeling the infrastructure-invalid full acceptance as GREEN; rerunning recovery; changing recovered source, task order, product candidate, thresholds, or public claims.`
 
 R1 authenticity and its blocked preflight remain preserved. Kenneth closed the
@@ -60,3 +60,13 @@ test work spans one committed file, one modified tracked file, and one untracked
 file. Typecheck, production build, the four-case storage contract, and five
 determinism repetitions pass offline. Capture, deletion, and recovery have not
 started. Kenneth's exact state declaration is the next human-only gate.
+
+Kenneth subsequently supplied the EV1-T02 exact-state declaration. The task
+completed as an evaluable pass, its objective evidence received independent
+GLM 5.2 GREEN, and its temporary root was torn down cleanly. EV1-T03 is now
+prepared and its declared test work passes typecheck, production build, seven
+recipe-invariant cases, and five byte-identical offline repetitions. The exact
+EV1-T03 state consists of committed `scripts/run-recipe-invariants.mjs` at
+`b18edb6f9b2b1c126e38c6fe218a167fe7ac7ca4`, modified `package.json`, and
+untracked `scripts/recipe-invariant-cases.cjs`. Capture, deletion, and recovery
+remain unstarted pending Kenneth's distinct exact-state declaration.
