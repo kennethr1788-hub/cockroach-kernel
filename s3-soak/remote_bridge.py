@@ -84,8 +84,15 @@ def main() -> int:
     local = args.local_root.resolve()
     local_requests = local / "requests"
     local_results = local / "results"
+    # Never expose an in-progress transfer inside the coordinator's watched
+    # request directory. Run 5 proved that a rename racing an `is_file()`
+    # check can make a just-moved temporary path look unsafe. A sibling staging
+    # directory keeps the watched directory final-file-only while preserving an
+    # atomic same-filesystem promotion into `requests`.
+    local_staging = local / "staging"
     local_requests.mkdir(parents=True, exist_ok=True)
     local_results.mkdir(parents=True, exist_ok=True)
+    local_staging.mkdir(parents=True, exist_ok=True)
     log = ChainLog(args.log.resolve(), args.campaign_id)
     common = [
         "-i", str(identity), "-p", str(args.port),
@@ -124,10 +131,9 @@ def main() -> int:
                 time.sleep(1)
             else:
                 raise BridgeFailure("REMOTE_REQUEST_DEADLINE")
-            # This name is a shared contract with host_coordinator's strict
-            # directory validator. The coordinator permits only the current
-            # sequence's `.json.tmp` while a transfer is incomplete.
-            local_temporary = local_requests / (request_name + ".tmp")
+            local_temporary = local_staging / (request_name + ".tmp")
+            if local_temporary.exists():
+                raise BridgeFailure("STAGING_FILE_EXISTS")
             transfer = run([*scp, f"{args.user}@{args.host}:{remote_request}",
                             str(local_temporary)], timeout=60)
             if transfer.returncode != 0:

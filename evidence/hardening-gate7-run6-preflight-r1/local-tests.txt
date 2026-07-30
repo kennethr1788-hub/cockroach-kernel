@@ -1,0 +1,24 @@
+test_bool_hour_rejected (test_protocol.ProtocolTests.test_bool_hour_rejected) ... ok
+test_coordinator_rejects_temporary_file_in_watched_directory (test_protocol.ProtocolTests.test_coordinator_rejects_temporary_file_in_watched_directory) ... ok
+test_coordinator_waits_for_completion_marker (test_protocol.ProtocolTests.test_coordinator_waits_for_completion_marker) ... ok
+test_duplicate_and_out_of_order_are_caller_enforced (test_protocol.ProtocolTests.test_duplicate_and_out_of_order_are_caller_enforced) ... ok
+test_frozen_evidence_manifest_is_sorted_and_atomic (test_protocol.ProtocolTests.test_frozen_evidence_manifest_is_sorted_and_atomic) ... ok
+test_guard_ignores_only_in_progress_final_fragment (test_protocol.ProtocolTests.test_guard_ignores_only_in_progress_final_fragment) ... ok
+test_hash_mismatch_rejected (test_protocol.ProtocolTests.test_hash_mismatch_rejected) ... ok
+test_injection_operation_rejected (test_protocol.ProtocolTests.test_injection_operation_rejected) ... ok
+test_out_of_order_request_file_blocks_coordinator (test_protocol.ProtocolTests.test_out_of_order_request_file_blocks_coordinator) ... ok
+test_remote_bridge_and_coordinator_share_atomic_staging_contract (test_protocol.ProtocolTests.test_remote_bridge_and_coordinator_share_atomic_staging_contract) ... ok
+test_result_linkage_rejected (test_protocol.ProtocolTests.test_result_linkage_rejected) ... ok
+test_round_trip (test_protocol.ProtocolTests.test_round_trip) ... ok
+test_unknown_field_rejected (test_protocol.ProtocolTests.test_unknown_field_rejected) ... ok
+test_cockroach_sqlstate_is_preserved_without_raw_output (test_hardening.HardeningTests.test_cockroach_sqlstate_is_preserved_without_raw_output) ... ok
+test_coordinated_local_shutdown_proves_all_processes_absent (test_hardening.HardeningTests.test_coordinated_local_shutdown_proves_all_processes_absent) ... ok
+test_failure_classes_are_stable_and_sanitized (test_hardening.HardeningTests.test_failure_classes_are_stable_and_sanitized) ... ok
+test_login_refresh_mode_requires_a_real_post_exchange_margin (test_hardening.HardeningTests.test_login_refresh_mode_requires_a_real_post_exchange_margin) ... ok
+test_preserved_eleven_pairs_and_expiry_exchange_twelve (test_hardening.HardeningTests.test_preserved_eleven_pairs_and_expiry_exchange_twelve) ... ok
+test_stage_failure_is_fsynced_before_exact_cleanup (test_hardening.HardeningTests.test_stage_failure_is_fsynced_before_exact_cleanup) ... ok
+
+----------------------------------------------------------------------
+Ran 19 tests in 3.215s
+
+OK

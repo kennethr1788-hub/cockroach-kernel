@@ -1,9 +1,9 @@
 # Resume State
 
-- `CURRENT_PHASE`: `HARDENING_7_RUN5_BLOCKED_CLOSEOUT`
+- `CURRENT_PHASE`: `HARDENING_7_RUN6_PREFLIGHT_REPAIR`
 - `LAST_GREEN_GATE`: `GATE7_RUN5_PREFLIGHT_GREEN`
-- `NEXT_ALLOWED_ACTION`: Freeze a separate replacement-campaign contract only after Kenneth explicitly supersedes the post-hidden no-replacement rule; preserve Run 5 as immutable failed evidence; require fresh same-hash GLM 5.2 and AGY GREEN before any worker creation
-- `FORBIDDEN_ACTIONS`: Retry Run 5 under the general pre-hidden retry envelope; reuse Run 3, Run 4, or Run 5 hidden seeds/inputs; tune against revealed hidden inputs; relabel partial sub-results as Gate 7 GREEN; begin Gate 8 before Gate 7 final independent GREEN; begin Gate 9, S3-R2, release, publication, video, or submission; mutate HOME/live memory; expose credentials
+- `NEXT_ALLOWED_ACTION`: Freeze and independently review the Run 6 replacement packet after local race-regression, bundle, cloud-readiness, scan, and empty-inventory proofs pass
+- `FORBIDDEN_ACTIONS`: Create a Run 6 worker before same-hash GLM 5.2 and AGY GREEN; create a hidden seed before CAMPAIGN_READY; reuse Run 3, Run 4, or Run 5 hidden seeds/inputs; tune against revealed hidden inputs; relabel partial sub-results as Gate 7 GREEN; begin Gate 8 before Gate 7 final independent GREEN; begin Gate 9, S3-R2, release, publication, video, or submission; mutate HOME/live memory; expose credentials
 - `CURRENT_COMMIT`: `d13da10d14778d3a2fa3d3a9197f813da1f107a8`
 - `GATE7_RUN5_AUTHORIZATION`: `RECORDED; CONTINUE_THROUGH_GATE8; POLICY_BOUNDED_RUNPOD_RUNS_AND_SEQUENTIAL_RETRIES_AUTHORIZED`
 - `GATE7_RUN5_REPAIR_COMMIT`: `9f76ece0e1aa98ac5bf037299ce1547c9c534aab`
@@ -30,6 +30,9 @@
 - `GATE7_RUN5_FINAL_PACKET_SHA256`: `8325637d019f5dcb33adb46be4f13fac2c218240b60dd47c587b14cdaacdffd8`
 - `GATE7_RUN5_FINAL_JUDGE_STATE`: `GLM_5_2_BLOCKED; AGY_GEMINI_3_1_PRO_HIGH_BLOCKED; SAME_HASH; RECUSAL_CLEAR`
 - `GATE7_RUN5_ACTIVE_RUNPOD_INVENTORY`: `[]`
+- `GATE7_RUN6_AUTHORIZATION`: `RECORDED; ONE_FRESH_REPLACEMENT; RUN5_POST_HIDDEN_NO_REPLACEMENT_SUPERSEDED_FOR_RUN6_ONLY`
+- `GATE7_RUN6_LOCAL_REPAIR`: `GREEN; ERROR_HASH_MATCHES_REQUEST_ENTRY_UNSAFE; EXTERNAL_STAGING_REPAIR; 12_REQUEST_TOPOLOGY_PROOF; 19_OF_19_TESTS_PASS`
+- `GATE7_RUN6_ACTIVE_RUNPOD_INVENTORY`: `[]`
 - `GATE7_RUN4_PREFLIGHT_PACKET_SHA256`: `e7f4d8723b49f422bf31e0f264d49432c5735054ed7d45fdb48666a78e55a7e4`
 - `GATE7_RUN4_PREFLIGHT_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; EXACT_SAME_HASH; RECUSAL_CLEAR`
 - `GATE7_RUN3_AUTHORIZATION_PROMPT_SHA256`: `a941c6e85d021d2ec77ea442765f4df724283af76f74c8b7f19ed91d077f8d30`

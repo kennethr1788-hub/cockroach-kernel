@@ -39,17 +39,27 @@ class ProtocolTests(unittest.TestCase):
             identity.chmod(0o600)
             known_hosts.write_text("proof", encoding="utf-8")
             campaign = "ck-s3-topology-proof"
-            request = protocol.make_request(
-                campaign, 1, protocol.GENESIS_HASH,
-                protocol.Operation.RUN_PROMOTE, "hour-01")
-            request_raw = protocol.canonical(request)
+            request_raw_by_name: dict[str, bytes] = {}
+            parent_hash = protocol.GENESIS_HASH
+            for sequence in range(1, 13):
+                operation = (protocol.Operation.RUN_PROMOTE if sequence % 2
+                             else protocol.Operation.RUN_REFUSE)
+                request = protocol.make_request(
+                    campaign, sequence, parent_hash, operation,
+                    f"hour-{sequence:02d}")
+                request_raw_by_name[f"request-{sequence:04d}.json"] = protocol.canonical(request)
+                parent_hash = request["request_hash"]
             uploaded: dict[str, bytes] = {}
+            observed: dict[str, object] = {
+                "request_entries_during_transfer": [],
+                "target_parents": [],
+            }
 
             coordinator = subprocess.Popen([
                 sys.executable, str(Path(__file__).parent / "host_coordinator.py"),
                 "--bridge-root", str(bridge), "--evidence-root", str(evidence),
-                "--campaign-id", campaign, "--expected-requests", "1",
-                "--lambda-call-ceiling", "1", "--cockroach-operation-ceiling", "9",
+                "--campaign-id", campaign, "--expected-requests", "12",
+                "--lambda-call-ceiling", "12", "--cockroach-operation-ceiling", "108",
                 "--deadline-epoch", str(int(time.time()) + 20),
                 "--mode", "fixture", "--heartbeat-seconds", "1",
             ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -61,11 +71,16 @@ class ProtocolTests(unittest.TestCase):
                 if command[0] == "/usr/bin/scp":
                     source, destination = command[-2:]
                     if source.startswith("root@example.invalid:"):
+                        request_name = Path(source.split(":", 1)[1]).name
+                        request_raw = request_raw_by_name[request_name]
                         target = Path(destination)
                         target.parent.mkdir(parents=True, exist_ok=True)
                         midpoint = len(request_raw) // 2
                         target.write_bytes(request_raw[:midpoint])
-                        time.sleep(0.3)
+                        observed["request_entries_during_transfer"].append(
+                            list((bridge / "requests").iterdir()))
+                        observed["target_parents"].append(target.parent)
+                        time.sleep(0.02)
                         with target.open("ab") as handle:
                             handle.write(request_raw[midpoint:])
                         return subprocess.CompletedProcess(command, 0, stdout=b"")
@@ -81,7 +96,7 @@ class ProtocolTests(unittest.TestCase):
                 "--known-hosts", str(known_hosts),
                 "--remote-root", f"/workspace/{campaign}/bridge",
                 "--local-root", str(bridge), "--campaign-id", campaign,
-                "--expected-requests", "1",
+                "--expected-requests", "12",
                 "--deadline-epoch", str(int(time.time()) + 20),
                 "--heartbeat-seconds", "1", "--log", str(log),
             ]
@@ -89,16 +104,40 @@ class ProtocolTests(unittest.TestCase):
                 with mock.patch.object(remote_bridge, "run", side_effect=fake_transport), \
                         mock.patch.object(sys, "argv", arguments):
                     bridge_exit = remote_bridge.main()
-                coordinator_output, _ = coordinator.communicate(timeout=10)
+                self.assertEqual(
+                    bridge_exit, 0,
+                    log.read_text(encoding="utf-8") if log.exists() else "bridge log missing",
+                )
+                coordinator_output, _ = coordinator.communicate(timeout=20)
             finally:
                 if coordinator.poll() is None:
                     coordinator.terminate()
                     coordinator.wait(timeout=5)
-            self.assertEqual(bridge_exit, 0)
             self.assertEqual(coordinator.returncode, 0, coordinator_output)
-            self.assertTrue(any(key.endswith("result-0001.json.tmp") for key in uploaded))
+            for index, entries in enumerate(
+                    observed["request_entries_during_transfer"]):
+                self.assertEqual(len(entries), index)
+                self.assertTrue(all(path.name.endswith(".json") for path in entries))
+            self.assertEqual(
+                observed["target_parents"],
+                [(bridge / "staging").resolve() for _ in range(12)],
+            )
+            self.assertEqual(
+                len([key for key in uploaded if key.endswith(".json.tmp")]), 12)
+            self.assertEqual(list((bridge / "staging").iterdir()), [])
             events = [json.loads(line)["event"] for line in log.read_bytes().splitlines()]
             self.assertEqual(events[-1], "BRIDGE_GREEN")
+
+    def test_coordinator_rejects_temporary_file_in_watched_directory(self):
+        with tempfile.TemporaryDirectory(prefix="s3-watched-temp-proof-") as temporary:
+            root = Path(temporary)
+            requests = root / "requests"
+            requests.mkdir()
+            (requests / "request-0001.json.tmp").write_bytes(b"partial")
+            with self.assertRaisesRegex(
+                    RuntimeError, "REQUEST_FILE_UNKNOWN"):
+                import host_coordinator
+                host_coordinator.verify_request_directory(requests, 1, set())
 
     def test_frozen_evidence_manifest_is_sorted_and_atomic(self):
         with tempfile.TemporaryDirectory(prefix="s3-manifest-proof-") as temporary:

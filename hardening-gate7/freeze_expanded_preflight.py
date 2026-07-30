@@ -123,12 +123,12 @@ def file_record(relative: str) -> dict[str, Any]:
     return {"path": relative, "sha256": digest(raw), "bytes": len(raw)}
 
 
-def contract_hash(plan: Path, prompt: Path) -> str:
+def contract_hash(plan: Path, prompt: Path, schedule: Path, thresholds: Path) -> str:
     rows = [
         {"label": "plan", "sha256": digest(plan.read_bytes())},
         {"label": "prompt", "sha256": digest(prompt.read_bytes())},
-        file_record("HARDENING_GATE7_RUN5_THRESHOLDS_R2.json"),
-        file_record("HARDENING_GATE7_RUN5_SCHEDULE_R1.json"),
+        {"label": "thresholds", "sha256": digest(thresholds.read_bytes())},
+        {"label": "schedule", "sha256": digest(schedule.read_bytes())},
     ]
     return digest(canonical(rows))
 
@@ -142,6 +142,13 @@ def main() -> int:
     parser.add_argument("--prompt", type=Path, required=True)
     parser.add_argument("--runpodctl", type=Path, required=True)
     parser.add_argument("--runpodctl-sha256", required=True)
+    parser.add_argument("--run-label", choices=("r5", "r6"), default="r5")
+    parser.add_argument(
+        "--schedule", type=Path,
+        default=BASE / "HARDENING_GATE7_RUN5_SCHEDULE_R1.json")
+    parser.add_argument(
+        "--thresholds", type=Path,
+        default=BASE / "HARDENING_GATE7_RUN5_THRESHOLDS_R2.json")
     args = parser.parse_args()
     output = args.output_root.resolve()
     if output.exists():
@@ -156,19 +163,29 @@ def main() -> int:
     ).splitlines()
     if changed_product:
         raise FreezeError("FROZEN_PRODUCT_CHANGED")
-    current_campaign_root = BASE / ".hardening-runtime/gate7-r5"
+    current_campaign_root = BASE / ".hardening-runtime" / f"gate7-{args.run_label}"
     if current_campaign_root.exists() and list(current_campaign_root.rglob("master-seed.bin")):
         raise FreezeError("PREMATURE_HIDDEN_SEED_PRESENT")
     plan = args.plan.resolve()
     prompt = args.prompt.resolve()
-    frozen_contract = contract_hash(plan, prompt)
+    schedule = args.schedule.resolve()
+    thresholds = args.thresholds.resolve()
+    if not schedule.is_file() or not thresholds.is_file():
+        raise FreezeError("SCHEDULE_OR_THRESHOLDS_MISSING")
+    frozen_contract = contract_hash(plan, prompt, schedule, thresholds)
+    harness_files = tuple(
+        str(schedule.relative_to(BASE)) if name == "HARDENING_GATE7_RUN5_SCHEDULE_R1.json"
+        else str(thresholds.relative_to(BASE)) if name == "HARDENING_GATE7_RUN5_THRESHOLDS_R2.json"
+        else name
+        for name in HARNESS_FILES
+    )
     source_body = {
         "version": "hardening-gate7-expanded-source-bindings-v1",
         "candidate_commit": CANDIDATE,
         "orchestration_head": head,
         "preflight_contract_sha256": frozen_contract,
         "product_files": [file_record(name) for name in PRODUCT_FILES],
-        "harness_files": [file_record(name) for name in HARNESS_FILES],
+        "harness_files": [file_record(name) for name in harness_files],
     }
     source = dict(source_body, source_bindings_sha256=digest(canonical(source_body)))
     atomic_write(args.source_bindings.resolve(), canonical(source))
@@ -233,7 +250,7 @@ def main() -> int:
     bulk_root = output / "bulk-sql-public"
     run([
         sys.executable, str(HERE / "live_bulk_controller.py"),
-        "--campaign-id", "ck-g7r5-public-preflight",
+        "--campaign-id", f"ck-g7{args.run_label}-public-preflight",
         "--generated-root", str(bulk_root), "--generate-only",
     ])
 
@@ -332,7 +349,7 @@ def main() -> int:
 
     # Preserve the read-only cloud readiness receipt. An expired AWS session is
     # a launch-time human action, not permission to weaken or skip the live track.
-    live_readiness = BASE / ".hardening-runtime/gate7-r5/live-readiness-freeze.json"
+    live_readiness = current_campaign_root / "live-readiness-freeze.json"
     live_readiness.parent.mkdir(parents=True, exist_ok=True)
     live = run([
         sys.executable, str(HERE / "preflight_live_check.py"),

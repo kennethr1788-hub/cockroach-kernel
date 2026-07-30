@@ -25,14 +25,11 @@ REQUEST_NAME_RE = re.compile(r"^request-([0-9]{4})\.json$")
 
 def verify_request_directory(requests: Path, expected_sequence: int,
                              processed: set[str]) -> None:
-    expected_temporary = f"request-{expected_sequence:04d}.json.tmp"
     for entry in requests.iterdir():
         if entry.is_symlink() or not entry.is_file():
             raise CoordinatorFailure("REQUEST_ENTRY_UNSAFE")
         match = REQUEST_NAME_RE.fullmatch(entry.name)
         if match is None:
-            if entry.name == expected_temporary:
-                continue
             raise CoordinatorFailure("REQUEST_FILE_UNKNOWN")
         sequence = int(match.group(1))
         if sequence > expected_sequence:
