@@ -1,5 +1,21 @@
 # HUMAN_ACTION_REQUIRED
 
+## Current EV1-T03 operator-observation gate
+
+- `BLOCKER`: `EV1_T03_OPERATOR_OBSERVATION_REQUIRED`
+- `MECHANICAL_RESULT`: `PASS`
+- `EXECUTION_RECEIPT_SHA256`: `b0209d1a4e40aa5ea05ad39587be96d8b7dee855c7cacfc488d6cda4ee8158da`
+- `ORIGINAL_WORKSPACE_ABSENT`: `TRUE`
+- `SUCCESSOR_PRESERVED`: `TRUE`
+- `CAMPAIGN_TEARDOWN`: `PENDING`
+- `UTC_RECORDED`: `2026-07-30T17:45:43Z`
+
+Kenneth must confirm or correct the two prepared statements in
+`EXTERNAL_VALIDITY_EV1_T03_MECHANICAL_RESULT_R1.md`: usability/productive
+continuation and the ordinary-Git counterfactual. The builder may not replace
+these human observations. Teardown and T03 closure remain blocked until they
+are recorded and the objective evidence receives its final independent audit.
+
 ## Closed EV1-T03 capture-declaration gate
 
 - `BLOCKER`: `NONE_BEFORE_ONE_AUTHORIZED_EXECUTION`
