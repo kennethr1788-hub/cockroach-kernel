@@ -15,5 +15,8 @@ s3-*.stdout
 build/
 *.egg-info/
 
+# EV1 genuine-use task roots, dependency caches, and raw task evidence stay local.
+.ev1-runtime/
+
 # Python compilation residue is never release evidence.
 __pycache__/
