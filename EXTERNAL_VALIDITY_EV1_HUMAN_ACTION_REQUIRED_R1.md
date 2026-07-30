@@ -1,6 +1,6 @@
 # EV1 Human Action Required R1
 
-- `STATUS`: `EV1_T01_CLOSED_INFRASTRUCTURE_INVALID_NON_SCORING; EV1_T02_CLOSED_EVALUABLE_PASS; EV1_T03_CLOSED_EVALUABLE_PASS; EV1_T04_CLOSED_EVALUABLE_PASS; EV1_T05_CLOSED_EVALUABLE_PASS; EV1_T06_CLOSED_EVALUABLE_PASS; EV1_T07_CLOSED_EXPECTED_INVALID; EV1_T08_CAPTURE_DECLARATION_RECEIVED_INDEPENDENT_PREFLIGHT_REQUIRED`
+- `STATUS`: `EV1_T01_CLOSED_INFRASTRUCTURE_INVALID_NON_SCORING; EV1_T02_CLOSED_EVALUABLE_PASS; EV1_T03_CLOSED_EVALUABLE_PASS; EV1_T04_CLOSED_EVALUABLE_PASS; EV1_T05_CLOSED_EVALUABLE_PASS; EV1_T06_CLOSED_EVALUABLE_PASS; EV1_T07_CLOSED_EXPECTED_INVALID; EV1_T08_CLOSED_EXPECTED_INVALID; EV1_T09_PREPARATION_NEXT`
 - `LAST_GREEN_GATE`: `LIVE_CONTINUITY_EVIDENCE_GREEN`
 - `BACKLOG_CANDIDATE_SHA256`: `34ffed70e3d52cde2e94e5f3b66dd96cdac1f2aa7de757b11bf6580bb5e536e4`
 - `R2_BACKLOG_CANDIDATE_SHA256`: `6dfe194028739ba57b2eb35a8fbd112bde1569ccd76ca73d5ec7f949fb64a0b5`
@@ -9,7 +9,7 @@
 - `MEASURED_CLOCK_STARTED`: `TRUE; 2026-07-30T14:10:38Z`
 - `CLOSED_FACT`: `Kenneth confirmed EV1-T01 through EV1-T04 may use the deterministic 76-file Brew Ledger export excluding CLAUDE.md and bound by manifest SHA-256 d78d1a589fe487368f797e3446ba8f1d7d22d7c08554ce91be2ece32cd8a2706.`
 - `EVIDENCE`: `EXTERNAL_VALIDITY_EV1_HUMAN_CONFIRMATION_RECEIPT_R2.md`
-- `NEXT_SAFE_ACTION`: `Run the frozen EV1-T08 capture-only local preflight and identical-packet GLM 5.2/AGY review; invoke capture only if both are GREEN.`
+- `NEXT_SAFE_ACTION`: `Prepare EV1-T09 from the exact public MIT source commit and stop at the independently typed and visibly saved one-sentence release-principle gate.`
 - `FORBIDDEN`: `Fabricating or replacing Kenneth's observations; relabeling the infrastructure-invalid full acceptance as GREEN; rerunning recovery; changing recovered source, task order, product candidate, thresholds, or public claims.`
 
 R1 authenticity and its blocked preflight remain preserved. Kenneth closed the
@@ -165,3 +165,11 @@ four regular files and exact symlink entry. It does not authorize following or
 reading the synthetic target, target mutation or deletion, workspace deletion,
 successor creation, or recovery. The capture-only runner and its independent
 same-packet preflight are now the next gate; there is no open T08 human action.
+
+The same-packet GLM 5.2 and AGY preflight returned GREEN. The one capture-only
+invocation then returned the predeclared `INVALID / REPRESENTATION_UNSAFE /
+NONE` result without following the link or changing any workspace or target
+metadata. Final direct GLM 5.2 review returned GREEN with no blockers or gaps.
+T08 is closed as expected-invalid safety evidence, not continuation evidence;
+its workspace and synthetic target remain preserved. EV1-T09 preparation is
+next, followed by Kenneth's required independent saved edit.
