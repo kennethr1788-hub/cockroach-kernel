@@ -38,8 +38,8 @@ RUNS_PER_FAMILY = 12
 TOTAL_RUNS = 24
 EVIDENCE_ROOT = ROOT / "evidence" / "external-validity-ev3-r1"
 LOCK_PATH = EVIDENCE_ROOT / "HIDDEN_EXECUTION_LOCK.json"
-PREFLIGHT_PACKET = ROOT / "EXTERNAL_VALIDITY_EV3_PREFLIGHT_PACKET_R1.md"
-PREFLIGHT_STATUS = ROOT / "EXTERNAL_VALIDITY_EV3_PREFLIGHT_STATUS_R1.md"
+PREFLIGHT_PACKET = ROOT / "EXTERNAL_VALIDITY_EV3_PREFLIGHT_PACKET_R2.md"
+PREFLIGHT_STATUS = ROOT / "EXTERNAL_VALIDITY_EV3_PREFLIGHT_STATUS_R2.md"
 
 
 spec = importlib.util.spec_from_file_location("ev3_r4", R4_PATH)
@@ -51,6 +51,13 @@ r3 = r4.r3
 
 class CampaignError(RuntimeError):
     """A fail-closed campaign error."""
+
+
+def classify_failure(exc: Exception) -> tuple[str, str | None]:
+    """Separate bounded product-contract failures from infrastructure failures."""
+    if isinstance(exc, CampaignError):
+        return "FAIL_BEHAVIOR", None
+    return "INVALID_INFRASTRUCTURE", "INFRASTRUCTURE_FAILURE"
 
 
 def write_exclusive(path: Path, value: dict[str, Any]) -> None:
@@ -456,11 +463,9 @@ def run_hidden(packet_hash: str) -> dict[str, Any]:
                     abort_reason = "SAFETY_FAILURE"
             except Exception as exc:  # preserve exact bounded failure
                 receipt["failure_code"] = str(exc)[:256] or exc.__class__.__name__
-                if isinstance(exc, (CampaignError, r3.r3.SurfaceError)):
-                    receipt["status"] = "FAIL_BEHAVIOR"
-                else:
-                    receipt["status"] = "INVALID_INFRASTRUCTURE"
-                    abort_reason = "INFRASTRUCTURE_FAILURE"
+                receipt["status"], classified_abort = classify_failure(exc)
+                if classified_abort is not None:
+                    abort_reason = classified_abort
             finally:
                 shutil.rmtree(scenario, ignore_errors=False)
                 receipt["scenario_teardown_verified"] = not scenario.exists()

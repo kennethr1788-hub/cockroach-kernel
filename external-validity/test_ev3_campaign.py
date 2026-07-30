@@ -98,6 +98,16 @@ class CampaignTests(unittest.TestCase):
         )
         self.assertEqual(count, 7)
 
+    def test_failure_classification_is_fail_closed(self) -> None:
+        self.assertEqual(
+            campaign.classify_failure(campaign.CampaignError("bounded")),
+            ("FAIL_BEHAVIOR", None),
+        )
+        self.assertEqual(
+            campaign.classify_failure(RuntimeError("runtime")),
+            ("INVALID_INFRASTRUCTURE", "INFRASTRUCTURE_FAILURE"),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

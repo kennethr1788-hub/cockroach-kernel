@@ -50,7 +50,7 @@ def main() -> int:
     parser.add_argument("--plan", type=Path, required=True)
     args = parser.parse_args()
     plan = args.plan.resolve()
-    output = ROOT / "EXTERNAL_VALIDITY_EV3_PREFLIGHT_PACKET_R1.md"
+    output = ROOT / "EXTERNAL_VALIDITY_EV3_PREFLIGHT_PACKET_R2.md"
     if output.exists():
         raise SystemExit("OUTPUT_EXISTS")
     if digest(plan) != PLAN_HASH:
@@ -64,8 +64,8 @@ def main() -> int:
     if digest(ROOT / ".hardening-runtime/external-validity-r1/official-rules.html") != RULES_HASH:
         raise SystemExit("RULES_SNAPSHOT_HASH_MISMATCH")
     actor_canary_path = ROOT / "evidence/external-validity-ev3-r1/public-canary-r2/FINAL_SUMMARY.json"
-    scenario_canary_path = ROOT / "evidence/external-validity-ev3-r1/scenario-canary-r4/FINAL_SUMMARY.json"
-    mechanical_path = ROOT / "evidence/external-validity-ev3-r1/mechanical-r2/FINAL_RECEIPT.json"
+    scenario_canary_path = ROOT / "evidence/external-validity-ev3-r1/scenario-canary-r5/FINAL_SUMMARY.json"
+    mechanical_path = ROOT / "evidence/external-validity-ev3-r1/mechanical-r3/FINAL_RECEIPT.json"
     failed_mechanical_path = ROOT / "evidence/external-validity-ev3-r1/mechanical-r1/FINAL_RECEIPT.json"
     sanitization_path = ROOT / "evidence/external-validity-ev3-r1/mechanical-r1/SANITIZATION_RECEIPT.json"
     actor_canary = load(actor_canary_path)
@@ -77,14 +77,14 @@ def main() -> int:
         raise SystemExit("ACTOR_CANARY_NOT_GREEN")
     if scenario_canary.get("status") != "GREEN" or scenario_canary.get("passes") != 7:
         raise SystemExit("SCENARIO_CANARY_NOT_GREEN")
-    if mechanical.get("status") != "GREEN" or mechanical.get("tests") != 84:
+    if mechanical.get("status") != "GREEN" or mechanical.get("tests") != 85:
         raise SystemExit("MECHANICAL_NOT_GREEN")
     if any((actor_canary.get("tools_exposed"), actor_canary.get("tool_calls"), actor_canary.get("context_reused"), actor_canary.get("path_authority"))):
         raise SystemExit("ACTOR_AUTHORITY_CANARY_INVALID")
     if (ROOT / "evidence/external-validity-ev3-r1/HIDDEN_EXECUTION_LOCK.json").exists():
         raise SystemExit("HIDDEN_SEED_ALREADY_EXISTS")
     utc = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-    header = f"""# External Validity EV3 Cross-Model Preflight Packet R1
+    header = f"""# External Validity EV3 Cross-Model Preflight Packet R2
 
 ## Decision requested
 
@@ -155,11 +155,11 @@ boundary. GLM and AGY are reserved as judges and cannot act as campaign actors.
 - actor canary R2: `GREEN`; two exact served-model responses; tools exposed `0`;
   tool calls `0`; context reuse `FALSE`; path authority `FALSE`; file SHA-256
   `{digest(actor_canary_path)}`; internal summary `{actor_canary['summary_sha256']}`.
-- materialized-candidate scenario canary R4: `7/7 PASS`; all six classes plus
+- materialized-candidate scenario canary R5: `7/7 PASS`; all six classes plus
   separate unsupported and stale variants; no model calls; runtime teardown
   `TRUE`; file SHA-256 `{digest(scenario_canary_path)}`; internal summary
   `{scenario_canary['summary_sha256']}`.
-- valid mechanical R2: `84` tests, zero command failures, Gitleaks zero,
+- valid mechanical R3: `85` tests, zero command failures, Gitleaks zero,
   detect-secrets zero, private-path/credential markers zero, scan teardown
   `TRUE`; file SHA-256 `{digest(mechanical_path)}`; internal receipt
   `{mechanical['receipt_sha256']}`.
