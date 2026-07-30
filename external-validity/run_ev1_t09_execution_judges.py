@@ -12,7 +12,9 @@ import subprocess
 ROOT = Path(__file__).resolve().parents[1]
 CONTROL = ROOT / ".ev1-runtime" / "EV1-T09" / "control"
 PACKET = CONTROL / "EV1_T09_EXECUTION_PREFLIGHT_PACKET_R1.md"
-GLM_RAW = CONTROL / "EV1_T09_EXECUTION_PREFLIGHT_GLM_RAW_R1.txt"
+GLM_INVALID_R1 = CONTROL / "EV1_T09_EXECUTION_PREFLIGHT_GLM_RAW_R1.txt"
+GLM_INVALID_R1_SHA256 = "fe590c1b1c98947e0c4331ea877ef623c98a631974c0775f7ac9031d03b816b1"
+GLM_RAW = CONTROL / "EV1_T09_EXECUTION_PREFLIGHT_GLM_RAW_R2.txt"
 AGY_RAW = CONTROL / "EV1_T09_EXECUTION_PREFLIGHT_AGY_RAW_R1.txt"
 PACKET_SHA256 = "341a54c7528213f76896237b2387dd1dfdf2845fb472ebac2929a7fdea1b6f50"
 REVIEW_CONTENT_SHA256 = "3e8bea049a0197eb3757526e2208e543fd9847a55bf2cf66cbcc5a9a44d6ca3d"
@@ -96,6 +98,8 @@ def validate_agy(raw: bytes) -> None:
 def main() -> int:
     if GLM_RAW.exists() or AGY_RAW.exists():
         raise JudgeError("JUDGE_OUTPUT_ALREADY_EXISTS")
+    if not GLM_INVALID_R1.is_file() or digest(GLM_INVALID_R1) != GLM_INVALID_R1_SHA256:
+        raise JudgeError("PRESERVED_GLM_R1_DRIFT")
     if digest(PACKET) != PACKET_SHA256:
         raise JudgeError("PACKET_DRIFT")
     if digest(GLM) != GLM_SHA256 or digest(AGY) != AGY_SHA256:
@@ -109,7 +113,7 @@ def main() -> int:
             "GLM_ZAI_DISABLE_FALLBACK": "1",
             "GLM_ZAI_VERIFY_MODEL": "glm-5.2",
             "GLM_ZAI_REPORT_MODEL": "1",
-            "GLM_ZAI_MAX_TOKENS": "8192",
+            "GLM_ZAI_MAX_TOKENS": "32768",
         }
     )
     glm_exit, glm_raw = invoke([str(GLM)], input_bytes=packet_raw, env=glm_env)
