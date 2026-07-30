@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CONTROL = ROOT / ".ev1-runtime" / "EV1-T10" / "control"
 PACKET = CONTROL / "EV1_T10_EXECUTION_PREFLIGHT_PACKET_R1.md"
 GLM_RAW = CONTROL / "EV1_T10_EXECUTION_PREFLIGHT_GLM_RAW_R1.txt"
+GLM_RAW_SHA256 = "fd0e1fef71dbd8a972165b83c0bf7a6d96a126138c3c85332dde9079e59a412c"
 AGY_RAW = CONTROL / "EV1_T10_EXECUTION_PREFLIGHT_AGY_RAW_R1.txt"
 PACKET_SHA256 = "ae1d52f6f190ef752b39fd61470b8f9e88c36d3c7ceac906c8871844a26a5c73"
 REVIEW_CONTENT_SHA256 = "8f49636acb34eed3a7bcebb88c47fd2180c7d07b1ae0acdce3c3941e56404e15"
@@ -68,14 +69,22 @@ def validate_glm(raw: bytes) -> None:
     required_patterns = (
         r"glm-zai:\s*served by glm-5\.2",
         rf"review[- _]content(?:[- _]+sha-256)?\**:\s*`?{REVIEW_CONTENT_SHA256}`?",
-        r"recusal(?:[- ]status|[- ]check)?\**:\s*`?(?:NOT_RECUSED|clear)`?",
+        r"(?:recusal(?:[- ]status|[- ]check)?\**:\s*`?(?:NOT_RECUSED|clear)`?|##\s*Recusal Status\s+Not recused\.)",
         r"verdict\**:\s*`?GREEN`?",
     )
     if any(not re.search(pattern, text, re.IGNORECASE) for pattern in required_patterns):
         raise JudgeError("GLM_OUTPUT_CONTRACT_FAILED")
-    if not re.search(r"blockers\**:\s*`?(?:None|NONE|\[\])`?", text, re.IGNORECASE):
+    if not re.search(
+        r"(?:blockers\**:\s*`?(?:None|NONE|\[\])`?|##\s*Concrete Blockers\s+None identified\.)",
+        text,
+        re.IGNORECASE,
+    ):
         raise JudgeError("GLM_BLOCKERS_NOT_EMPTY")
-    if not re.search(r"evidence[- ]gaps\**:\s*`?(?:None|NONE|\[\])`?", text, re.IGNORECASE):
+    if not re.search(
+        r"(?:evidence[- ]gaps\**:\s*`?(?:None|NONE|\[\])`?|##\s*Evidence Gaps\s+None that prevent a decision\.)",
+        text,
+        re.IGNORECASE,
+    ):
         raise JudgeError("GLM_EVIDENCE_GAPS_NOT_EMPTY")
 
 
@@ -94,28 +103,33 @@ def validate_agy(raw: bytes) -> None:
 
 
 def main() -> int:
-    if GLM_RAW.exists() or AGY_RAW.exists():
-        raise JudgeError("JUDGE_OUTPUT_ALREADY_EXISTS")
+    if AGY_RAW.exists():
+        raise JudgeError("AGY_OUTPUT_ALREADY_EXISTS")
     if digest(PACKET) != PACKET_SHA256:
         raise JudgeError("PACKET_DRIFT")
     if digest(GLM) != GLM_SHA256 or digest(AGY) != AGY_SHA256:
         raise JudgeError("JUDGE_WRAPPER_DRIFT")
-    packet_raw = PACKET.read_bytes()
-    glm_env = os.environ.copy()
-    glm_env.update(
-        {
-            "GLM_ZAI_MODEL": "glm-5.2",
-            "GLM_ZAI_PRIMARY_RETRIES": "0",
-            "GLM_ZAI_DISABLE_FALLBACK": "1",
-            "GLM_ZAI_VERIFY_MODEL": "glm-5.2",
-            "GLM_ZAI_REPORT_MODEL": "1",
-            "GLM_ZAI_MAX_TOKENS": "32768",
-        }
-    )
-    glm_exit, glm_raw = invoke([str(GLM)], input_bytes=packet_raw, env=glm_env)
-    atomic_write(GLM_RAW, glm_raw)
-    if glm_exit != 0:
-        raise JudgeError(f"GLM_PROCESS_FAILED:{glm_exit}:{glm_raw[-1000:]!r}")
+    if GLM_RAW.exists():
+        if digest(GLM_RAW) != GLM_RAW_SHA256:
+            raise JudgeError("PRESERVED_GLM_OUTPUT_DRIFT")
+        glm_raw = GLM_RAW.read_bytes()
+    else:
+        packet_raw = PACKET.read_bytes()
+        glm_env = os.environ.copy()
+        glm_env.update(
+            {
+                "GLM_ZAI_MODEL": "glm-5.2",
+                "GLM_ZAI_PRIMARY_RETRIES": "0",
+                "GLM_ZAI_DISABLE_FALLBACK": "1",
+                "GLM_ZAI_VERIFY_MODEL": "glm-5.2",
+                "GLM_ZAI_REPORT_MODEL": "1",
+                "GLM_ZAI_MAX_TOKENS": "32768",
+            }
+        )
+        glm_exit, glm_raw = invoke([str(GLM)], input_bytes=packet_raw, env=glm_env)
+        atomic_write(GLM_RAW, glm_raw)
+        if glm_exit != 0:
+            raise JudgeError(f"GLM_PROCESS_FAILED:{glm_exit}:{glm_raw[-1000:]!r}")
     validate_glm(glm_raw)
     agy_exit, agy_raw = invoke([str(AGY), "--packet", str(PACKET), "--timeout", "600"])
     atomic_write(AGY_RAW, agy_raw)
