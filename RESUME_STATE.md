@@ -2,7 +2,7 @@
 
 - `CURRENT_PHASE`: `EXTERNAL_VALIDITY_ITEM3_PROSPECTIVE_DOGFOODING`
 - `LAST_GREEN_GATE`: `CROSS_MODEL_BLIND_EVIDENCE_GREEN`
-- `NEXT_ALLOWED_ACTION`: Prepare EV1-T01 from the exact 76-file Brew Ledger export, freeze dependency and acceptance state, start the measured clock, then stop for Kenneth's independently typed and visibly saved tagline edit
+- `NEXT_ALLOWED_ACTION`: After Kenneth confirms credential rotation/revocation and process restart/termination, verify the unrelated npm serve command line no longer exposes a credential; only then reopen the EV1-T01 human edit gate
 - `FORBIDDEN_ACTIONS`: Modify product behavior or Gate 3–8/EV3 evidence; rerun EV3 or tune against revealed hidden inputs; omit or relabel failed campaigns; expose credentials, private paths, account identifiers, or raw private evidence; describe synthetic/replayed/model evidence as production or independent-human evidence; begin Gate 9, Gate 10, release, publication, video, or submission; mutate HOME/live memory
 - `CURRENT_COMMIT`: `0ff9877e528237e6a1aad50b86cc6489599747b8`
 - `LAST_VERIFIED_UTC`: `2026-07-30T13:29:40Z`
@@ -85,7 +85,7 @@
 - `EXTERNAL_VALIDITY_EV3_STATUS`: `CROSS_MODEL_BLIND_EVIDENCE_GREEN; 24_OF_24_PASS; MISTRAL_12_OF_12; STEPFUN_12_OF_12; SAFETY_24_OF_24; ZERO_INFRASTRUCTURE_INVALID; ZERO_TOOL_PATH_CONTEXT_AUTHORITY; TEARDOWN_GREEN`
 - `EXTERNAL_VALIDITY_EV3_FINAL_PACKET_SHA256`: `f6288d648a01035f43a696ae21157bee38e03d2bdf0ace33265d20c3f8b035e0`
 - `EXTERNAL_VALIDITY_EV3_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; EXACT_SAME_HASH; RECUSAL_CLEAR; NO_BLOCKERS; NO_EVIDENCE_GAPS; NO_RERUNS`
-- `PENDING_BLOCKERS`: `EV1_T01_HUMAN_EDIT_PROSPECTIVE — R3 preflight is GREEN; no task or measured clock started yet; T01 and T09 human edits plus per-task observations remain prospective`
+- `PENDING_BLOCKERS`: `EV1_T01_SECURITY_BLOCKED — unrelated active npm serve process exposes a credential in command-line environment; task workspace is prepared and measured clock started at 2026-07-30T14:10:38Z; human edit, capture, and recovery have not started`
 - `EV1_BACKLOG_CANDIDATE_SHA256`: `34ffed70e3d52cde2e94e5f3b66dd96cdac1f2aa7de757b11bf6580bb5e536e4`
 - `EV1_BACKLOG_CANDIDATE_R2_SHA256`: `6dfe194028739ba57b2eb35a8fbd112bde1569ccd76ca73d5ec7f949fb64a0b5`
 - `EV1_R2_HUMAN_CONFIRMATION`: `GREEN; RECEIVED_UTC_2026-07-30T13:47:28Z; BREW_LEDGER_EXPORT_76_FILES; CLAUDE_MD_EXCLUDED_ONLY`
@@ -94,6 +94,7 @@
 - `EV1_R2_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_BLOCKED; PACKET_SCOPE_EXTRACTION_DEFECT; PRESERVED_STALE`
 - `EV1_R3_PREFLIGHT_PACKET_SHA256`: `a08bb6c49a64b293488d4c0ecc0357740f7e6187e963bc438d563db574b8f0a2`
 - `EV1_R3_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; EXACT_SAME_HASH; RECUSAL_CLEAR; NO_BLOCKERS; NO_EVIDENCE_GAPS; NO_RERUNS`
+- `EV1_T01_PREPARATION`: `GREEN_THEN_SECURITY_BLOCKED; RECEIPT_SHA256_094a37908ec2282a05174d4a13f9d13d7ed621fad2ab1aebf48cb884bf9bbc19; START_UTC_2026-07-30T14:10:38Z; HUMAN_EDIT_FALSE; CAPTURE_FALSE; RECOVERY_FALSE`
 - `REQUIRED_JUDGE_STATE`: `EV1 requires fresh identical-packet GLM 5.2 and AGY GREEN before EV1-T01; Item 5 final GLM 5.2 and AGY review remains complete`
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
