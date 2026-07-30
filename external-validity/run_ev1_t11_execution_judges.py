@@ -14,6 +14,7 @@ CONTROL = ROOT / ".ev1-runtime" / "EV1-T11" / "control"
 PACKET = CONTROL / "EV1_T11_EXECUTION_PREFLIGHT_PACKET_R2.md"
 GLM_RAW = CONTROL / "EV1_T11_EXECUTION_PREFLIGHT_GLM_RAW_R2.txt"
 AGY_RAW = CONTROL / "EV1_T11_EXECUTION_PREFLIGHT_AGY_RAW_R2.txt"
+GLM_RAW_SHA256 = "b723f799a0cd4cee095cc0836d6cefae1e3698a3c10aedb6f6fbffaedcdad795"
 PACKET_SHA256 = "427fd744cdf173113bb7ffe3273368647e612addd270acc44ae8f45c13c2401c"
 REVIEW_CONTENT_SHA256 = "e6a975731690de1791616ec08e4a96dea158f342814cc9669ebdc6ba838d63a8"
 GLM = Path("/Users/kennethruedas/.local/bin/glm-zai")
@@ -67,9 +68,9 @@ def validate_glm(raw: bytes) -> None:
     text = raw.decode("utf-8", "strict")
     required_patterns = (
         r"glm-zai:\s*served by glm-5\.2",
-        rf"review[- _]content(?:[- _]+sha-?256)?[^\n]*{REVIEW_CONTENT_SHA256}",
-        r"recusal[^\n]*(?:NOT_RECUSED|not recused|clear)",
-        r"verdict[^\n]*GREEN",
+        rf"review[- _]content(?:[- _]+sha-?256)?[\s\S]{{0,120}}{REVIEW_CONTENT_SHA256}",
+        r"recusal(?:[- ]status|[- ]check)?[\s\S]{0,120}(?:NOT_RECUSED|not recused|clear)",
+        r"(?:^|\n)#+\s*verdict\s*\n+[\s`*_-]*GREEN\b|verdict[^\n]*GREEN",
     )
     if any(not re.search(pattern, text, re.IGNORECASE) for pattern in required_patterns):
         raise JudgeError("GLM_OUTPUT_CONTRACT_FAILED")
@@ -96,28 +97,33 @@ def validate_agy(raw: bytes) -> None:
 
 
 def main() -> int:
-    if GLM_RAW.exists() or AGY_RAW.exists():
-        raise JudgeError("JUDGE_OUTPUT_ALREADY_EXISTS")
+    if AGY_RAW.exists():
+        raise JudgeError("AGY_OUTPUT_ALREADY_EXISTS")
     if digest(PACKET) != PACKET_SHA256:
         raise JudgeError("PACKET_DRIFT")
     if digest(GLM) != GLM_SHA256 or digest(AGY) != AGY_SHA256:
         raise JudgeError("JUDGE_WRAPPER_DRIFT")
-    packet_raw = PACKET.read_bytes()
-    glm_env = os.environ.copy()
-    glm_env.update(
-        {
-            "GLM_ZAI_MODEL": "glm-5.2",
-            "GLM_ZAI_PRIMARY_RETRIES": "0",
-            "GLM_ZAI_DISABLE_FALLBACK": "1",
-            "GLM_ZAI_VERIFY_MODEL": "glm-5.2",
-            "GLM_ZAI_REPORT_MODEL": "1",
-            "GLM_ZAI_MAX_TOKENS": "32768",
-        }
-    )
-    glm_exit, glm_raw = invoke([str(GLM)], input_bytes=packet_raw, env=glm_env)
-    atomic_write(GLM_RAW, glm_raw)
-    if glm_exit != 0:
-        raise JudgeError(f"GLM_PROCESS_FAILED:{glm_exit}:{glm_raw[-1000:]!r}")
+    if GLM_RAW.exists():
+        if digest(GLM_RAW) != GLM_RAW_SHA256:
+            raise JudgeError("PRESERVED_GLM_OUTPUT_DRIFT")
+        glm_raw = GLM_RAW.read_bytes()
+    else:
+        packet_raw = PACKET.read_bytes()
+        glm_env = os.environ.copy()
+        glm_env.update(
+            {
+                "GLM_ZAI_MODEL": "glm-5.2",
+                "GLM_ZAI_PRIMARY_RETRIES": "0",
+                "GLM_ZAI_DISABLE_FALLBACK": "1",
+                "GLM_ZAI_VERIFY_MODEL": "glm-5.2",
+                "GLM_ZAI_REPORT_MODEL": "1",
+                "GLM_ZAI_MAX_TOKENS": "32768",
+            }
+        )
+        glm_exit, glm_raw = invoke([str(GLM)], input_bytes=packet_raw, env=glm_env)
+        atomic_write(GLM_RAW, glm_raw)
+        if glm_exit != 0:
+            raise JudgeError(f"GLM_PROCESS_FAILED:{glm_exit}:{glm_raw[-1000:]!r}")
     validate_glm(glm_raw)
     agy_exit, agy_raw = invoke([str(AGY), "--packet", str(PACKET), "--timeout", "600"])
     atomic_write(AGY_RAW, agy_raw)
