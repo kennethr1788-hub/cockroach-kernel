@@ -12,7 +12,9 @@ import subprocess
 ROOT = Path(__file__).resolve().parents[1]
 CONTROL = ROOT / ".ev1-runtime" / "EV1-T09" / "control"
 PACKET = CONTROL / "EV1_T09_RESULT_AUDIT_PACKET_R1.md"
-GLM_RAW = CONTROL / "EV1_T09_RESULT_AUDIT_GLM_RAW_R1.txt"
+GLM_INVALID_R1 = CONTROL / "EV1_T09_RESULT_AUDIT_GLM_RAW_R1.txt"
+GLM_INVALID_R1_SHA256 = "fda7a4a132b433cfdc1dc632243f6c02e426dca173c01b58afe5e16b01e6df36"
+GLM_RAW = CONTROL / "EV1_T09_RESULT_AUDIT_GLM_RAW_R2.txt"
 PACKET_SHA256 = "90a21e73653d37f48e6802458e8a6808a792c46ce548cf27bc2acb9ec3b2cc69"
 REVIEW_CONTENT_SHA256 = "a2ad10b073ff7b800127ce9c078404d876d0e55cf07e3566858cb672e9489e27"
 GLM = Path("/Users/kennethruedas/.local/bin/glm-zai")
@@ -85,6 +87,8 @@ def validate(raw: bytes) -> None:
 def main() -> int:
     if GLM_RAW.exists():
         raise JudgeError("GLM_OUTPUT_ALREADY_EXISTS")
+    if not GLM_INVALID_R1.is_file() or digest(GLM_INVALID_R1) != GLM_INVALID_R1_SHA256:
+        raise JudgeError("PRESERVED_GLM_R1_DRIFT")
     if digest(PACKET) != PACKET_SHA256:
         raise JudgeError("PACKET_DRIFT")
     if digest(GLM) != GLM_SHA256:
@@ -97,7 +101,7 @@ def main() -> int:
             "GLM_ZAI_DISABLE_FALLBACK": "1",
             "GLM_ZAI_VERIFY_MODEL": "glm-5.2",
             "GLM_ZAI_REPORT_MODEL": "1",
-            "GLM_ZAI_MAX_TOKENS": "8192",
+            "GLM_ZAI_MAX_TOKENS": "16384",
         }
     )
     completed = subprocess.run(
