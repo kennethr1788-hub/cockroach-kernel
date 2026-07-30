@@ -1,21 +1,23 @@
 # HUMAN_ACTION_REQUIRED
 
-## Current EV1-T03 capture-declaration gate
+## Closed EV1-T03 capture-declaration gate
 
-- `BLOCKER`: `EV1_T03_CAPTURE_DECLARATION_REQUIRED`
+- `BLOCKER`: `NONE_BEFORE_ONE_AUTHORIZED_EXECUTION`
 - `TASK_COMMIT`: `b18edb6f9b2b1c126e38c6fe218a167fe7ac7ca4`
 - `WORK_RECEIPT_FILE_SHA256`: `a79ca9fca84602471b0640c31adbe5dc0feadbb3d6981fce43f7919c56492f5d`
 - `WORK_RECEIPT_SHA256`: `3afe529af6f359cbe412e4e16a01ce4eb2a79392cff7e533901c7b9f08f04488`
-- `MECHANICAL_WORK_STATE`: `GREEN; CAPTURE_NOT_STARTED`
-- `UTC_RECORDED`: `2026-07-30T17:27:35Z`
+- `MECHANICAL_WORK_STATE`: `GREEN; CAPTURE_GREEN; EXECUTION_PREFLIGHT_GREEN; DELETION_NOT_STARTED`
+- `EXECUTION_PACKET_SHA256`: `325f413cdf6f7e31640b8512f39e911a9ef0cc9c184d8437cbb0189fda483f92`
+- `INDEPENDENT_PREFLIGHT`: `GLM_5_2_GREEN; AGY_GREEN; RECUSAL_CLEAR`
+- `UTC_RECORDED`: `2026-07-30T17:44:02Z`
 
-Kenneth must explicitly declare the exact current state—committed
+Kenneth explicitly declared the exact current state—committed
 `scripts/run-recipe-invariants.mjs` at the task commit above, modified
 `package.json`, and untracked `scripts/recipe-invariant-cases.cjs`—permitted
 for capture, guarded disposable-workspace deletion, and fresh-process recovery
-under the frozen EV1 protocol. Campaign-wide task authorization does not
-replace this distinct exact-state declaration. No capture, deletion, or
-recovery may begin before it is recorded.
+under the frozen EV1 protocol. The declaration, capture receipt, local
+preflight, and same-packet independent GREEN results are now recorded. The one
+authorized guarded execution may proceed; no second execution is authorized.
 
 ## Closed EV1-T02 operator-observation gate
 
