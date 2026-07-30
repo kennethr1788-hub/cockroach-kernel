@@ -1,9 +1,10 @@
-# EV1 Genuine-Task Backlog Candidate R1
+# EV1 Genuine-Task Backlog Candidate R2
 
 ## Status
 
 - `STATUS`: `CONTENT_COMPLETE_AWAITING_KENNETH_REVIEW`
 - `UTC_CREATED`: `2026-07-30T13:29:40Z`
+- `R2_REASON`: `R1 preflight found two absolute local paths in the committed Brew Ledger CLAUDE.md; R2 excludes that one non-application instruction file through a deterministic export manifest.`
 - `PRODUCT_CANDIDATE`: `1c483b1930e629c9ecb6d73418b9554897dc08ad`
 - `MEASURED_TASKS_STARTED`: `0`
 - `MEASURED_CLOCK_STARTED`: `FALSE`
@@ -21,7 +22,7 @@ completed and frozen before measurement, then with network access disabled.
 ### EV1-T01 — Surface the Brew Ledger product promise
 
 - `GENUINE_INTENT_CONFIRMATION`: `PENDING_KENNETH_CONFIRMATION`
-- `SOURCE_LOCATION`: `LOCAL_PROJECT_LABEL:brew-ledger@1a92380a9edf12337f80b3c42ba098a7c1724664`
+- `SOURCE_LOCATION`: `LOCAL_SANITIZED_EXPORT_LABEL:brew-ledger@1a92380a9edf12337f80b3c42ba098a7c1724664#d78d1a589fe487368f797e3446ba8f1d7d22d7c08554ce91be2ece32cd8a2706`
 - `PROJECT_CLASS`: `SMALL_SINGLE_PACKAGE`
 - `OBJECTIVE`: Add the already documented Home-page tagline `Document every extraction.` as semantic, accessible copy without changing routes or storage behavior.
 - `ACCEPTANCE_COMMAND_OR_CHECK`: `npm run typecheck && npm run build && node scripts/verify-home-tagline.mjs`
@@ -30,12 +31,12 @@ completed and frozen before measurement, then with network access disabled.
 - `PREDECLARED_REFUSAL_OR_INVALID`: `NONE`
 - `DATA_CLASSIFICATION`: `KENNETH_OWNED_NON_CLIENT`
 - `DISPOSABLE_DELETION_AUTHORIZED`: `YES`
-- `LIMITATION`: `The source working tree has unrelated later changes; only the exact source commit may seed this task.`
+- `LIMITATION`: `The source working tree has unrelated later changes. The task uses the exact 76-file manifest-bound export from the source commit; CLAUDE.md alone is excluded because it contains absolute local paths and is not application or acceptance-test code.`
 
 ### EV1-T02 — Automate corrupt-storage and import-repair checks
 
 - `GENUINE_INTENT_CONFIRMATION`: `PENDING_KENNETH_CONFIRMATION`
-- `SOURCE_LOCATION`: `LOCAL_PROJECT_LABEL:brew-ledger@1a92380a9edf12337f80b3c42ba098a7c1724664`
+- `SOURCE_LOCATION`: `LOCAL_SANITIZED_EXPORT_LABEL:brew-ledger@1a92380a9edf12337f80b3c42ba098a7c1724664#d78d1a589fe487368f797e3446ba8f1d7d22d7c08554ce91be2ece32cd8a2706`
 - `PROJECT_CLASS`: `SMALL_SINGLE_PACKAGE`
 - `OBJECTIVE`: Add deterministic tests proving corrupt JSON is quarantined, unknown import keys are ignored, invalid records are rejected, and valid recipe references survive invariant repair.
 - `ACCEPTANCE_COMMAND_OR_CHECK`: `npm run typecheck && npm run build && npm run test:storage-contract`
@@ -44,12 +45,12 @@ completed and frozen before measurement, then with network access disabled.
 - `PREDECLARED_REFUSAL_OR_INVALID`: `NONE`
 - `DATA_CLASSIFICATION`: `SYNTHETIC`
 - `DISPOSABLE_DELETION_AUTHORIZED`: `YES`
-- `LIMITATION`: `The test runner and exact dependency graph must be pinned during preflight; measured acceptance must be offline.`
+- `LIMITATION`: `The exact 76-file manifest-bound export excludes CLAUDE.md only. The test runner and dependency graph must be pinned during preflight; measured acceptance must be offline.`
 
 ### EV1-T03 — Prove recipe-version invariants
 
 - `GENUINE_INTENT_CONFIRMATION`: `PENDING_KENNETH_CONFIRMATION`
-- `SOURCE_LOCATION`: `LOCAL_PROJECT_LABEL:brew-ledger@1a92380a9edf12337f80b3c42ba098a7c1724664`
+- `SOURCE_LOCATION`: `LOCAL_SANITIZED_EXPORT_LABEL:brew-ledger@1a92380a9edf12337f80b3c42ba098a7c1724664#d78d1a589fe487368f797e3446ba8f1d7d22d7c08554ce91be2ece32cd8a2706`
 - `PROJECT_CLASS`: `SMALL_SINGLE_PACKAGE`
 - `OBJECTIVE`: Add deterministic tests for monotonic version labels, exclusive favorite and dial-in pointers, cross-group rejection, and cascading cleanup of version-linked Quick Brews.
 - `ACCEPTANCE_COMMAND_OR_CHECK`: `npm run typecheck && npm run build && npm run test:recipe-invariants`
@@ -58,12 +59,12 @@ completed and frozen before measurement, then with network access disabled.
 - `PREDECLARED_REFUSAL_OR_INVALID`: `NONE`
 - `DATA_CLASSIFICATION`: `SYNTHETIC`
 - `DISPOSABLE_DELETION_AUTHORIZED`: `YES`
-- `LIMITATION`: `The test runner and exact dependency graph must be pinned during preflight; measured acceptance must be offline.`
+- `LIMITATION`: `The exact 76-file manifest-bound export excludes CLAUDE.md only. The test runner and dependency graph must be pinned during preflight; measured acceptance must be offline.`
 
 ### EV1-T04 — Lock local-day dashboard behavior across UTC rollover
 
 - `GENUINE_INTENT_CONFIRMATION`: `PENDING_KENNETH_CONFIRMATION`
-- `SOURCE_LOCATION`: `LOCAL_PROJECT_LABEL:brew-ledger@1a92380a9edf12337f80b3c42ba098a7c1724664`
+- `SOURCE_LOCATION`: `LOCAL_SANITIZED_EXPORT_LABEL:brew-ledger@1a92380a9edf12337f80b3c42ba098a7c1724664#d78d1a589fe487368f797e3446ba8f1d7d22d7c08554ce91be2ece32cd8a2706`
 - `PROJECT_CLASS`: `SMALL_SINGLE_PACKAGE`
 - `OBJECTIVE`: Extract the dashboard's local-calendar-day selection into a pure helper and add deterministic timezone cases proving a late-Pacific brew remains on the correct local day.
 - `ACCEPTANCE_COMMAND_OR_CHECK`: `TZ=America/Los_Angeles npm run test:dashboard-date && TZ=UTC npm run test:dashboard-date && npm run typecheck && npm run build`
@@ -72,7 +73,7 @@ completed and frozen before measurement, then with network access disabled.
 - `PREDECLARED_REFUSAL_OR_INVALID`: `NONE`
 - `DATA_CLASSIFICATION`: `SYNTHETIC`
 - `DISPOSABLE_DELETION_AUTHORIZED`: `YES`
-- `LIMITATION`: `The helper must remain deterministic and must not read the wall clock inside verdict logic.`
+- `LIMITATION`: `The exact 76-file manifest-bound export excludes CLAUDE.md only. The helper must remain deterministic and must not read the wall clock inside verdict logic.`
 
 ### EV1-T05 — Validate the offline signal dataset at runtime
 
@@ -211,4 +212,4 @@ remain his responsibility when those tasks occur.
 - `CHECKBOX`: `UNCHECKED`
 - `CONFIRMED_CANDIDATE_SHA256`:
 - `UTC_TIMESTAMP`:
-- `LIMITATION`: `Human review and confirmation have not yet occurred for this populated candidate.`
+- `LIMITATION`: `Kenneth's R1 confirmation remains preserved but does not cover the R2 sanitized export binding; fresh exact-hash review is required.`

@@ -1,8 +1,8 @@
-# EV1 Prospective Genuine-Use Protocol — Draft R1
+# EV1 Prospective Genuine-Use Protocol R1
 
 ## Status
 
-- `STATUS`: `DRAFT_AWAITING_HUMAN_TASK_AUTHENTICITY_GATE`
+- `STATUS`: `PREFLIGHT_R1_BLOCKED_SOURCE_PRIVATE_PATH_MARKER; R2_HUMAN_REBIND_REQUIRED`
 - `PARENT_GATE`: `LIVE_CONTINUITY_EVIDENCE_GREEN`
 - `PRODUCT_CANDIDATE`: `1c483b1930e629c9ecb6d73418b9554897dc08ad`
 - `OFFICIAL_RULES_URL`: `https://cockroachdb-ai.devpost.com/rules`
@@ -10,10 +10,15 @@
 - `MEASURED_TASKS_STARTED`: `0`
 - `MEASURED_CLOCK_STARTED`: `FALSE`
 - `PUBLIC_CLAIMS_CHANGED`: `FALSE`
+- `BACKLOG_SHA256`: `34ffed70e3d52cde2e94e5f3b66dd96cdac1f2aa7de757b11bf6580bb5e536e4`
+- `HUMAN_CONFIRMATION_RECEIVED_UTC`: `2026-07-30T13:35:47Z`
+- `R1_PREFLIGHT_RESULT`: `BLOCKED_BEFORE_MEASUREMENT_OR_JUDGING`
+- `R2_BACKLOG_CANDIDATE_SHA256`: `6dfe194028739ba57b2eb35a8fbd112bde1569ccd76ca73d5ec7f949fb64a0b5`
 
-This draft operationalizes EV1 from the independently reviewed external-validity
-plan. It is not a frozen packet, authorization to destroy a workspace, or
-genuine-use evidence.
+This protocol operationalizes EV1 from the independently reviewed
+external-validity plan. It is not genuine-use evidence. Task execution remains
+forbidden until the mechanical canaries and same-hash GLM 5.2 and AGY preflight
+are GREEN.
 
 ## Hypothesis
 
@@ -145,8 +150,8 @@ failure.
 
 ## Gate sequence
 
-1. Kenneth completes and confirms all 12 backlog rows.
-2. Freeze the ordered backlog and its SHA-256.
+1. Kenneth completes and confirms all 12 backlog rows. `R1_COMPLETE; R2_REBIND_REQUIRED`
+2. Freeze the ordered backlog and its SHA-256. `R1_SUPERSEDED_BEFORE_MEASUREMENT`
 3. Build a sanitized EV1 execution packet containing this protocol and the
    confirmed backlog, with no private paths or task content beyond what is
    required for judging.

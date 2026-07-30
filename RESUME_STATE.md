@@ -2,7 +2,7 @@
 
 - `CURRENT_PHASE`: `EXTERNAL_VALIDITY_ITEM3_PROSPECTIVE_DOGFOODING`
 - `LAST_GREEN_GATE`: `CROSS_MODEL_BLIND_EVIDENCE_GREEN`
-- `NEXT_ALLOWED_ACTION`: Mechanically validate and hash EXTERNAL_VALIDITY_EV1_BACKLOG_CANDIDATE_R1.md, obtain Kenneth's new explicit confirmation over that exact populated hash, then freeze the byte-identical backlog and build the EV1 preflight packet; do not begin EV1-T01 before same-hash GLM 5.2 and AGY GREEN
+- `NEXT_ALLOWED_ACTION`: Hash and present EXTERNAL_VALIDITY_EV1_BACKLOG_CANDIDATE_R2.md for Kenneth's exact-hash confirmation; then freeze it byte-identically and rerun EV1 mechanical plus same-hash GLM 5.2 and AGY preflight
 - `FORBIDDEN_ACTIONS`: Modify product behavior or Gate 3–8/EV3 evidence; rerun EV3 or tune against revealed hidden inputs; omit or relabel failed campaigns; expose credentials, private paths, account identifiers, or raw private evidence; describe synthetic/replayed/model evidence as production or independent-human evidence; begin Gate 9, Gate 10, release, publication, video, or submission; mutate HOME/live memory
 - `CURRENT_COMMIT`: `0ff9877e528237e6a1aad50b86cc6489599747b8`
 - `LAST_VERIFIED_UTC`: `2026-07-30T13:29:40Z`
@@ -85,8 +85,9 @@
 - `EXTERNAL_VALIDITY_EV3_STATUS`: `CROSS_MODEL_BLIND_EVIDENCE_GREEN; 24_OF_24_PASS; MISTRAL_12_OF_12; STEPFUN_12_OF_12; SAFETY_24_OF_24; ZERO_INFRASTRUCTURE_INVALID; ZERO_TOOL_PATH_CONTEXT_AUTHORITY; TEARDOWN_GREEN`
 - `EXTERNAL_VALIDITY_EV3_FINAL_PACKET_SHA256`: `f6288d648a01035f43a696ae21157bee38e03d2bdf0ace33265d20c3f8b035e0`
 - `EXTERNAL_VALIDITY_EV3_JUDGE_STATE`: `GLM_5_2_GREEN; AGY_GREEN; EXACT_SAME_HASH; RECUSAL_CLEAR; NO_BLOCKERS; NO_EVIDENCE_GAPS; NO_RERUNS`
-- `PENDING_BLOCKERS`: `EV1_HUMAN_TASK_AUTHENTICITY_BLOCKED — populated candidate exists but Kenneth has not yet reviewed and confirmed its exact hash; two prospective human edits and per-task operator observations remain required; historical failed campaigns remain immutable and cannot be pooled into successful evidence`
+- `PENDING_BLOCKERS`: `EV1_R2_SOURCE_BINDING_CONFIRMATION_BLOCKED — R1 preflight found two private absolute-path markers in Brew Ledger CLAUDE.md; R2 excludes only that file via a deterministic 76-file manifest; no task or measured clock started; T01 and T09 human edits plus per-task observations remain prospective`
 - `EV1_BACKLOG_CANDIDATE_SHA256`: `34ffed70e3d52cde2e94e5f3b66dd96cdac1f2aa7de757b11bf6580bb5e536e4`
+- `EV1_BACKLOG_CANDIDATE_R2_SHA256`: `6dfe194028739ba57b2eb35a8fbd112bde1569ccd76ca73d5ec7f949fb64a0b5`
 - `REQUIRED_JUDGE_STATE`: `After Kenneth's exact-hash confirmation, EV1 requires fresh same-hash GLM 5.2 and AGY GREEN before EV1-T01; Item 5 final GLM 5.2 and AGY review remains complete`
 - `PLAN_SHA256`: `bdbd99c1d3ac17bb2448f02d64d756bf747e5d17eed0c0e6fcf3190c3ab3a67e`
 - `P9_FINAL_PACKET_SHA256`: `9f1e007df3626f20ffdf98387ca03321ef0e2339279c9e03e58959f9dc55abbb`
