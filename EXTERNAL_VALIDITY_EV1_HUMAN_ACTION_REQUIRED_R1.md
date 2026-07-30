@@ -1,6 +1,6 @@
 # EV1 Human Action Required R1
 
-- `STATUS`: `EV1_T01_CLOSED_INFRASTRUCTURE_INVALID_NON_SCORING; EV1_T02_CLOSED_EVALUABLE_PASS; EV1_T03_CLOSED_EVALUABLE_PASS; EV1_T04_CLOSED_EVALUABLE_PASS; EV1_T05_CLOSED_EVALUABLE_PASS; EV1_T06_PREPARATION_NEXT`
+- `STATUS`: `EV1_T01_CLOSED_INFRASTRUCTURE_INVALID_NON_SCORING; EV1_T02_CLOSED_EVALUABLE_PASS; EV1_T03_CLOSED_EVALUABLE_PASS; EV1_T04_CLOSED_EVALUABLE_PASS; EV1_T05_CLOSED_EVALUABLE_PASS; EV1_T06_CAPTURE_DECLARATION_REQUIRED`
 - `LAST_GREEN_GATE`: `LIVE_CONTINUITY_EVIDENCE_GREEN`
 - `BACKLOG_CANDIDATE_SHA256`: `34ffed70e3d52cde2e94e5f3b66dd96cdac1f2aa7de757b11bf6580bb5e536e4`
 - `R2_BACKLOG_CANDIDATE_SHA256`: `6dfe194028739ba57b2eb35a8fbd112bde1569ccd76ca73d5ec7f949fb64a0b5`
@@ -9,7 +9,7 @@
 - `MEASURED_CLOCK_STARTED`: `TRUE; 2026-07-30T14:10:38Z`
 - `CLOSED_FACT`: `Kenneth confirmed EV1-T01 through EV1-T04 may use the deterministic 76-file Brew Ledger export excluding CLAUDE.md and bound by manifest SHA-256 d78d1a589fe487368f797e3446ba8f1d7d22d7c08554ce91be2ece32cd8a2706.`
 - `EVIDENCE`: `EXTERNAL_VALIDITY_EV1_HUMAN_CONFIRMATION_RECEIPT_R2.md`
-- `NEXT_SAFE_ACTION`: `Prepare EV1-T06 from the frozen source and dependency graph; stop at its exact-state capture declaration gate.`
+- `NEXT_SAFE_ACTION`: `Kenneth must explicitly declare the exact current EV1-T06 committed, modified, and untracked state permitted for capture, guarded disposable-workspace deletion, and fresh-process recovery.`
 - `FORBIDDEN`: `Fabricating or replacing Kenneth's observations; relabeling the infrastructure-invalid full acceptance as GREEN; rerunning recovery; changing recovered source, task order, product candidate, thresholds, or public claims.`
 
 R1 authenticity and its blocked preflight remain preserved. Kenneth closed the
@@ -109,3 +109,12 @@ reserved to Kenneth. The exact temporary successor was then removed; its root
 is absent, related-process and open-file checks are zero, and the project-local
 snapshot and next-task dependency runtime remain intact. EV1-T05 is closed as
 an evaluable pass. No T05 human action remains.
+
+EV1-T06 is now prepared from the frozen source and dependency graph. Its pure
+ranking comparator and five deterministic cases pass offline along with
+typecheck, production build, and five byte-identical repetitions. The exact
+state is committed `lib/ranking.ts` and `scripts/run-stable-ranking.mjs` at
+`a3e5cd8f7dda19dd04df5904b5671f955a5c7adb`; modified `lib/signals.ts` and
+`package.json`; and untracked `scripts/stable-ranking-cases.cjs`. Capture,
+deletion, and recovery remain unstarted pending Kenneth's separate exact-state
+declaration.
