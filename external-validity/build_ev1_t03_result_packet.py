@@ -111,7 +111,7 @@ def main() -> int:
         f"- Operator observation SHA-256: `{sha256(OBSERVATION.read_bytes())}`\n"
         f"- Typecheck log SHA-256: `{sha256(TYPECHECK_LOG.read_bytes())}`\n"
         f"- Build log SHA-256: `{sha256(BUILD_LOG.read_bytes())}`\n"
-        f"- Storage-contract log SHA-256: `{sha256(RECIPE_LOG.read_bytes())}`\n",
+        f"- Recipe-invariants log SHA-256: `{sha256(RECIPE_LOG.read_bytes())}`\n",
         fenced("Canonical pre-loss work receipt", "json", canonical_json(WORK)),
         fenced("Canonical mechanical result receipt", "json", canonical_json(RESULT)),
         fenced("Mechanical result report", "markdown", MECHANICAL.read_text()),
@@ -145,4 +145,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
