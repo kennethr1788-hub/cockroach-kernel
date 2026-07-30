@@ -28,7 +28,7 @@
 - `SOURCE_EDIT_AFTER_RECOVERY`: `FALSE`
 - `SECOND_RECOVERY_ATTEMPTED`: `FALSE`
 - `TASK_COUNTED_AS_EVALUABLE_PASS`: `FALSE`
-- `TEMPORARY_SUCCESSOR_TEARDOWN`: `PENDING_OPERATOR_OBSERVATIONS`
+- `TEMPORARY_SUCCESSOR_TEARDOWN`: `GREEN; EXTERNAL_VALIDITY_EV1_T01_TEARDOWN_RECEIPT_R1.md; FILE_SHA256 6a5e724aceb634a5fa0b79b489850f17dfcd0794aaf8c9f25a8d21a417268dce`
 
 The product recovered both declared work units byte-for-byte through the
 one-use warrant and fresh-process path. The frozen three-command acceptance
@@ -36,3 +36,8 @@ sequence did not pass because the evidence runner placed dependencies outside
 the successor's module-resolution ancestry. This result remains
 infrastructure-invalid and non-scoring. It is not relabeled as product GREEN,
 and no post-outcome recovery rerun or source change is authorized.
+
+Kenneth's two operator observations were confirmed and preserved separately.
+Independent direct GLM 5.2 review supported the conservative classification.
+The exact temporary successor was then torn down with zero related processes,
+zero root residue, and intact project-local snapshot custody.
