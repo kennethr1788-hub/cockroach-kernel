@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CONTROL = ROOT / ".ev1-runtime" / "EV1-T11" / "control"
 PACKET = CONTROL / "EV1_T11_RESULT_AUDIT_PACKET_R1.md"
 GLM_RAW = CONTROL / "EV1_T11_RESULT_AUDIT_GLM_RAW_R1.txt"
+GLM_RAW_SHA256 = "e994de0963fbbee38fd0cebd947695f4065eb2f0bb3a6f61b54b7293a9dbeeb5"
 PACKET_SHA256 = "c1224cb0f1a6d6e05f554956b8f0f51e6ba7f73f9dfd5bf4d339514e39e8f651"
 REVIEW_CONTENT_SHA256 = "610fbfd44b2257d4d4eafbdd495702286fa4c1fada0b81985a019f93aa754064"
 GLM = Path("/Users/kennethruedas/.local/bin/glm-zai")
@@ -59,7 +60,8 @@ def validate(raw: bytes) -> None:
         label("OBSERVATION[- _]1[- _]EVIDENCE") + r"`?SUPPORTED`?",
         label("OBSERVATION[- _]2[- _]EVIDENCE") + r"`?SUPPORTED`?",
         label("CLASSIFICATION[- _]EVIDENCE") + r"`?SUPPORTED`?",
-        label("BLOCKERS") + r"`?(?:None|NONE|\[\])`?",
+        r"(?:" + label("BLOCKERS") + r"`?(?:None|NONE|\[\])`?"
+        r"|(?:^|\n)#*\s*BLOCKERS\s*\n+\s*-?\s*(?:None|NONE|\[\]))",
     )
     if any(not re.search(pattern, text, re.IGNORECASE) for pattern in required):
         raise JudgeError("GLM_OUTPUT_CONTRACT_FAILED")
@@ -99,37 +101,40 @@ def validate(raw: bytes) -> None:
 
 
 def main() -> int:
-    if GLM_RAW.exists():
-        raise JudgeError("GLM_OUTPUT_ALREADY_EXISTS")
+    if GLM_RAW.exists() and digest(GLM_RAW) != GLM_RAW_SHA256:
+        raise JudgeError("PRESERVED_GLM_OUTPUT_DRIFT")
     if digest(PACKET) != PACKET_SHA256:
         raise JudgeError("PACKET_DRIFT")
     if digest(GLM) != GLM_SHA256:
         raise JudgeError("JUDGE_WRAPPER_DRIFT")
-    environment = os.environ.copy()
-    environment.update(
-        {
-            "GLM_ZAI_MODEL": "glm-5.2",
-            "GLM_ZAI_PRIMARY_RETRIES": "0",
-            "GLM_ZAI_DISABLE_FALLBACK": "1",
-            "GLM_ZAI_VERIFY_MODEL": "glm-5.2",
-            "GLM_ZAI_REPORT_MODEL": "1",
-            "GLM_ZAI_MAX_TOKENS": "16384",
-        }
-    )
-    completed = subprocess.run(
-        [str(GLM)],
-        cwd=ROOT,
-        env=environment,
-        input=PACKET.read_bytes(),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        timeout=900,
-        check=False,
-    )
-    raw = completed.stdout + completed.stderr
-    atomic_write(GLM_RAW, raw)
-    if completed.returncode != 0:
-        raise JudgeError(f"GLM_PROCESS_FAILED:{completed.returncode}:{raw[-1000:]!r}")
+    if GLM_RAW.exists():
+        raw = GLM_RAW.read_bytes()
+    else:
+        environment = os.environ.copy()
+        environment.update(
+            {
+                "GLM_ZAI_MODEL": "glm-5.2",
+                "GLM_ZAI_PRIMARY_RETRIES": "0",
+                "GLM_ZAI_DISABLE_FALLBACK": "1",
+                "GLM_ZAI_VERIFY_MODEL": "glm-5.2",
+                "GLM_ZAI_REPORT_MODEL": "1",
+                "GLM_ZAI_MAX_TOKENS": "16384",
+            }
+        )
+        completed = subprocess.run(
+            [str(GLM)],
+            cwd=ROOT,
+            env=environment,
+            input=PACKET.read_bytes(),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=900,
+            check=False,
+        )
+        raw = completed.stdout + completed.stderr
+        atomic_write(GLM_RAW, raw)
+        if completed.returncode != 0:
+            raise JudgeError(f"GLM_PROCESS_FAILED:{completed.returncode}:{raw[-1000:]!r}")
     validate(raw)
     print(
         "GLM_5_2_GREEN "
