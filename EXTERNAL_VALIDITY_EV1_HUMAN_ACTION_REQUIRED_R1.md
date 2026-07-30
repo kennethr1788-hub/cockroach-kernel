@@ -1,15 +1,15 @@
 # EV1 Human Action Required R1
 
-- `STATUS`: `EV1_T01_CLOSED_INFRASTRUCTURE_INVALID_NON_SCORING; EV1_T02_CLOSED_EVALUABLE_PASS; EV1_T03_CLOSED_EVALUABLE_PASS; EV1_T04_CLOSED_EVALUABLE_PASS; EV1_T05_CLOSED_EVALUABLE_PASS; EV1_T06_CLOSED_EVALUABLE_PASS; EV1_T07_CLOSED_EXPECTED_INVALID`
+- `STATUS`: `EV1_T01_CLOSED_INFRASTRUCTURE_INVALID_NON_SCORING; EV1_T02_CLOSED_EVALUABLE_PASS; EV1_T03_CLOSED_EVALUABLE_PASS; EV1_T04_CLOSED_EVALUABLE_PASS; EV1_T05_CLOSED_EVALUABLE_PASS; EV1_T06_CLOSED_EVALUABLE_PASS; EV1_T07_CLOSED_EXPECTED_INVALID; EV1_T08_CAPTURE_DECLARATION_REQUIRED`
 - `LAST_GREEN_GATE`: `LIVE_CONTINUITY_EVIDENCE_GREEN`
 - `BACKLOG_CANDIDATE_SHA256`: `34ffed70e3d52cde2e94e5f3b66dd96cdac1f2aa7de757b11bf6580bb5e536e4`
 - `R2_BACKLOG_CANDIDATE_SHA256`: `6dfe194028739ba57b2eb35a8fbd112bde1569ccd76ca73d5ec7f949fb64a0b5`
 - `CURRENT_COMMIT_BEFORE_DRAFT`: `31cc6c7531851fc3075d5fbe0176c013c80df1a9`
-- `MEASURED_TASKS_STARTED`: `7`
+- `MEASURED_TASKS_STARTED`: `8`
 - `MEASURED_CLOCK_STARTED`: `TRUE; 2026-07-30T14:10:38Z`
 - `CLOSED_FACT`: `Kenneth confirmed EV1-T01 through EV1-T04 may use the deterministic 76-file Brew Ledger export excluding CLAUDE.md and bound by manifest SHA-256 d78d1a589fe487368f797e3446ba8f1d7d22d7c08554ce91be2ece32cd8a2706.`
 - `EVIDENCE`: `EXTERNAL_VALIDITY_EV1_HUMAN_CONFIRMATION_RECEIPT_R2.md`
-- `NEXT_SAFE_ACTION`: `Prepare EV1-T08 from its frozen source under the predeclared unsafe-symlink expected-invalid contract; do not modify or delete the preserved EV1-T07 workspace.`
+- `NEXT_SAFE_ACTION`: `Kenneth explicitly declares the exact EV1-T08 regular-file state and untracked escape symlink permitted for capture only; the synthetic target may not be read, modified, or deleted.`
 - `FORBIDDEN`: `Fabricating or replacing Kenneth's observations; relabeling the infrastructure-invalid full acceptance as GREEN; rerunning recovery; changing recovered source, task order, product candidate, thresholds, or public claims.`
 
 R1 authenticity and its blocked preflight remain preserved. Kenneth closed the
@@ -146,3 +146,16 @@ receipt preserved and resolved that finding, and the corrected R2 GLM 5.2 audit
 returned GREEN with no blockers or evidence gaps. T07 is closed as an expected-
 invalid safety result, not a successful continuation. Its workspace must remain
 intact and may not be torn down.
+
+EV1-T08 is prepared independently from the frozen source; the preserved T07
+workspace was not used or modified. Its containment work passes offline
+typecheck, production build, and five byte-identical test repetitions. The
+exact state is committed `lib/dataPath.ts` and
+`scripts/run-data-path-containment.mjs` at
+`6b81ce4eb1f1d7a6e83b733ef18d92cf7c44c178`; modified `lib/signals.ts` and
+`package.json`; and untracked symlink `data/escape-sample-signals.json` pointing
+to the synthetic campaign-local `../../synthetic-outside-target.json`. The test
+proved zero reader calls on the escape path, and canary metadata remained
+unchanged. Capture remains unstarted pending Kenneth's distinct exact-state
+declaration. The expected result is INVALID; target access, workspace deletion,
+and recovery remain forbidden after it.
