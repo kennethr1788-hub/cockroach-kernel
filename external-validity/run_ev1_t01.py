@@ -37,6 +37,7 @@ PRODUCT_RUNTIME = CONTROL / "product-runtime"
 DEPENDENCY_RUNTIME = CAMPAIGN / "dependency-runtime"
 PREPARE_RECEIPT = CONTROL / "CAPTURE_PREPARE_RECEIPT.json"
 TASK_RECEIPT = CONTROL / "TASK_EXECUTION_RECEIPT.json"
+FAILURE_RECEIPT = CONTROL / "TASK_FAILURE_RECEIPT.json"
 SOURCE_REPO = Path.home() / "master-vault" / "coffee"
 SOURCE_COMMIT = "1a92380a9edf12337f80b3c42ba098a7c1724664"
 SOURCE_MANIFEST_SHA256 = "d78d1a589fe487368f797e3446ba8f1d7d22d7c08554ce91be2ece32cd8a2706"
@@ -538,12 +539,14 @@ def execute() -> int:
     if process_scan.returncode != 0:
         raise T01Error("PROCESS_RESIDUE_SCAN_FAILED")
     markers = (str(ORIGINAL), str(RECOVERY))
-    residue_processes = [
-        line.decode("utf-8", "replace").strip()
-        for line in process_scan.stdout.splitlines()
-        if any(marker in line.decode("utf-8", "replace") for marker in markers)
-        and str(os.getpid()) not in line.decode("utf-8", "replace")
-    ]
+    residue_processes: list[str] = []
+    for raw_line in process_scan.stdout.splitlines():
+        line = raw_line.decode("utf-8", "replace").strip()
+        fields = line.split(maxsplit=1)
+        if len(fields) != 2 or not fields[0].isdigit():
+            continue
+        if int(fields[0]) != os.getpid() and any(marker in fields[1] for marker in markers):
+            residue_processes.append(line)
     if residue_processes:
         raise T01Error("TASK_PROCESS_RESIDUE")
 
@@ -606,7 +609,26 @@ def main() -> int:
     try:
         return prepare() if args.phase == "prepare" else execute()
     except (OSError, ValueError, json.JSONDecodeError, subprocess.TimeoutExpired, T01Error) as exc:
-        result = {"status": "EV1_T01_BLOCKED", "reason": str(exc) or exc.__class__.__name__}
+        reason = str(exc) or exc.__class__.__name__
+        result = {"status": "EV1_T01_BLOCKED", "reason": reason}
+        if not FAILURE_RECEIPT.exists():
+            try:
+                atomic_record(
+                    FAILURE_RECEIPT,
+                    {
+                        "version": "ev1-t01-failure-receipt-v1",
+                        "status": "EV1_T01_BLOCKED",
+                        "phase": getattr(args, "phase", "ARGUMENT_PARSE"),
+                        "reason": reason,
+                        "original_workspace_exists": ORIGINAL.exists(),
+                        "successor_workspace_exists": SUCCESSOR.exists(),
+                        "capture_prepare_exists": PREPARE_RECEIPT.exists(),
+                        "task_execution_receipt_exists": TASK_RECEIPT.exists(),
+                        "utc_recorded": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                    },
+                )
+            except OSError:
+                pass
         print(canonical(result).decode(), file=sys.stderr)
         return 2
 
