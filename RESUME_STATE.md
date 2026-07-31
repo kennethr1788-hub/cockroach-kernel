@@ -1,11 +1,11 @@
 # Resume State
 
-- `CURRENT_PHASE`: `EXTERNAL_VALIDITY_EV1_AGGREGATE_CLOSEOUT`
-- `LAST_GREEN_GATE`: `EV1_AGGREGATE_EVIDENCE_GREEN`
-- `NEXT_ALLOWED_ACTION`: Integrate only the independently approved qualified EV1 claim into the next frozen claims/evidence package, then follow the existing Gate 9 plan or a separately authorized next phase
-- `FORBIDDEN_ACTIONS`: Modify product behavior or Gate 3–8/EV3 evidence; rerun EV3 or tune against revealed hidden inputs; omit or relabel failed campaigns; expose credentials, private paths, account identifiers, or raw private evidence; describe synthetic/replayed/model evidence as production or independent-human evidence; begin Gate 9, Gate 10, release, publication, video, or submission; mutate HOME/live memory
-- `CURRENT_COMMIT`: `567ead78d1ba99bcebb101ab280c2af734af762a`
-- `LAST_VERIFIED_UTC`: `2026-07-31T00:47:22Z`
+- `CURRENT_PHASE`: `POST_DOGFOOD_PDH2_EXTERNAL_HUMAN_RECOVERY`
+- `LAST_GREEN_GATE`: `PDH_1_INFORMATION_BOUNDARY_GREEN`
+- `NEXT_ALLOWED_ACTION`: Kenneth selects a real external developer, obtains the frozen consent fields in PDH_2_EXTERNAL_TESTER_CONSENT_FORM_R1.md, and returns those fields before the tester package is issued
+- `FORBIDDEN_ACTIONS`: Impersonate or simulate the external tester; fabricate human edits, consent, or observations; expose expected hashes to the tester; modify product behavior or Gate 3–8/EV3 evidence; provision paid PDH-3/PDH-4 resources without a separate exact cost ceiling and explicit authorization; omit failed evidence; begin Gate 9, Gate 10, release, publication, video, or submission; mutate HOME/live memory
+- `CURRENT_COMMIT`: `bbf8768`
+- `LAST_VERIFIED_UTC`: `2026-07-31T01:44:39Z`
 - `GATE7_RUN5_AUTHORIZATION`: `RECORDED; CONTINUE_THROUGH_GATE8; POLICY_BOUNDED_RUNPOD_RUNS_AND_SEQUENTIAL_RETRIES_AUTHORIZED`
 - `GATE7_RUN5_REPAIR_COMMIT`: `9f76ece0e1aa98ac5bf037299ce1547c9c534aab`
 - `GATE7_RUN5_LOCAL_PREFLIGHT`: `R3_GREEN_EXCEPT_AWS_AUTH; RECEIPT_SHA256_2aaafb2e7d56a8e75e01f5df3a733c5f56bf8ee265dedde56a88fe5b275bcd0e; SOURCE_BINDINGS_SHA256_07d616082b32b61e21c84b86c76b1349444ed873801d705b2b692b195d467e96; CONTRACT_SHA256_a643d0a04baa2d76f23b0a9a5d34c247c805e52b4792671426c658ad16df91be; HIDDEN_SEED_FALSE; ACTIVE_RUNPOD_INVENTORY_EMPTY`
