@@ -266,6 +266,13 @@ def classify(
     return "INFRASTRUCTURE_INVALID"
 
 
+def scrub_text(value: str, replacements: dict[str, str]) -> str:
+    result = value
+    for raw, replacement in sorted(replacements.items(), key=lambda item: -len(item[0])):
+        result = result.replace(raw, replacement)
+    return result[-4000:]
+
+
 def execute_case(
     campaign_root: Path,
     profile: Path,
@@ -387,6 +394,14 @@ def execute_case(
         "request_sha256": digest(request_path),
         "stdout_sha256": digest(completed.stdout.encode()),
         "stderr_sha256": digest(completed.stderr.encode()),
+        "stdout_sanitized": scrub_text(
+            completed.stdout,
+            {str(root): "<CASE_ROOT>", str(python): "<FROZEN_PYTHON>"},
+        ),
+        "stderr_sanitized": scrub_text(
+            completed.stderr,
+            {str(root): "<CASE_ROOT>", str(python): "<FROZEN_PYTHON>"},
+        ),
         "product_output": product,
         "workspace_before": before_workspace,
         "workspace_after": after_workspace,
@@ -418,12 +433,20 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--candidate-commit", default=PRODUCT_CANDIDATE)
+    parser.add_argument("--cases", default="B1,B2,B3,B4,B5,B6")
+    parser.add_argument("--repeats", type=int, default=REPEATS)
+    parser.add_argument(
+        "--receipt-name",
+        default="PDH_1_INFORMATION_BOUNDARY_MECHANICAL_RECEIPT_R1.json",
+    )
     args = parser.parse_args()
     if args.candidate_commit != PRODUCT_CANDIDATE:
         raise SystemExit("CANDIDATE_MISMATCH")
     output_dir = Path(args.output_dir).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
-    python = Path(os.environ.get("PDH1_PYTHON", os.sys.executable)).resolve()
+    # Preserve the virtual-environment launcher path. Resolving its symlink to
+    # the base interpreter drops the venv's installed candidate site-packages.
+    python = Path(os.path.abspath(os.environ.get("PDH1_PYTHON", os.sys.executable)))
     sandbox_exec = Path("/usr/bin/sandbox-exec")
     if not sandbox_exec.is_file():
         raise SystemExit("OFFLINE_VERIFY_BLOCKED")
@@ -438,10 +461,18 @@ def main() -> int:
         if not network_probe["denied"]:
             raise SystemExit("OFFLINE_VERIFY_BLOCKED")
         inputs = case_inputs(b4_oracle)
+        selected_cases = [item.strip() for item in args.cases.split(",") if item.strip()]
+        if (
+            not selected_cases
+            or any(item not in inputs for item in selected_cases)
+            or args.repeats < 1
+            or args.repeats > REPEATS
+        ):
+            raise SystemExit("INVALID_CAMPAIGN_SELECTION")
         results = []
-        for case_id in sorted(inputs):
+        for case_id in selected_cases:
             files, represented, tamper = inputs[case_id]
-            for repeat in range(1, REPEATS + 1):
+            for repeat in range(1, args.repeats + 1):
                 results.append(
                     execute_case(
                         campaign_root,
@@ -456,7 +487,7 @@ def main() -> int:
                     )
                 )
         deterministic = {}
-        for case_id in EXPECTED_CLASSES:
+        for case_id in selected_cases:
             case_hashes = [
                 result["semantic_sha256"]
                 for result in results
@@ -467,12 +498,20 @@ def main() -> int:
                 "identical": len(set(case_hashes)) == 1,
                 "semantic_sha256": case_hashes[0],
             }
-        status = (
-            "PDH_1_INFORMATION_BOUNDARY_MECHANICAL_GREEN"
-            if all(result["pass"] and result["teardown_root_absent"] for result in results)
-            and all(value["identical"] for value in deterministic.values())
-            else "PDH_1_INFORMATION_BOUNDARY_MECHANICAL_BLOCKED"
+        full_campaign = (
+            selected_cases == ["B1", "B2", "B3", "B4", "B5", "B6"]
+            and args.repeats == REPEATS
         )
+        mechanical_pass = (
+            all(result["pass"] and result["teardown_root_absent"] for result in results)
+            and all(value["identical"] for value in deterministic.values())
+        )
+        if full_campaign and mechanical_pass:
+            status = "PDH_1_INFORMATION_BOUNDARY_MECHANICAL_GREEN"
+        elif not full_campaign and mechanical_pass:
+            status = "PDH_1_INFORMATION_BOUNDARY_CANARY_GREEN"
+        else:
+            status = "PDH_1_INFORMATION_BOUNDARY_MECHANICAL_BLOCKED"
         receipt = {
             "version": CAMPAIGN_VERSION,
             "status": status,
@@ -491,19 +530,20 @@ def main() -> int:
             },
             "model_call_count": 0,
             "measured_executions": len(results),
+            "full_campaign": full_campaign,
             "case_determinism": deterministic,
             "results": results,
             "campaign_root_absent_after_context": True,
         }
         receipt["receipt_sha256"] = digest(canonical(receipt))
-        atomic_json(output_dir / "PDH_1_INFORMATION_BOUNDARY_MECHANICAL_RECEIPT_R1.json", receipt)
+        atomic_json(output_dir / args.receipt_name, receipt)
     final = json.loads(
-        (output_dir / "PDH_1_INFORMATION_BOUNDARY_MECHANICAL_RECEIPT_R1.json").read_bytes()
+        (output_dir / args.receipt_name).read_bytes()
     )
     final["campaign_root_absent_after_context"] = True
     body = {key: value for key, value in final.items() if key != "receipt_sha256"}
     final["receipt_sha256"] = digest(canonical(body))
-    atomic_json(output_dir / "PDH_1_INFORMATION_BOUNDARY_MECHANICAL_RECEIPT_R1.json", final)
+    atomic_json(output_dir / args.receipt_name, final)
     print(final["status"])
     print(final["receipt_sha256"])
     return 0 if final["status"].endswith("_GREEN") else 1
