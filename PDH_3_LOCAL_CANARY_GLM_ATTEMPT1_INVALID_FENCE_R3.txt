@@ -1,0 +1,17 @@
+```json
+{
+  "packet_sha256": "015967a553f351af711ee42ca9360859bec6535769bc5d2c5a94a9bb81070f43",
+  "verdict": "GREEN",
+  "blockers": [],
+  "non_blocking_risks": [
+    "Prior R1 and R2 attempts experienced review execution failures, which could imply latent environmental constraints not fully captured by the static bindings."
+  ],
+  "evidence_required": [
+    "Result and teardown receipts bind the reviewed contract and controller hashes.",
+    "All mechanical acceptance booleans are true.",
+    "Final manifest hashes bind result and teardown.",
+    "No process, port, or generated root remains.",
+    "A final independent review classifies the evidence."
+  ]
+}
+```

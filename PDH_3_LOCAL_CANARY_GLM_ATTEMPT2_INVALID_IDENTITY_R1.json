@@ -1,0 +1,20 @@
+```json
+{
+  "packet_sha256": "596f386bebb3372d127ce761d7b6c288a6218ab093014189b96ed44bf12a6f96",
+  "served_model": "gemini-1.5-pro",
+  "verdict": "GREEN",
+  "blockers": [],
+  "non_blocking_risks": [
+    "Local single-node loopback testing cannot fully emulate distributed network partitions, cross-region cloud latency, or multi-node failure scenarios, though this is acceptable for a local canary scope.",
+    "Reliance on the local machine's resource contention could artificially skew p99/pMax latency metrics compared to a dedicated cloud environment."
+  ],
+  "evidence_required": [
+    "result.json showing source, packet, candidate, migration, and receipt hash bindings.",
+    "result.json load metrics demonstrating exact row counts, zero query errors, and latency within p99/pMax thresholds.",
+    "Evidence of zero wrong-task vector linkage and exact histogram accounting for acknowledged writes and contended updates.",
+    "teardown.json proving successful SIGKILL crash recovery with zero acknowledged application-row loss.",
+    "manifest.json verifying the final result and teardown hashes.",
+    "Evidence of complete teardown: zero campaign residue, closed loopback ports, and successful removal of the generated root."
+  ]
+}
+```

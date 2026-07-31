@@ -1,0 +1,25 @@
+glm-zai: served by glm-5.2
+```json
+{
+  "verdict": "GREEN",
+  "packet_sha256": "a320f9b291ca5da8e404fa5fcfe3ab64da3dc87904e8ff8a1e2186036ba3f11e",
+  "controller_sha256": "3371a2952c29c649a5940da4eaf5dfa724b5f7d524e17b110460cb6365169fc1",
+  "blocking_findings": [],
+  "non_blocking_risks": [
+    "Soft-cap overshoot model was calibrated only at concurrency 10 and 50; concurrency 100 and 250 rely on the same bounded mechanism.",
+    "Replay verification depends on the controller's one-row idempotency check.",
+    "Any later drift back to duration-bounded mutating workloads must be rejected by the controller hash check."
+  ],
+  "required_evidence_after_execution": [
+    "Canonical GREEN receipt bound to the frozen product and controller.",
+    "Per-stage operation-bound, histogram, database-equality, error, and latency receipts.",
+    "SIGKILL/restart, verifier, inventory, retry, cleanup, teardown, and manifest receipts."
+  ]
+}
+```
+
+`CLASSIFICATION`: `INVALID_OUTPUT_FORMAT`
+
+The response was served by GLM 5.2 and was substantively GREEN, but Markdown
+fences violated the required raw-JSON-only output contract. It cannot authorize
+execution.
