@@ -18,5 +18,9 @@ build/
 # EV1 genuine-use task roots, dependency caches, and raw task evidence stay local.
 .ev1-runtime/
 
+# PDH-3 paid-campaign archives, raw scans, provider responses, and retrieved
+# evidence stay local; canonical receipts bind them by SHA-256.
+.pdh3-runtime/
+
 # Python compilation residue is never release evidence.
 __pycache__/

@@ -1,0 +1,55 @@
+from __future__ import annotations
+
+import unittest
+
+import pdh3_scale_contract as contract
+
+
+class ContractTests(unittest.TestCase):
+    def test_exact_upper_envelope(self) -> None:
+        value = contract.production_contract()
+        self.assertEqual(value["workload"]["trajectory_events"], 5_000_000)
+        self.assertEqual(value["workload"]["task_bound_vectors"], 250_000)
+        self.assertEqual(value["workload"]["verifier_executions"], 9_976)
+        self.assertEqual(value["workload"]["checkpoints"], 288)
+
+    def test_cost_and_lifecycle(self) -> None:
+        runpod = contract.RUNPOD
+        self.assertEqual(runpod["gpu_id"], "NVIDIA L40S")
+        self.assertEqual(runpod["cloud"], "SECURE")
+        self.assertEqual(
+            runpod["image"],
+            "runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404",
+        )
+        self.assertEqual(runpod["ports"], ["22/tcp"])
+        self.assertFalse(runpod["global_networking"])
+        self.assertEqual(runpod["volume_gb"], 0)
+        self.assertIsNone(runpod["network_volume"])
+        self.assertLessEqual(runpod["aggregate_cost_usd_max"], 35)
+        self.assertEqual(runpod["paid_seconds_max"], 28 * 60 * 60)
+
+    def test_production_arguments_fail_closed(self) -> None:
+        good = {
+            "duration_seconds": contract.MEASURED_SECONDS,
+            "checkpoint_seconds": contract.CHECKPOINT_SECONDS,
+            "tasks": contract.TASKS,
+            "events_per_task": contract.EVENTS_PER_TASK,
+            "receipts_per_task": contract.RECEIPTS_PER_TASK,
+            "vectors": contract.VECTORS,
+            "max_concurrency": contract.MAX_CONCURRENCY,
+            "disk_used_fraction_limit": contract.DISK_USED_FRACTION_LIMIT,
+            "query_duration_seconds": contract.QUERY_DURATION_SECONDS,
+            "seed_batch_tasks": contract.SEED_BATCH_TASKS,
+            "setup_timeout_seconds": contract.SETUP_TIMEOUT_SECONDS,
+            "fault_every_checkpoints": contract.FAULT_EVERY_CHECKPOINTS,
+            "cache": contract.NODE_CACHE,
+            "sql_memory": contract.NODE_SQL_MEMORY,
+        }
+        contract.validate_production_arguments(good)
+        bad = dict(good, duration_seconds=60)
+        with self.assertRaisesRegex(ValueError, "PRODUCTION_ARGUMENT_MISMATCH"):
+            contract.validate_production_arguments(bad)
+
+
+if __name__ == "__main__":
+    unittest.main()
