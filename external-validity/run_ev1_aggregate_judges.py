@@ -23,6 +23,7 @@ GLM = Path("/Users/kennethruedas/.local/bin/glm-zai")
 AGY = Path("/Users/kennethruedas/.local/bin/agy-judge")
 GLM_SHA256 = "0b94755754de89557ffb9d00b45b8d8fef6578614d00563db2320e940f83748f"
 AGY_SHA256 = "e90a7eca1526dd31b522fdbcb1b52e0083c93a0984e4d2f4edf8bde9eb0dd716"
+PRESERVED_GLM_RAW_R1_SHA256 = "b340bfc86f57444e6ffa85a29666ce5d92b6abd75d7582116bc074ccfcbbf361"
 
 
 class JudgeError(RuntimeError):
@@ -80,7 +81,7 @@ def validate_glm(raw: bytes) -> None:
         raise JudgeError("GLM_AGGREGATE_OUTPUT_CONTRACT_FAILED")
     for heading in ("BLOCKERS", "EVIDENCE[- _]GAPS"):
         section = re.search(label(heading) + r"(.{0,240})", text, re.IGNORECASE | re.DOTALL)
-        if section is None or not re.search(r"\b(?:none|\[\])\b", section.group(1), re.IGNORECASE):
+        if section is None or not re.search(r"(?:\bnone\b|\[\])", section.group(1), re.IGNORECASE):
             raise JudgeError(f"GLM_AGGREGATE_{heading}_NOT_EMPTY")
     if not (
         re.search(r"12/12.{0,220}(?:not supported|blocked|prohibited|reject)", text, re.IGNORECASE | re.DOTALL)
@@ -107,7 +108,7 @@ def validate_agy(raw: bytes) -> None:
 
 
 def main() -> int:
-    if GLM_RAW.exists() or AGY_RAW.exists() or RECEIPT.exists():
+    if AGY_RAW.exists() or RECEIPT.exists():
         raise JudgeError("AGGREGATE_JUDGE_OUTPUT_ALREADY_EXISTS")
     if digest(PACKET) != PACKET_SHA256 or digest(OUT / "EV1_AGGREGATE_MANIFEST_R2.json") != MANIFEST_SHA256:
         raise JudgeError("AGGREGATE_PACKET_OR_MANIFEST_DRIFT")
@@ -122,10 +123,15 @@ def main() -> int:
         "GLM_ZAI_REPORT_MODEL": "1",
         "GLM_ZAI_MAX_TOKENS": "16384",
     })
-    glm_exit, glm_raw = invoke([str(GLM)], input_bytes=PACKET.read_bytes(), env=environment)
-    atomic_write(GLM_RAW, glm_raw)
-    if glm_exit != 0:
-        raise JudgeError(f"GLM_PROCESS_FAILED:{glm_exit}")
+    if GLM_RAW.exists():
+        if digest(GLM_RAW) != PRESERVED_GLM_RAW_R1_SHA256:
+            raise JudgeError("PRESERVED_GLM_RAW_DRIFT")
+        glm_raw = GLM_RAW.read_bytes()
+    else:
+        glm_exit, glm_raw = invoke([str(GLM)], input_bytes=PACKET.read_bytes(), env=environment)
+        atomic_write(GLM_RAW, glm_raw)
+        if glm_exit != 0:
+            raise JudgeError(f"GLM_PROCESS_FAILED:{glm_exit}")
     validate_glm(glm_raw)
     agy_exit, agy_raw = invoke([str(AGY), "--packet", str(PACKET), "--timeout", "600"])
     atomic_write(AGY_RAW, agy_raw)
