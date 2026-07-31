@@ -10,9 +10,9 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RUNTIME = ROOT / ".pdh3-runtime" / "preflight-r4"
-PACKET = ROOT / "PDH_3_SCALE_RUNPOD_PREFLIGHT_PACKET_R4.md"
-BINDINGS = ROOT / "PDH_3_SCALE_RUNPOD_PREFLIGHT_BINDINGS_R4.json"
+RUNTIME = ROOT / ".pdh3-runtime" / "preflight-r5"
+PACKET = ROOT / "PDH_3_SCALE_RUNPOD_PREFLIGHT_PACKET_R5.md"
+BINDINGS = ROOT / "PDH_3_SCALE_RUNPOD_PREFLIGHT_BINDINGS_R5.json"
 
 LAUNCH_WINDOW_START = "2026-07-31T04:00:00Z"
 LAUNCH_WINDOW_END = "2026-07-31T05:00:00Z"
@@ -24,6 +24,7 @@ TERMINATE_EPOCH = 1_785_571_200
 SOURCES = (
     "post-dogfood/pdh3_scale_contract.py",
     "post-dogfood/run_pdh3_scale_campaign.py",
+    "post-dogfood/run_pdh3_traced.py",
     "post-dogfood/build_pdh3_scale_bundle.py",
     "s2-soak/lifecycle_guard.py",
 )
@@ -32,8 +33,9 @@ RECEIPTS = (
     "PDH_3_SCALE_AUTHORIZATION_RECEIPT_R1.md",
     "PDH_3_SCALE_LOCAL_SMOKE_PACKET_R1.md",
     "PDH_3_SCALE_LOCAL_SMOKE_REPORT_R1.md",
-    "PDH_3_SCALE_BUNDLE_SCAN_RECEIPT_R4.md",
+    "PDH_3_SCALE_BUNDLE_SCAN_RECEIPT_R5.md",
     "PDH_3_SCALE_RUNPOD_ATTEMPT_01_RECEIPT.md",
+    "PDH_3_SCALE_RUNPOD_ATTEMPT_02_RECEIPT.md",
 )
 
 
@@ -140,7 +142,7 @@ def main() -> int:
     bindings["bindings_sha256"] = digest(canonical(bindings))
     BINDINGS.write_bytes(canonical(bindings))
 
-    packet = f"""# PDH-3 Production-Shaped Scale RunPod Preflight Packet R4
+    packet = f"""# PDH-3 Production-Shaped Scale RunPod Preflight Packet R5
 
 ## Judge task
 
@@ -183,10 +185,10 @@ against a three-node local CockroachDB cluster inside one disposable Secure
 Cloud L40S worker.
 
 Kill line: stop and delete the worker on any identity, rate, image, disk,
-volume, hash, namespace, evidence, checkpoint, latency, growth, determinism,
-cross-task isolation, retry, crash-recovery, cleanup, credential, private-data,
-or lifecycle mismatch. No replacement is allowed after the measured workload
-begins.
+volume, hash, syscall-trace, external-destination, evidence, checkpoint,
+latency, growth, determinism, cross-task isolation, retry, crash-recovery,
+cleanup, credential, private-data, or lifecycle mismatch. No replacement is
+allowed after the measured workload begins.
 
 ## Exact provider and economic envelope
 
@@ -240,7 +242,7 @@ exact-ID absence and empty matching-campaign active inventory, before another
 attempt. Three consecutive identical failures stop blind retries. Retry is
 allowed only for provider creation/capacity, returned-shape/image/price
 mismatch, readiness, SSH, hash-checked transfer, extracted-bundle validation,
-or namespace canary failure before measured execution. Any credential/private
+or syscall-observer canary failure before measured execution. Any credential/private
 data exposure, unbounded price, failed deletion, product/source drift, or
 evidence-contract defect ends the campaign. Once measured execution starts,
 there is no replacement, restart, extension, or second measured run.
@@ -259,26 +261,45 @@ runpodctl, checks worker identity on every heartbeat, survives parent-shell
 exit, records a hash chain, performs bounded stop/delete retries, and declares
 teardown only after exact-ID absence plus empty matching active inventory.
 
-Only the R3 archive and this packet are uploaded. Their hashes are verified
+Only the R5 archive and this packet are uploaded. Their hashes are verified
 before extraction. No AWS, CockroachDB Cloud, GitHub, package-registry, model,
 HOME, client, private, or production credential/data is transferred. SSH is
 used only for bounded transfer, start, observation, retrieval, and teardown.
-The workload launches in a fresh user/network namespace with loopback enabled
-and no external egress. Namespace failure blocks before measured execution.
+The RunPod container does not expose an unprivileged network namespace; Attempt
+02 proved this directly and was deleted before upload. R5 therefore makes no
+namespace or firewall claim. Instead, the full measured command is launched
+under `strace -ff` following every descendant and recording every `connect` and
+`sendto`. A 0.5-second fail-fast observer permits only IPv4/IPv6 loopback,
+AF_UNIX, AF_NETLINK, and AF_UNSPEC destinations. Any external or unparseable
+destination terminates the measured process group and blocks the campaign. The
+final claim is exactly `PROCESS_TREE_OBSERVED_ZERO_EXTERNAL_EGRESS`.
 
 ## Remote canary and measured command
 
-After extraction and hash verification, execute a 60-second reduced canary
-through the same controller inside the no-egress namespace. It must prove
-three-node startup, seed, workload, 43 verifier executions, one node
+Before payload upload, `strace` must already exist in the exact image; record
+its version and SHA-256. If absent, delete the worker rather than installing a
+package or changing the image. After extraction and hash verification, execute
+a classifier canary over fixed loopback, Unix, IPv6 loopback, external,
+unparseable, and non-network lines; it must allow only the first three. Then
+execute a 60-second reduced controller canary through the R5 trace wrapper. It
+must prove three-node startup, seed, workload, 43 verifier executions, one node
 crash/restart, exact reconciliation, database drop, closed ports, stopped
-processes, and removed generated root.
+processes, removed generated root, and a GREEN zero-external-destination trace
+receipt.
 
-Only after that canary is GREEN, execute exactly:
+Only after that canary is GREEN, execute the following wrapper around the exact
+production command:
 
 ```text
-PDH3_PACKET_SHA256=<this packet SHA-256>
-python3 post-dogfood/run_pdh3_scale_campaign.py
+python3 post-dogfood/run_pdh3_traced.py
+  --trace-prefix /runpod-volume-disabled/ck-pdh3-scale-r1/network-trace
+  --receipt /runpod-volume-disabled/ck-pdh3-scale-r1/network-receipt.json
+  --packet-sha256 <this packet SHA-256>
+  --poll-seconds 0.5
+  --max-trace-bytes 2147483648
+  --
+  env PDH3_PACKET_SHA256=<this packet SHA-256>
+  python3 post-dogfood/run_pdh3_scale_campaign.py
   --binary p2-cleanroom/vendor/cockroach-v26.2.3-linux/cockroach-v26.2.3.linux-amd64/cockroach
   --packet <this exact packet>
   --output /runpod-volume-disabled/ck-pdh3-scale-r1/evidence
@@ -323,6 +344,8 @@ volume or network volume is attached.
 - database bytes no greater than 100 GiB;
 - evidence bytes no greater than 20 GiB;
 - container disk occupancy no greater than 70%;
+- zero external or unparseable `connect`/`sendto` destinations across the
+  traced measured process tree;
 - every canonical checkpoint, journal event, result, manifest, and teardown
   receipt hash-linked and fsynced.
 
@@ -351,9 +374,11 @@ only authorizes worker creation.
 
 {(ROOT / "PDH_3_SCALE_LOCAL_SMOKE_REPORT_R1.md").read_text(encoding="utf-8")}
 
-{(ROOT / "PDH_3_SCALE_BUNDLE_SCAN_RECEIPT_R4.md").read_text(encoding="utf-8")}
+{(ROOT / "PDH_3_SCALE_BUNDLE_SCAN_RECEIPT_R5.md").read_text(encoding="utf-8")}
 
 {(ROOT / "PDH_3_SCALE_RUNPOD_ATTEMPT_01_RECEIPT.md").read_text(encoding="utf-8")}
+
+{(ROOT / "PDH_3_SCALE_RUNPOD_ATTEMPT_02_RECEIPT.md").read_text(encoding="utf-8")}
 
 The local smoke used the final controller source but preceded two
 contract-only hardenings that pinned production scheduling parameters and the

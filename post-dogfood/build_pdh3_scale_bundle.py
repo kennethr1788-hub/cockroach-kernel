@@ -17,6 +17,7 @@ BASE = Path(__file__).resolve().parents[1]
 FILES = (
     "post-dogfood/pdh3_scale_contract.py",
     "post-dogfood/run_pdh3_scale_campaign.py",
+    "post-dogfood/run_pdh3_traced.py",
     "post-dogfood/run_pdh3_local_canary.py",
     "hardening-gate7/make_vectors.py",
     "hardening-gate7/run_campaign.py",

@@ -12,6 +12,11 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(value["workload"]["task_bound_vectors"], 250_000)
         self.assertEqual(value["workload"]["verifier_executions"], 9_976)
         self.assertEqual(value["workload"]["checkpoints"], 288)
+        self.assertEqual(
+            value["egress_evidence"]["claim"],
+            "PROCESS_TREE_OBSERVED_ZERO_EXTERNAL_EGRESS",
+        )
+        self.assertFalse(value["egress_evidence"]["network_namespace"])
 
     def test_cost_and_lifecycle(self) -> None:
         runpod = contract.RUNPOD

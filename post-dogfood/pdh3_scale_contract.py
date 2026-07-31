@@ -21,6 +21,8 @@ SETUP_TIMEOUT_SECONDS = 5_400
 FAULT_EVERY_CHECKPOINTS = 12
 NODE_CACHE = "8GiB"
 NODE_SQL_MEMORY = "8GiB"
+EGRESS_OBSERVATION = "strace-process-tree-connect-sendto-v1"
+EXTERNAL_EGRESS_ALLOWED = 0
 
 TASKS = 500_000
 EVENTS_PER_TASK = 10
@@ -117,6 +119,13 @@ def production_contract() -> dict[str, Any]:
             "acknowledged_write_loss": 0,
             "accepted_replays": 0,
             "residual_paid_resources": 0,
+            "external_egress_destinations": EXTERNAL_EGRESS_ALLOWED,
+        },
+        "egress_evidence": {
+            "mechanism": EGRESS_OBSERVATION,
+            "claim": "PROCESS_TREE_OBSERVED_ZERO_EXTERNAL_EGRESS",
+            "network_namespace": False,
+            "firewall": False,
         },
         "forbidden_runtime_dependencies": list(FORBIDDEN_RUNTIME_DEPENDENCIES),
     }
