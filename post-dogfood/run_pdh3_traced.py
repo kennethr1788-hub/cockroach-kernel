@@ -2,9 +2,10 @@
 """Run one PDH-3 command under complete process-tree network syscall tracing.
 
 This is evidence infrastructure, not a network namespace or firewall. It
-follows every descendant with strace, permits only loopback, Unix, netlink, and
-AF_UNSPEC destinations, terminates the process group when a non-loopback or
-unparseable connect/sendto call is observed, and emits a canonical receipt.
+follows every descendant with strace, permits only loopback, Unix, netlink,
+AF_UNSPEC, and destinationless sends on already-connected sockets, terminates
+the process group when a non-loopback or unparseable connect/sendto call is
+observed, and emits a canonical receipt.
 """
 from __future__ import annotations
 
@@ -81,6 +82,12 @@ def classify_line(line: str) -> tuple[str, str] | None:
     if match is None:
         return None
     syscall = match.group(1)
+    # A destinationless sendto delegates routing to a preceding connect().
+    # strace begins before exec and traces every descendant, so any external
+    # connection that could make this send egress is independently observed
+    # and blocked by the connect classifier.
+    if syscall == "sendto" and re.search(r",\s*NULL,\s*0\)\s*=", line):
+        return ("PERMITTED_CONNECTED_NO_DESTINATION", syscall)
     if any(family in line for family in PERMITTED_FAMILIES):
         return ("PERMITTED_LOCAL_KERNEL", syscall)
     if "AF_INET6" in line:
@@ -141,6 +148,7 @@ def scan_incremental(
         "sendto": 0,
         "permitted_loopback": 0,
         "permitted_local_kernel": 0,
+        "permitted_connected_no_destination": 0,
     }
     violations: list[dict[str, str]] = []
     total = 0
@@ -165,6 +173,8 @@ def scan_incremental(
                     counts["permitted_loopback"] += 1
                 elif classification == "PERMITTED_LOCAL_KERNEL":
                     counts["permitted_local_kernel"] += 1
+                elif classification == "PERMITTED_CONNECTED_NO_DESTINATION":
+                    counts["permitted_connected_no_destination"] += 1
                 else:
                     violations.append(
                         {
@@ -241,6 +251,7 @@ def main() -> int:
         "sendto": 0,
         "permitted_loopback": 0,
         "permitted_local_kernel": 0,
+        "permitted_connected_no_destination": 0,
     }
     violations: list[dict[str, str]] = []
     trace_bytes = 0
@@ -293,6 +304,7 @@ def main() -> int:
         "limitations": [
             "OBSERVATION_NOT_NETWORK_NAMESPACE_OR_FIREWALL",
             "ONLY_CONNECT_AND_SENDTO_SYSCALLS_ARE_CLASSIFIED",
+            "DESTINATIONLESS_SENDTO_RELIES_ON_COMPLETE_PRE_EXEC_CONNECT_TRACING",
             "UNRELATED_HOST_OR_CONTAINER_PROCESSES_ARE_OUT_OF_SCOPE",
         ],
         "green": child_exit == 0 and not violations and bool(files),

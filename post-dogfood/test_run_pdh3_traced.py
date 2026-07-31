@@ -43,6 +43,20 @@ class TraceClassifierTests(unittest.TestCase):
             ("BLOCK_UNPARSEABLE_FAMILY", "connect"),
         )
 
+    def test_permits_destinationless_send_on_connected_socket(self) -> None:
+        line = 'sendto(4, "x", 1, MSG_NOSIGNAL, NULL, 0) = 1'
+        self.assertEqual(
+            classify_line(line),
+            ("PERMITTED_CONNECTED_NO_DESTINATION", "sendto"),
+        )
+
+    def test_still_blocks_sendto_with_external_destination(self) -> None:
+        line = (
+            'sendto(4, "x", 1, 0, {sa_family=AF_INET, '
+            'sin_addr=inet_addr("198.51.100.12")}, 16) = 1'
+        )
+        self.assertEqual(classify_line(line), ("BLOCK_EXTERNAL", "sendto"))
+
     def test_ignores_non_network_lines(self) -> None:
         self.assertIsNone(classify_line("+++ exited with 0 +++"))
 
