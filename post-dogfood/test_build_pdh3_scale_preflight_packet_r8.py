@@ -842,6 +842,29 @@ class R8PreflightPacketTests(unittest.TestCase):
         self.assertIsNone(bindings["provider"]["selected_offer"]["offer_id"])
         self.assertEqual(bindings["identity"]["campaign_id"], self.campaign_id)
         self.assertFalse(bindings["commands"]["shell_interpolation"])
+        expected_local_runtime = f".pdh3-runtime/r8-campaigns/{self.campaign_id}"
+        self.assertEqual(
+            bindings["commands"]["local_runtime_root"], expected_local_runtime
+        )
+        lifecycle = bindings["commands"]["lifecycle_guard_argv_template"]
+        supervisor = bindings["commands"]["supervisor_argv_template"]
+        self.assertEqual(
+            lifecycle[lifecycle.index("--log") + 1],
+            expected_local_runtime + "/lifecycle-guard.ndjson",
+        )
+        self.assertEqual(
+            supervisor[supervisor.index("--ssh-config") + 1],
+            expected_local_runtime + "/ssh-config",
+        )
+        self.assertEqual(
+            supervisor[supervisor.index("--retrieval") + 1],
+            expected_local_runtime + "/retrieval",
+        )
+        self.assertEqual(
+            supervisor[supervisor.index("--log") + 1],
+            expected_local_runtime + "/supervisor.ndjson",
+        )
+        self.assertNotIn(".pdh3-runtime/r8/", canonical(bindings["commands"]).decode())
         traced = bindings["commands"]["traced_argv_runtime_template"]
         self.assertEqual(
             traced[traced.index("--trace-prefix") + 1],

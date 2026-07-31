@@ -1370,6 +1370,7 @@ def _command_bindings(
         "json",
     ]
     create_argv = _validate_argv(create_argv, "RUNPOD_CREATE")
+    local_runtime_root = f".pdh3-runtime/r8-campaigns/{config.campaign_id}"
     lifecycle_argv_template = _validate_argv(
         [
             "python3",
@@ -1397,7 +1398,7 @@ def _command_bindings(
             "--delete-grace-seconds",
             "900",
             "--log",
-            ".pdh3-runtime/r8/lifecycle-guard.ndjson",
+            local_runtime_root + "/lifecycle-guard.ndjson",
         ],
         "LIFECYCLE_GUARD_TEMPLATE",
     )
@@ -1420,15 +1421,15 @@ def _command_bindings(
             "--campaign-prefix",
             config.campaign_id,
             "--ssh-config",
-            ".pdh3-runtime/r8/ssh-config",
+            local_runtime_root + "/ssh-config",
             "--ssh-alias",
             config.pod_name,
             "--remote-root",
             remote_root,
             "--retrieval",
-            ".pdh3-runtime/r8/retrieval",
+            local_runtime_root + "/retrieval",
             "--log",
-            ".pdh3-runtime/r8/supervisor.ndjson",
+            local_runtime_root + "/supervisor.ndjson",
             "--packet-sha256",
             "__FROZEN_PACKET_SHA256__",
             "--trace-tool-sha256",
@@ -1451,6 +1452,7 @@ def _command_bindings(
     return {
         "version": "ck-pdh3-r8-command-bindings-v1",
         "identity": identity,
+        "local_runtime_root": local_runtime_root,
         "remote_root": remote_root,
         "remote_packet": remote_packet,
         "remote_evidence_root": remote_evidence,
