@@ -239,6 +239,86 @@ class R8PreflightPacketTests(unittest.TestCase):
         self.history_manifest_path = self.runtime / "prior-history-manifest.json"
         self.history_manifest_path.write_bytes(canonical(self.history_manifest))
 
+        attempt_dir = self.runtime / "attempt-08"
+        attempt_dir.mkdir()
+        attempt_payloads: dict[str, bytes] = {
+            "summary_receipt": b"STATUS=BLOCKED_PREMEASUREMENT\nBLOCKER=OUTPUT_ALREADY_EXISTS\n",
+            "preflight_packet": b"fixture packet",
+            "preflight_bindings": canonical({"fixture": "bindings"}),
+            "runtime_commands": canonical({"fixture": "commands"}),
+            "final_state": canonical(
+                {"version": "ck-pdh3-closeout-summary-v2", "result.json": None}
+            ),
+            "final_evidence_archive": b"fixture archive",
+            "final_evidence_sidecar": b"fixture archive hash",
+            "supervisor_log": b'{"event":"DELETE_ATTEMPT"}\n',
+            "lifecycle_log": b'{"event":"PROVIDER_RETRY"}\n',
+            "provider_exact_absence": canonical(
+                {
+                    "returncode": 1,
+                    "stdout": "",
+                    "stderr": (
+                        '{"error":"api error: {\\"error\\":\\"pod not found\\",'
+                        '\\"status\\":404}\\n (status 404)"}\n'
+                        "Usage:\n"
+                        "  runpodctl pod get <pod-id> [flags]\n\n"
+                        "Flags:\n"
+                        "  -h, --help                     help for get\n"
+                        "      --include-machine          include machine info\n"
+                        "      --include-network-volume   include network volume info\n\n"
+                        "Global Flags:\n"
+                        "  -o, --output string   output format (json, yaml) (default \"json\")\n\n"
+                        '{"error":"failed to get pod: api error: {"error":"pod not found",'
+                        '"status":404}\n (status 404)"}\n'
+                    ),
+                }
+            ),
+            "provider_campaign_absence": canonical(
+                {"returncode": 0, "stdout": "[]", "stderr": ""}
+            ),
+        }
+        attempt_entries: list[dict[str, object]] = []
+        for classification, raw in attempt_payloads.items():
+            path = attempt_dir / f"{classification}.bin"
+            if classification in {"final_state", "provider_exact_absence", "provider_campaign_absence"}:
+                path = path.with_suffix(".json")
+            path.write_bytes(raw)
+            attempt_entries.append(
+                {
+                    "classification": classification,
+                    "path": path.relative_to(self.root).as_posix(),
+                    "bytes": len(raw),
+                    "sha256": sha(raw),
+                }
+            )
+        attempt_body = {
+            "version": "ck-pdh3-attempt-08-manifest-v1",
+            "attempt": 8,
+            "status": "BLOCKED_PREMEASUREMENT",
+            "campaign_id": "ck-pdh3-scale-r8-relaunch",
+            "pod_name": "ck-pdh3-scale-r8-relaunch-01",
+            "pod_id": "eo9deg7xgys6a8",
+            "packet_sha256": "0" * 64,
+            "measured_clock_started": False,
+            "workload_executed": False,
+            "blocker": "OUTPUT_ALREADY_EXISTS",
+            "provider_resource_status": "DELETED",
+            "frozen_teardown_proof_status": "BLOCKED_PROVIDER_RENDERING_UNSUPPORTED",
+            "active_seconds_upper": 349,
+            "active_rate_usd_hour_upper": 1.0,
+            "attempt_cost_usd_upper": 349 / 3_600,
+            "exact_provider_charge_available": False,
+            "binding_only": True,
+            "raw_evidence_embedded": False,
+            "credential_material_copied": False,
+            "entries": attempt_entries,
+            "entry_count": len(attempt_entries),
+            "evidence_set_sha256": sha(canonical(attempt_entries)),
+        }
+        self.attempt_08_manifest = finalize_manifest(attempt_body)
+        self.attempt_08_manifest_path = self.runtime / "attempt-08-manifest.json"
+        self.attempt_08_manifest_path.write_bytes(canonical(self.attempt_08_manifest))
+
         contract_module = builder._load_contract(self.root)
         arguments = {
             "duration_seconds": contract_module.MEASURED_SECONDS,
@@ -675,6 +755,7 @@ class R8PreflightPacketTests(unittest.TestCase):
             bundle_manifest_json=self.bundle_manifest_path,
             local_test_manifest_json=self.local_manifest_path,
             prior_attempt_history_manifest_json=self.history_manifest_path,
+            attempt_08_manifest_json=self.attempt_08_manifest_path,
             authorization_receipt=self.authorization,
             runpodctl_path=self.runpodctl,
             runpodctl_version=self.runpodctl_version,
@@ -696,6 +777,16 @@ class R8PreflightPacketTests(unittest.TestCase):
         body.update(updates)
         self.history_manifest = finalize_manifest(body)
         self.history_manifest_path.write_bytes(canonical(self.history_manifest))
+
+    def _rewrite_attempt_08(self, **updates: object) -> None:
+        body = {
+            key: value
+            for key, value in self.attempt_08_manifest.items()
+            if key != "manifest_sha256"
+        }
+        body.update(updates)
+        self.attempt_08_manifest = finalize_manifest(body)
+        self.attempt_08_manifest_path.write_bytes(canonical(self.attempt_08_manifest))
 
     def _rewrite_local(self, **updates: object) -> None:
         body = {
@@ -751,6 +842,19 @@ class R8PreflightPacketTests(unittest.TestCase):
         self.assertIsNone(bindings["provider"]["selected_offer"]["offer_id"])
         self.assertEqual(bindings["identity"]["campaign_id"], self.campaign_id)
         self.assertFalse(bindings["commands"]["shell_interpolation"])
+        traced = bindings["commands"]["traced_argv_runtime_template"]
+        self.assertEqual(
+            traced[traced.index("--trace-prefix") + 1],
+            f"/workspace/{self.campaign_id}/network-trace",
+        )
+        self.assertEqual(
+            traced[traced.index("--receipt") + 1],
+            f"/workspace/{self.campaign_id}/network-receipt.json",
+        )
+        self.assertEqual(
+            bindings["commands"]["remote_evidence_root"],
+            f"/workspace/{self.campaign_id}/evidence",
+        )
         self.assertEqual(
             bindings["commands"]["child_controller_argv_sha256"],
             sha(canonical(bindings["commands"]["child_controller_argv"])),
@@ -772,6 +876,9 @@ class R8PreflightPacketTests(unittest.TestCase):
         source_rows = bindings["source_files"]
         self.assertEqual(len(source_rows), len(builder.MANDATORY_SOURCES))
         self.assertEqual(bindings["source_set_sha256"], sha(canonical(source_rows)))
+        self.assertEqual(bindings["attempt_08_artifacts_verified"], 11)
+        self.assertIn("### Failed Attempt 08 manifest", packet)
+        self.assertIn('"blocker":"OUTPUT_ALREADY_EXISTS"', packet)
         self.assertEqual(
             [row["id"] for row in bindings["checklist"]],
             [f"R8-{index:02d}" for index in range(1, 24)],
@@ -805,6 +912,29 @@ class R8PreflightPacketTests(unittest.TestCase):
         )
         result = builder.build(config, now=NOW)
         self.assertEqual(result["revision"], "R8")
+
+    def test_attempt_08_cost_mismatch_is_blocked(self) -> None:
+        self._rewrite_attempt_08(attempt_cost_usd_upper=0.0)
+        with self.assertRaisesRegex(builder.PreflightBuildError, "ATTEMPT_08_COST_INVALID"):
+            builder.build(self.config, now=NOW)
+
+    def test_runpodctl_v272_not_found_wrapper_is_strict(self) -> None:
+        valid = (
+            '{"error":"api error: {\\"error\\":\\"pod not found\\",'
+            '\\"status\\":404}\\n (status 404)"}\n'
+            "Usage:\n"
+            "  runpodctl pod get <pod-id> [flags]\n\n"
+            "Flags:\n"
+            "  -h, --help                     help for get\n"
+            "      --include-machine          include machine info\n"
+            "      --include-network-volume   include network volume info\n\n"
+            "Global Flags:\n"
+            "  -o, --output string   output format (json, yaml) (default \"json\")\n\n"
+            '{"error":"failed to get pod: api error: {"error":"pod not found",'
+            '"status":404}\n (status 404)"}\n'
+        )
+        self.assertTrue(builder._runpodctl_v272_not_found(valid))
+        self.assertFalse(builder._runpodctl_v272_not_found(valid + "arbitrary trailing text"))
 
     def test_expired_launch_window_is_blocked(self) -> None:
         with self.assertRaisesRegex(builder.PreflightBuildError, "LAUNCH_WINDOW_EXPIRED"):

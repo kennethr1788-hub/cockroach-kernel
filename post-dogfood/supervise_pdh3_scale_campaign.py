@@ -2109,12 +2109,42 @@ def structured_pod_not_found(raw: str) -> bool:
     try:
         value = json.loads(raw)
     except json.JSONDecodeError:
-        return False
+        first, separator, remainder = raw.partition("\n")
+        expected_remainder = (
+            "Usage:\n"
+            "  runpodctl pod get <pod-id> [flags]\n\n"
+            "Flags:\n"
+            "  -h, --help                     help for get\n"
+            "      --include-machine          include machine info\n"
+            "      --include-network-volume   include network volume info\n\n"
+            "Global Flags:\n"
+            "  -o, --output string   output format (json, yaml) (default \"json\")\n\n"
+            '{"error":"failed to get pod: api error: {"error":"pod not found",'
+            '"status":404}\n (status 404)"}\n'
+        )
+        if not separator or remainder != expected_remainder:
+            return False
+        try:
+            value = json.loads(first)
+        except json.JSONDecodeError:
+            return False
     if not isinstance(value, dict):
         return False
     candidates = [value]
-    if isinstance(value.get("error"), dict):
-        candidates.append(value["error"])
+    nested = value.get("error")
+    if isinstance(nested, dict):
+        candidates.append(nested)
+    elif isinstance(nested, str):
+        matched = re.fullmatch(
+            r"api error: (\{.*\})\n \(status 404\)", nested, re.DOTALL
+        )
+        if matched:
+            try:
+                decoded = json.loads(matched.group(1))
+            except json.JSONDecodeError:
+                decoded = None
+            if isinstance(decoded, dict):
+                candidates.append(decoded)
     for candidate in candidates:
         codes = [
             candidate[key]

@@ -1205,6 +1205,26 @@ class SupervisorTests(unittest.TestCase):
                 "provider warning",
             )
             self.assertFalse(supervisor.explicit_not_found(mixed_streams))
+            runpodctl_v272 = subprocess.CompletedProcess(
+                [],
+                1,
+                "",
+                (
+                    '{"error":"api error: {\\"error\\":\\"pod not found\\",'
+                    '\\"status\\":404}\\n (status 404)"}\n'
+                    "Usage:\n"
+                    "  runpodctl pod get <pod-id> [flags]\n\n"
+                    "Flags:\n"
+                    "  -h, --help                     help for get\n"
+                    "      --include-machine          include machine info\n"
+                    "      --include-network-volume   include network volume info\n\n"
+                    "Global Flags:\n"
+                    "  -o, --output string   output format (json, yaml) (default \"json\")\n\n"
+                    '{"error":"failed to get pod: api error: {"error":"pod not found",'
+                    '"status":404}\n (status 404)"}\n'
+                ),
+            )
+            self.assertTrue(supervisor.explicit_not_found(runpodctl_v272))
 
     def test_command_timeout_is_transport_failure(self) -> None:
         with mock.patch.object(

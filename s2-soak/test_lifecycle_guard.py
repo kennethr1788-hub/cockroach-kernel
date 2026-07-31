@@ -87,6 +87,36 @@ class LifecycleGuardTests(unittest.TestCase):
         self.assertFalse(observed)
         self.assertIsNone(value)
 
+    def test_runpodctl_v272_wrapped_pod_404_is_accepted(self) -> None:
+        output = (
+            '{"error":"api error: {\\"error\\":\\"pod not found\\",'
+            '\\"status\\":404}\\n (status 404)"}\n'
+            "Usage:\n"
+            "  runpodctl pod get <pod-id> [flags]\n\n"
+            "Flags:\n"
+            "  -h, --help                     help for get\n"
+            "      --include-machine          include machine info\n"
+            "      --include-network-volume   include network volume info\n\n"
+            "Global Flags:\n"
+            "  -o, --output string   output format (json, yaml) (default \"json\")\n\n"
+            '{"error":"failed to get pod: api error: {"error":"pod not found",'
+            '"status":404}\n (status 404)"}\n'
+        )
+        result = subprocess.CompletedProcess([], 1, output, None)
+        with mock.patch.object(guard, "run", return_value=result):
+            observed, value, _ = guard.pod_get(
+                Path("/tmp/cli"), "pod", timeout_seconds=1
+            )
+        self.assertFalse(observed)
+        self.assertIsNone(value)
+
+    def test_json_404_followed_by_unscoped_text_is_rejected(self) -> None:
+        output = '{"status":404,"message":"Pod not found"}\nprovider warning\n'
+        failed = subprocess.CompletedProcess([], 1, output, None)
+        with mock.patch.object(guard, "run", return_value=failed):
+            with self.assertRaises(guard.TransientProviderError):
+                guard.pod_get(Path("/tmp/cli"), "pod", timeout_seconds=1)
+
     def test_arbitrary_stdout_containing_404_is_not_absence_proof(self) -> None:
         outputs = (
             "upstream request 404; retry later",

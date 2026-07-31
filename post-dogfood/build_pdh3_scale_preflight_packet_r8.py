@@ -237,6 +237,7 @@ class BuildConfig:
     bundle_manifest_json: Path
     local_test_manifest_json: Path
     prior_attempt_history_manifest_json: Path
+    attempt_08_manifest_json: Path
     authorization_receipt: Path
     runpodctl_path: Path
     runpodctl_version: str
@@ -1299,8 +1300,11 @@ def _command_bindings(
         "__FROZEN_PACKET__": remote_packet,
         "__REMOTE_EVIDENCE_ROOT__": remote_evidence,
         "__IMMUTABLE_CAMPAIGN_ID__": config.campaign_id,
-        "__REMOTE_TRACE_PREFIX__": remote_evidence + "/network-trace",
-        "__REMOTE_NETWORK_RECEIPT__": remote_evidence + "/network-receipt.json",
+        "__REMOTE_TRACE_PREFIX__": remote_root + "/network-trace",
+        # The tracer owns this terminal receipt.  Keep it outside the
+        # controller-owned evidence root: the production controller correctly
+        # refuses to start when its output directory already exists.
+        "__REMOTE_NETWORK_RECEIPT__": remote_root + "/network-receipt.json",
     }
     controller = _substitute_argv(
         list(launch["controller_argv_template"]),
@@ -1723,6 +1727,166 @@ def _history_cost_and_validate(
     return prior_cost
 
 
+def _runpodctl_v272_not_found(raw: str) -> bool:
+    """Accept only the exact command-scoped v2.7.2 Pod-not-found wrapper."""
+    first, separator, remainder = raw.partition("\n")
+    expected_remainder = (
+        "Usage:\n"
+        "  runpodctl pod get <pod-id> [flags]\n\n"
+        "Flags:\n"
+        "  -h, --help                     help for get\n"
+        "      --include-machine          include machine info\n"
+        "      --include-network-volume   include network volume info\n\n"
+        "Global Flags:\n"
+        "  -o, --output string   output format (json, yaml) (default \"json\")\n\n"
+        '{"error":"failed to get pod: api error: {"error":"pod not found",'
+        '"status":404}\n (status 404)"}\n'
+    )
+    if not separator or remainder != expected_remainder:
+        return False
+    try:
+        envelope = json.loads(first)
+    except json.JSONDecodeError:
+        return False
+    if not isinstance(envelope, dict) or set(envelope) != {"error"}:
+        return False
+    message = envelope.get("error")
+    if not isinstance(message, str):
+        return False
+    match = re.fullmatch(r"api error: (\{.*\})\n \(status 404\)", message)
+    if match is None:
+        return False
+    try:
+        nested = json.loads(match.group(1))
+    except json.JSONDecodeError:
+        return False
+    return (
+        isinstance(nested, dict)
+        and nested.get("status") == 404
+        and nested.get("error") == "pod not found"
+    )
+
+
+def _attempt_08_cost_and_validate(
+    attempt: Mapping[str, Any],
+    contract: Mapping[str, Any],
+    root: Path,
+    manifest_path: Path,
+) -> float:
+    if (
+        attempt.get("version") != "ck-pdh3-attempt-08-manifest-v1"
+        or attempt.get("attempt") != 8
+        or attempt.get("status") != "BLOCKED_PREMEASUREMENT"
+        or attempt.get("campaign_id") != "ck-pdh3-scale-r8-relaunch"
+        or attempt.get("pod_name") != "ck-pdh3-scale-r8-relaunch-01"
+        or attempt.get("pod_id") != "eo9deg7xgys6a8"
+        or attempt.get("measured_clock_started") is not False
+        or attempt.get("workload_executed") is not False
+        or attempt.get("blocker") != "OUTPUT_ALREADY_EXISTS"
+        or attempt.get("provider_resource_status") != "DELETED"
+        or attempt.get("frozen_teardown_proof_status")
+        != "BLOCKED_PROVIDER_RENDERING_UNSUPPORTED"
+    ):
+        raise PreflightBuildError("ATTEMPT_08_STATE_INVALID")
+    _require_hex64(str(attempt.get("packet_sha256", "")), "ATTEMPT_08_PACKET_HASH_INVALID")
+    if (
+        attempt.get("binding_only") is not True
+        or attempt.get("raw_evidence_embedded") is not False
+        or attempt.get("credential_material_copied") is not False
+        or attempt.get("exact_provider_charge_available") is not False
+    ):
+        raise PreflightBuildError("ATTEMPT_08_BOUNDARY_INVALID")
+    entries = attempt.get("entries")
+    if (
+        not isinstance(entries, list)
+        or attempt.get("entry_count") != len(entries)
+        or digest(entries) != attempt.get("evidence_set_sha256")
+    ):
+        raise PreflightBuildError("ATTEMPT_08_EVIDENCE_SET_INVALID")
+    by_classification: dict[str, Mapping[str, Any]] = {}
+    for row in entries:
+        if not isinstance(row, dict) or not isinstance(row.get("classification"), str):
+            raise PreflightBuildError("ATTEMPT_08_EVIDENCE_INVALID")
+        classification = row["classification"]
+        if classification in by_classification:
+            raise PreflightBuildError("ATTEMPT_08_EVIDENCE_DUPLICATE")
+        by_classification[classification] = row
+    required = {
+        "summary_receipt",
+        "preflight_packet",
+        "preflight_bindings",
+        "runtime_commands",
+        "final_state",
+        "final_evidence_archive",
+        "final_evidence_sidecar",
+        "supervisor_log",
+        "lifecycle_log",
+        "provider_exact_absence",
+        "provider_campaign_absence",
+    }
+    if set(by_classification) != required:
+        raise PreflightBuildError("ATTEMPT_08_EVIDENCE_CLASSIFICATION_INVALID")
+
+    def artifact(classification: str) -> Path:
+        return _resolve_artifact(
+            root, manifest_path, str(by_classification[classification]["path"])
+        )
+
+    final_state = _read_json(artifact("final_state"), "ATTEMPT_08_FINAL_STATE")
+    if not isinstance(final_state, dict) or any(
+        value is not None for key, value in final_state.items() if key != "version"
+    ):
+        raise PreflightBuildError("ATTEMPT_08_FINAL_STATE_INVALID")
+    exact_absence = _read_json(
+        artifact("provider_exact_absence"), "ATTEMPT_08_PROVIDER_GET"
+    )
+    if (
+        not isinstance(exact_absence, dict)
+        or exact_absence.get("returncode") != 1
+        or exact_absence.get("stdout") != ""
+        or not isinstance(exact_absence.get("stderr"), str)
+        or not _runpodctl_v272_not_found(exact_absence["stderr"])
+    ):
+        raise PreflightBuildError("ATTEMPT_08_EXACT_ABSENCE_INVALID")
+    campaign_absence = _read_json(
+        artifact("provider_campaign_absence"), "ATTEMPT_08_PROVIDER_LIST"
+    )
+    try:
+        inventory = json.loads(campaign_absence.get("stdout", ""))
+    except (AttributeError, json.JSONDecodeError) as exc:
+        raise PreflightBuildError("ATTEMPT_08_CAMPAIGN_ABSENCE_INVALID") from exc
+    if (
+        campaign_absence.get("returncode") != 0
+        or campaign_absence.get("stderr") != ""
+        or not isinstance(inventory, list)
+        or any(
+            row.get("id") == attempt["pod_id"]
+            or row.get("name") == attempt["pod_name"]
+            or str(row.get("name", "")).startswith(attempt["campaign_id"])
+            for row in inventory
+            if isinstance(row, dict)
+        )
+    ):
+        raise PreflightBuildError("ATTEMPT_08_CAMPAIGN_ABSENCE_INVALID")
+    seconds = attempt.get("active_seconds_upper")
+    rate = attempt.get("active_rate_usd_hour_upper")
+    cost = attempt.get("attempt_cost_usd_upper")
+    if (
+        isinstance(seconds, bool)
+        or not isinstance(seconds, int)
+        or seconds <= 0
+        or seconds > 3_600
+        or not isinstance(rate, (int, float))
+        or isinstance(rate, bool)
+        or not isinstance(cost, (int, float))
+        or isinstance(cost, bool)
+        or float(rate) > float(contract["runpod"]["active_rate_usd_hour_max"])
+        or abs(float(cost) - seconds / 3_600 * float(rate)) > 1e-12
+    ):
+        raise PreflightBuildError("ATTEMPT_08_COST_INVALID")
+    return float(cost)
+
+
 def _symbol_bindings(relative: str, text: str) -> dict[str, Any]:
     """Bind review-relevant top-level Python spans without exporting bodies."""
     if not relative.endswith(".py"):
@@ -1847,6 +2011,7 @@ def build(config: BuildConfig, *, now: datetime | None = None) -> dict[str, Any]
         config.bundle_manifest_json,
         config.local_test_manifest_json,
         config.prior_attempt_history_manifest_json,
+        config.attempt_08_manifest_json,
     ):
         _within(path, runtime, "RUNTIME_INPUT_OUTSIDE_RUNTIME")
     for path in (config.output_packet, config.output_bindings):
@@ -1933,6 +2098,17 @@ def build(config: BuildConfig, *, now: datetime | None = None) -> dict[str, Any]
         root,
         config.prior_attempt_history_manifest_json,
     )
+    attempt_08, attempt_08_files, attempt_08_binding = _verify_manifest(
+        config.attempt_08_manifest_json,
+        root,
+        "ATTEMPT_08",
+    )
+    prior_cost += _attempt_08_cost_and_validate(
+        attempt_08,
+        contract,
+        root,
+        config.attempt_08_manifest_json,
+    )
     offer = _validate_gpu_inventory(
         _read_json(config.gpu_inventory_json, "GPU_INVENTORY"),
         root=root,
@@ -1988,6 +2164,8 @@ def build(config: BuildConfig, *, now: datetime | None = None) -> dict[str, Any]
         "local_test_manifest": local_binding,
         "prior_attempt_history_manifest": history_binding,
         "prior_attempt_artifacts_verified": len(history_files),
+        "attempt_08_manifest": attempt_08_binding,
+        "attempt_08_artifacts_verified": len(attempt_08_files),
         "local_test_artifacts_verified": len(local_files),
         "provider": {
             "active_inventory_receipt": active,
@@ -2211,6 +2389,17 @@ not target-scale or RunPod evidence.
 {canonical(history).decode('utf-8')}
 ```
 
+### Failed Attempt 08 manifest
+
+Attempt 08 is preserved as a premeasurement failure. Its bundle was uploaded,
+the measured clock never began, and its frozen teardown proof remained blocked
+even though the provider resource was deleted. The replacement cost projection
+includes its conservative upper-bound interval.
+
+```json
+{canonical(attempt_08).decode('utf-8')}
+```
+
 ### Transfer-bundle receipt and manifest
 
 ```json
@@ -2271,6 +2460,7 @@ transport ceiling without changing executable bytes.
         "sources": len(sources),
         "local_artifacts_verified": len(local_files),
         "prior_attempt_artifacts_verified": len(history_files),
+        "attempt_08_artifacts_verified": len(attempt_08_files),
     }
 
 
@@ -2293,6 +2483,7 @@ def parse_arguments(argv: Iterable[str] | None = None) -> BuildConfig:
     parser.add_argument("--bundle-manifest-json", type=Path, required=True)
     parser.add_argument("--local-test-manifest-json", type=Path, required=True)
     parser.add_argument("--prior-attempt-history-manifest-json", type=Path, required=True)
+    parser.add_argument("--attempt-08-manifest-json", type=Path, required=True)
     parser.add_argument("--authorization-receipt", type=Path, required=True)
     parser.add_argument("--runpodctl-path", type=Path, required=True)
     parser.add_argument("--runpodctl-version", required=True)
