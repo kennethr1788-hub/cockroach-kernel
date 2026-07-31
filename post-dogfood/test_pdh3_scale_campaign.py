@@ -451,6 +451,118 @@ class ScaleCampaignUnitTests(unittest.TestCase):
         self.assertEqual(proof["job"]["job_id"], None)
         self.assertEqual(proof["job"]["new_job_ids"], [])
 
+    def test_vector_index_timeout_reconciles_server_job_without_duplicate_ddl(self) -> None:
+        statements: list[str] = []
+        job_polls = 0
+
+        def fake_sql(*args: object, **kwargs: object) -> bytes:
+            nonlocal job_polls
+            statement = str(args[2])
+            statements.append(statement)
+            if statement.startswith("CREATE VECTOR INDEX"):
+                cause = campaign.CommandError(
+                    "TIMEOUT",
+                    "cockroach",
+                    "a" * 64,
+                    timeout_seconds=1_800,
+                )
+                raise campaign.SqlOperationError(
+                    cause,
+                    stage="vector_index_create",
+                    start=None,
+                    stop=None,
+                    statement_sha256="b" * 64,
+                )
+            if "SHOW INDEXES FROM ck.context_vectors" in statement:
+                return b"2\t1\t1\t0\n"
+            if "FROM [SHOW JOBS]" in statement:
+                job_polls += 1
+                if job_polls == 1:
+                    return b"job_id\tstatus\tfraction_completed\tdescription\n"
+                status = "running" if job_polls == 2 else "succeeded"
+                fraction = "0.5" if status == "running" else "1"
+                return (
+                    b"job_id\tstatus\tfraction_completed\tdescription\n"
+                    + f"new-job\t{status}\t{fraction}\tCREATE VECTOR INDEX "
+                    "context_vectors_vector_idx ON ck.context_vectors (vector)\n".encode()
+                )
+            if "ORDER BY vector <->" in statement:
+                return b"250000\t250000\n"
+            return b""
+
+        with mock.patch.object(campaign, "sql", side_effect=fake_sql), mock.patch.object(
+            campaign.time, "sleep", return_value=None
+        ):
+            restored = campaign.restore_vector_index(
+                Path("/tmp/cockroach"),
+                26257,
+                {"PATH": "/usr/bin:/bin"},
+                campaign.time.monotonic() + 60,
+                250_000,
+                10,
+            )
+
+        self.assertTrue(restored["green"])
+        self.assertTrue(restored["uncertain_timeout_reconciled"])
+        self.assertEqual(restored["attempts"], 1)
+        self.assertEqual(
+            sum(item.startswith("CREATE VECTOR INDEX") for item in statements),
+            1,
+        )
+
+    def test_vector_index_timeout_without_server_effect_retries_ddl(self) -> None:
+        create_calls = 0
+
+        def fake_sql(*args: object, **kwargs: object) -> bytes:
+            nonlocal create_calls
+            statement = str(args[2])
+            if statement.startswith("CREATE VECTOR INDEX"):
+                create_calls += 1
+                if create_calls == 1:
+                    cause = campaign.CommandError(
+                        "TIMEOUT",
+                        "cockroach",
+                        "a" * 64,
+                        timeout_seconds=1_800,
+                    )
+                    raise campaign.SqlOperationError(
+                        cause,
+                        stage="vector_index_create",
+                        start=None,
+                        stop=None,
+                        statement_sha256="b" * 64,
+                    )
+                return b""
+            if "SHOW INDEXES FROM ck.context_vectors" in statement:
+                return b"0\t0\t0\t0\n" if create_calls < 2 else b"2\t1\t1\t0\n"
+            if "FROM [SHOW JOBS]" in statement:
+                if create_calls < 2:
+                    return b"job_id\tstatus\tfraction_completed\tdescription\n"
+                return (
+                    b"job_id\tstatus\tfraction_completed\tdescription\n"
+                    b"new-job\tsucceeded\t1\tCREATE VECTOR INDEX "
+                    b"context_vectors_vector_idx ON ck.context_vectors (vector)\n"
+                )
+            if "ORDER BY vector <->" in statement:
+                return b"250000\t250000\n"
+            return b""
+
+        with mock.patch.object(campaign, "sql", side_effect=fake_sql), mock.patch.object(
+            campaign.time, "sleep", return_value=None
+        ):
+            restored = campaign.restore_vector_index(
+                Path("/tmp/cockroach"),
+                26257,
+                {"PATH": "/usr/bin:/bin"},
+                campaign.time.monotonic() + 60,
+                250_000,
+                10,
+            )
+
+        self.assertTrue(restored["green"])
+        self.assertFalse(restored["uncertain_timeout_reconciled"])
+        self.assertEqual(create_calls, 2)
+
     def test_preexisting_successful_job_cannot_prove_async_completion(self) -> None:
         def fake_sql(*args: object, **kwargs: object) -> bytes:
             statement = str(args[2])

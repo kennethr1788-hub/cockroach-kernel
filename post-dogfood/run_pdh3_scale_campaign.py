@@ -1384,6 +1384,7 @@ def restore_vector_index(
     )
     pre_create_job_ids = frozenset(job["job_id"] for job in pre_create_jobs)
     attempts = 0
+    uncertain_timeout_reconciled = False
     while attempts < MAX_SEED_ATTEMPTS:
         attempts += 1
         try:
@@ -1403,6 +1404,30 @@ def restore_vector_index(
         except SqlOperationError as exc:
             if not exc.retryable:
                 raise
+            # CREATE INDEX is a CockroachDB schema-change job.  A client timeout
+            # does not prove that the server-side job stopped.  Reconcile the
+            # exact post-timeout job/index state before issuing another DDL;
+            # otherwise retries can wait on the same job and consume the setup
+            # window without adding progress.
+            proof = vector_index_proof(
+                binary,
+                port,
+                env,
+                setup_deadline,
+                vector_count,
+                pre_create_job_ids,
+                reserve_seconds=verification_reserve_seconds,
+            )
+            if proof["green"]:
+                return {
+                    "attempts": attempts,
+                    "uncertain_timeout_reconciled": True,
+                    "pre_create_job_ids": sorted(pre_create_job_ids),
+                    **proof,
+                }
+            if proof["job"]["new_job_ids"] or proof["metadata"]["rows"] > 0:
+                uncertain_timeout_reconciled = True
+                break
             if attempts == MAX_SEED_ATTEMPTS:
                 break
             time.sleep(0.25 * attempts)
@@ -1420,6 +1445,7 @@ def restore_vector_index(
         if proof["green"]:
             return {
                 "attempts": attempts,
+                "uncertain_timeout_reconciled": uncertain_timeout_reconciled,
                 "pre_create_job_ids": sorted(pre_create_job_ids),
                 **proof,
             }

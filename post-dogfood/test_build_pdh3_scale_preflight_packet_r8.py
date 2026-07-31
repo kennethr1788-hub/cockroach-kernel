@@ -735,17 +735,17 @@ class R8PreflightPacketTests(unittest.TestCase):
         self.gpu_path = self.runtime / "gpu.json"
         self.gpu_path.write_bytes(canonical(self.gpu_receipt))
 
-        stop = datetime(2026, 8, 3, 2, 30, tzinfo=timezone.utc)
-        terminate = datetime(2026, 8, 3, 2, 45, tzinfo=timezone.utc)
+        stop = datetime(2026, 8, 3, 3, 45, tzinfo=timezone.utc)
+        terminate = datetime(2026, 8, 3, 4, 0, tzinfo=timezone.utc)
         self.config = builder.BuildConfig(
             root=self.root,
             runtime_dir=self.runtime,
             campaign_id=self.campaign_id,
             pod_name=self.pod_name,
             launch_window_start="2026-08-02T00:00:00Z",
-            launch_window_end="2026-08-02T00:30:00Z",
-            stop_after="2026-08-03T02:30:00Z",
-            terminate_after="2026-08-03T02:45:00Z",
+            launch_window_end="2026-08-02T00:15:00Z",
+            stop_after="2026-08-03T03:45:00Z",
+            terminate_after="2026-08-03T04:00:00Z",
             stop_epoch=int(stop.timestamp()),
             terminate_epoch=int(terminate.timestamp()),
             active_inventory_json=self.active_path,
@@ -940,6 +940,70 @@ class R8PreflightPacketTests(unittest.TestCase):
         self._rewrite_attempt_08(attempt_cost_usd_upper=0.0)
         with self.assertRaisesRegex(builder.PreflightBuildError, "ATTEMPT_08_COST_INVALID"):
             builder.build(self.config, now=NOW)
+
+    def test_additional_attempt_history_cost_is_mechanical(self) -> None:
+        rate = 1.0247222222222223
+        attempts = [
+            {
+                "attempt_id": "R3-PREWORKLOAD-01",
+                "campaign_id": "ck-pdh3-scale-r8-relaunch-r3",
+                "pod_name": "ck-pdh3-scale-r8-relaunch-r3-01",
+                "pod_id": "e3it78a0fnn232",
+                "status": "DELETED_BEFORE_UPLOAD_OPERATOR_MISCLASSIFICATION",
+                "measured_clock_started": False,
+                "workload_started": False,
+                "blocker": "OPERATOR_WORKER_SHAPE_MISCLASSIFICATION",
+                "provider_resource_status": "DELETED",
+                "exact_id_absent": True,
+                "campaign_active_inventory": [],
+                "credential_material_copied": False,
+                "exact_provider_charge_available": False,
+                "active_interval_start_utc": "2026-07-31T20:47:32Z",
+                "absence_proved_utc": "2026-07-31T20:48:11Z",
+                "active_seconds_upper": 39,
+                "active_rate_usd_hour_upper": rate,
+                "attempt_cost_usd_upper": 39 / 3_600 * rate,
+            },
+            {
+                "attempt_id": "R3-SETUP-01",
+                "campaign_id": "ck-pdh3-scale-r8-relaunch-r3",
+                "pod_name": "ck-pdh3-scale-r8-relaunch-r3-01",
+                "pod_id": "rf6f4rcwo9c5wk",
+                "status": "BLOCKED_COMPLETE",
+                "measured_clock_started": False,
+                "workload_started": True,
+                "blocker": "SETUP_DEADLINE_RESERVE_EXHAUSTED:reserve_seconds=600",
+                "provider_resource_status": "DELETED",
+                "exact_id_absent": True,
+                "campaign_active_inventory": [],
+                "credential_material_copied": False,
+                "exact_provider_charge_available": False,
+                "active_interval_start_utc": "2026-07-31T20:41:30Z",
+                "absence_proved_utc": "2026-07-31T22:18:37Z",
+                "active_seconds_upper": 5_827,
+                "active_rate_usd_hour_upper": rate,
+                "attempt_cost_usd_upper": 5_827 / 3_600 * rate,
+            },
+        ]
+        history = {
+            "version": "ck-pdh3-additional-attempt-history-v1",
+            "attempts": attempts,
+            "attempt_ids": [row["attempt_id"] for row in attempts],
+            "attempt_count": 2,
+            "cost_usd_upper": sum(row["attempt_cost_usd_upper"] for row in attempts),
+        }
+        contract = builder._load_contract(self.root).production_contract()
+        expected = sum(row["attempt_cost_usd_upper"] for row in attempts)
+        self.assertAlmostEqual(
+            builder._additional_attempt_cost_and_validate(history, contract),
+            expected,
+        )
+        history["attempts"][1]["active_seconds_upper"] -= 1
+        with self.assertRaisesRegex(
+            builder.PreflightBuildError,
+            "ADDITIONAL_ATTEMPT_COST_INVALID",
+        ):
+            builder._additional_attempt_cost_and_validate(history, contract)
 
     def test_runpodctl_v272_not_found_wrapper_is_strict(self) -> None:
         valid = (

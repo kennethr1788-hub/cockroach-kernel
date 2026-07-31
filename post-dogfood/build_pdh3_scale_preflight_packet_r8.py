@@ -245,6 +245,7 @@ class BuildConfig:
     sources: tuple[str, ...]
     output_packet: Path
     output_bindings: Path
+    additional_attempt_history_manifest_json: Path | None = None
 
 
 def canonical(value: Any) -> bytes:
@@ -1889,6 +1890,82 @@ def _attempt_08_cost_and_validate(
     return float(cost)
 
 
+def _additional_attempt_cost_and_validate(
+    history: Mapping[str, Any],
+    contract: Mapping[str, Any],
+) -> float:
+    if history.get("version") != "ck-pdh3-additional-attempt-history-v1":
+        raise PreflightBuildError("ADDITIONAL_ATTEMPT_HISTORY_VERSION_INVALID")
+    attempts = history.get("attempts")
+    if not isinstance(attempts, list) or len(attempts) != 2:
+        raise PreflightBuildError("ADDITIONAL_ATTEMPT_HISTORY_COUNT_INVALID")
+    expected = (
+        {
+            "attempt_id": "R3-PREWORKLOAD-01",
+            "campaign_id": "ck-pdh3-scale-r8-relaunch-r3",
+            "pod_name": "ck-pdh3-scale-r8-relaunch-r3-01",
+            "pod_id": "e3it78a0fnn232",
+            "status": "DELETED_BEFORE_UPLOAD_OPERATOR_MISCLASSIFICATION",
+            "measured_clock_started": False,
+            "workload_started": False,
+            "blocker": "OPERATOR_WORKER_SHAPE_MISCLASSIFICATION",
+        },
+        {
+            "attempt_id": "R3-SETUP-01",
+            "campaign_id": "ck-pdh3-scale-r8-relaunch-r3",
+            "pod_name": "ck-pdh3-scale-r8-relaunch-r3-01",
+            "pod_id": "rf6f4rcwo9c5wk",
+            "status": "BLOCKED_COMPLETE",
+            "measured_clock_started": False,
+            "workload_started": True,
+            "blocker": "SETUP_DEADLINE_RESERVE_EXHAUSTED:reserve_seconds=600",
+        },
+    )
+    total = 0.0
+    observed_ids: list[str] = []
+    for row, required in zip(attempts, expected, strict=True):
+        if not isinstance(row, dict) or any(row.get(key) != value for key, value in required.items()):
+            raise PreflightBuildError("ADDITIONAL_ATTEMPT_STATE_INVALID")
+        if (
+            row.get("provider_resource_status") != "DELETED"
+            or row.get("exact_id_absent") is not True
+            or row.get("campaign_active_inventory") != []
+            or row.get("credential_material_copied") is not False
+            or row.get("exact_provider_charge_available") is not False
+        ):
+            raise PreflightBuildError("ADDITIONAL_ATTEMPT_BOUNDARY_INVALID")
+        interval_start = _parse_utc(
+            str(row.get("active_interval_start_utc", "")),
+            "ADDITIONAL_ATTEMPT_START_INVALID",
+        )
+        absent = _parse_utc(str(row.get("absence_proved_utc", "")), "ADDITIONAL_ATTEMPT_ABSENCE_INVALID")
+        seconds = row.get("active_seconds_upper")
+        rate = row.get("active_rate_usd_hour_upper")
+        cost = row.get("attempt_cost_usd_upper")
+        elapsed = math.ceil((absent - interval_start).total_seconds())
+        if (
+            isinstance(seconds, bool)
+            or not isinstance(seconds, int)
+            or seconds != elapsed
+            or seconds <= 0
+            or seconds > 10_800
+            or isinstance(rate, bool)
+            or not isinstance(rate, (int, float))
+            or float(rate) > float(contract["runpod"]["active_rate_usd_hour_max"])
+            or isinstance(cost, bool)
+            or not isinstance(cost, (int, float))
+            or abs(float(cost) - seconds / 3_600 * float(rate)) > 1e-12
+        ):
+            raise PreflightBuildError("ADDITIONAL_ATTEMPT_COST_INVALID")
+        observed_ids.append(str(row["attempt_id"]))
+        total += float(cost)
+    if history.get("attempt_ids") != observed_ids or history.get("attempt_count") != 2:
+        raise PreflightBuildError("ADDITIONAL_ATTEMPT_INDEX_INVALID")
+    if abs(float(history.get("cost_usd_upper", -1)) - total) > 1e-12:
+        raise PreflightBuildError("ADDITIONAL_ATTEMPT_TOTAL_INVALID")
+    return total
+
+
 def _symbol_bindings(relative: str, text: str) -> dict[str, Any]:
     """Bind review-relevant top-level Python spans without exporting bodies."""
     if not relative.endswith(".py"):
@@ -2016,6 +2093,12 @@ def build(config: BuildConfig, *, now: datetime | None = None) -> dict[str, Any]
         config.attempt_08_manifest_json,
     ):
         _within(path, runtime, "RUNTIME_INPUT_OUTSIDE_RUNTIME")
+    if config.additional_attempt_history_manifest_json is not None:
+        _within(
+            config.additional_attempt_history_manifest_json,
+            runtime,
+            "RUNTIME_INPUT_OUTSIDE_RUNTIME",
+        )
     for path in (config.output_packet, config.output_bindings):
         _within(path, root, "OUTPUT_OUTSIDE_ROOT")
         if path.exists():
@@ -2111,6 +2194,23 @@ def build(config: BuildConfig, *, now: datetime | None = None) -> dict[str, Any]
         root,
         config.attempt_08_manifest_json,
     )
+    additional_history: dict[str, Any] | None = None
+    additional_history_files: list[dict[str, Any]] = []
+    additional_history_binding: dict[str, Any] | None = None
+    if config.additional_attempt_history_manifest_json is not None:
+        (
+            additional_history,
+            additional_history_files,
+            additional_history_binding,
+        ) = _verify_manifest(
+            config.additional_attempt_history_manifest_json,
+            root,
+            "ADDITIONAL_ATTEMPT_HISTORY",
+        )
+        prior_cost += _additional_attempt_cost_and_validate(
+            additional_history,
+            contract,
+        )
     offer = _validate_gpu_inventory(
         _read_json(config.gpu_inventory_json, "GPU_INVENTORY"),
         root=root,
@@ -2168,6 +2268,8 @@ def build(config: BuildConfig, *, now: datetime | None = None) -> dict[str, Any]
         "prior_attempt_artifacts_verified": len(history_files),
         "attempt_08_manifest": attempt_08_binding,
         "attempt_08_artifacts_verified": len(attempt_08_files),
+        "additional_attempt_history_manifest": additional_history_binding,
+        "additional_attempt_artifacts_verified": len(additional_history_files),
         "local_test_artifacts_verified": len(local_files),
         "provider": {
             "active_inventory_receipt": active,
@@ -2400,6 +2502,16 @@ includes its conservative upper-bound interval.
 
 ```json
 {canonical(attempt_08).decode('utf-8')}
+```
+
+### Additional failed replacement attempts
+
+The optional append-only history below binds any paid attempts that occurred
+after Attempt 08. Their conservative cost upper bounds are included in the
+aggregate projection; none is relabeled as measured evidence.
+
+```json
+{canonical(additional_history).decode('utf-8') if additional_history is not None else 'null'}
 ```
 
 ### Transfer-bundle receipt and manifest

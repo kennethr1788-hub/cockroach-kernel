@@ -13,6 +13,7 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(value["workload"]["verifier_executions"], 9_976)
         self.assertEqual(value["workload"]["checkpoints"], 288)
         self.assertEqual(value["workload"]["setup_success_margin_seconds"], 300)
+        self.assertEqual(value["workload"]["setup_timeout_seconds"], 10_800)
         self.assertEqual(
             value["egress_evidence"]["claim"],
             "PROCESS_TREE_OBSERVED_ZERO_EXTERNAL_EGRESS",
