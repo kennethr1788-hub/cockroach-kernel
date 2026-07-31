@@ -11,15 +11,15 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 RUNTIME = ROOT / ".pdh3-runtime" / "preflight-r3"
-PACKET = ROOT / "PDH_3_SCALE_RUNPOD_PREFLIGHT_PACKET_R2.md"
-BINDINGS = ROOT / "PDH_3_SCALE_RUNPOD_PREFLIGHT_BINDINGS_R2.json"
+PACKET = ROOT / "PDH_3_SCALE_RUNPOD_PREFLIGHT_PACKET_R3.md"
+BINDINGS = ROOT / "PDH_3_SCALE_RUNPOD_PREFLIGHT_BINDINGS_R3.json"
 
-LAUNCH_WINDOW_START = "2026-07-31T05:00:00Z"
-LAUNCH_WINDOW_END = "2026-07-31T06:00:00Z"
-STOP_AFTER = "2026-08-01T08:45:00Z"
-TERMINATE_AFTER = "2026-08-01T09:00:00Z"
-STOP_EPOCH = 1_785_573_900
-TERMINATE_EPOCH = 1_785_574_800
+LAUNCH_WINDOW_START = "2026-07-31T04:00:00Z"
+LAUNCH_WINDOW_END = "2026-07-31T05:00:00Z"
+STOP_AFTER = "2026-08-01T07:45:00Z"
+TERMINATE_AFTER = "2026-08-01T08:00:00Z"
+STOP_EPOCH = 1_785_570_300
+TERMINATE_EPOCH = 1_785_571_200
 
 SOURCES = (
     "post-dogfood/pdh3_scale_contract.py",
@@ -139,7 +139,7 @@ def main() -> int:
     bindings["bindings_sha256"] = digest(canonical(bindings))
     BINDINGS.write_bytes(canonical(bindings))
 
-    packet = f"""# PDH-3 Production-Shaped Scale RunPod Preflight Packet R2
+    packet = f"""# PDH-3 Production-Shaped Scale RunPod Preflight Packet R3
 
 ## Judge task
 
