@@ -14,7 +14,7 @@ def main() -> int:
     state = json.loads(state_path.read_text()) if state_path.exists() else None
     if args[:2] == ["pod", "get"]:
         if state is None or state.get("id") != args[2]:
-            print("404 pod not found")
+            print(json.dumps({"statusCode": 404, "message": "Pod not found"}))
             return 1
         print(json.dumps(state))
         return 0
@@ -23,7 +23,7 @@ def main() -> int:
         return 0
     if args[:2] == ["pod", "stop"]:
         if state is None or state.get("id") != args[2]:
-            print("404 pod not found")
+            print(json.dumps({"statusCode": 404, "message": "Pod not found"}))
             return 1
         state["desiredStatus"] = "EXITED"
         state_path.write_text(json.dumps(state))
@@ -31,7 +31,7 @@ def main() -> int:
         return 0
     if args[:2] == ["pod", "delete"]:
         if state is None or state.get("id") != args[2]:
-            print("404 pod not found")
+            print(json.dumps({"statusCode": 404, "message": "Pod not found"}))
             return 1
         state_path.unlink()
         print(json.dumps({"deleted": args[2]}))

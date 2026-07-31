@@ -18,7 +18,13 @@ REQUIRED_CHECKPOINTS = 288
 QUERY_DURATION_SECONDS = 120
 SEED_BATCH_TASKS = 5_000
 SETUP_TIMEOUT_SECONDS = 5_400
+SETUP_SUCCESS_MARGIN_SECONDS = 300
 FAULT_EVERY_CHECKPOINTS = 12
+REMOTE_PREFLIGHT_EPOCHS = 3
+REMOTE_PREFLIGHT_CONCURRENCY = 500
+REMOTE_PREFLIGHT_FAULTS = 3
+TRACE_BYTES_LIMIT = 2 * 1024**3
+TRACE_PREFLIGHT_PROJECTION_LIMIT = int(TRACE_BYTES_LIMIT * 0.80)
 NODE_CACHE = "8GiB"
 NODE_SQL_MEMORY = "8GiB"
 EGRESS_OBSERVATION = "strace-process-tree-connect-sendto-v2"
@@ -42,6 +48,10 @@ PMAX_LIMIT_MS = 10_000.0
 DATABASE_BYTES_LIMIT = 100 * 1024**3
 EVIDENCE_BYTES_LIMIT = 20 * 1024**3
 DISK_USED_FRACTION_LIMIT = 0.70
+RSS_KB_LIMIT = 80 * 1024**2
+FILE_DESCRIPTORS_PER_NODE_LIMIT = 65_536
+REQUIRED_LIVE_NODE_PROCESSES = 3
+PROCESS_TREE_COUNT_LIMIT = 64
 
 RUNPOD = {
     "cloud": "SECURE",
@@ -50,7 +60,8 @@ RUNPOD = {
     "image": "runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404",
     "ports": ["22/tcp"],
     "global_networking": False,
-    "vcpu": 16,
+    "vcpu_min": 16,
+    "vcpu_max": 32,
     "ram_gb_min": 94,
     "ram_gb_max": 188,
     "container_disk_gb": 250,
@@ -107,7 +118,11 @@ def production_contract() -> dict[str, Any]:
             "query_duration_seconds": QUERY_DURATION_SECONDS,
             "seed_batch_tasks": SEED_BATCH_TASKS,
             "setup_timeout_seconds": SETUP_TIMEOUT_SECONDS,
+            "setup_success_margin_seconds": SETUP_SUCCESS_MARGIN_SECONDS,
             "fault_every_checkpoints": FAULT_EVERY_CHECKPOINTS,
+            "remote_preflight_epochs": REMOTE_PREFLIGHT_EPOCHS,
+            "remote_preflight_concurrency": REMOTE_PREFLIGHT_CONCURRENCY,
+            "remote_preflight_faults": REMOTE_PREFLIGHT_FAULTS,
             "node_cache": NODE_CACHE,
             "node_sql_memory": NODE_SQL_MEMORY,
         },
@@ -117,12 +132,18 @@ def production_contract() -> dict[str, Any]:
             "database_bytes": DATABASE_BYTES_LIMIT,
             "evidence_bytes": EVIDENCE_BYTES_LIMIT,
             "disk_used_fraction": DISK_USED_FRACTION_LIMIT,
+            "rss_kb_total": RSS_KB_LIMIT,
+            "file_descriptors_per_node": FILE_DESCRIPTORS_PER_NODE_LIMIT,
+            "live_node_processes": REQUIRED_LIVE_NODE_PROCESSES,
+            "process_tree_count": PROCESS_TREE_COUNT_LIMIT,
             "false_promotions": 0,
             "cross_task_vector_links": 0,
             "acknowledged_write_loss": 0,
             "accepted_replays": 0,
             "residual_paid_resources": 0,
             "external_egress_destinations": EXTERNAL_EGRESS_ALLOWED,
+            "trace_bytes": TRACE_BYTES_LIMIT,
+            "trace_preflight_projected_bytes": TRACE_PREFLIGHT_PROJECTION_LIMIT,
         },
         "egress_evidence": {
             "mechanism": EGRESS_OBSERVATION,
@@ -136,6 +157,33 @@ def production_contract() -> dict[str, Any]:
         "forbidden_runtime_dependencies": list(FORBIDDEN_RUNTIME_DEPENDENCIES),
     }
     return {**body, "contract_sha256": digest(body)}
+
+
+def expected_schedule() -> dict[str, Any]:
+    """Return the exact mechanically checkable 24-hour execution schedule."""
+    checkpoints = MEASURED_SECONDS // CHECKPOINT_SECONDS
+    concurrency = [
+        min(MAX_CONCURRENCY, CONCURRENCY_STAGES[min(epoch, len(CONCURRENCY_STAGES) - 1)])
+        for epoch in range(checkpoints)
+    ]
+    verifier_batches = min(VERIFIER_BATCHES, checkpoints)
+    fault_epochs = [
+        epoch + 1
+        for epoch in range(checkpoints)
+        if (epoch + 1) % FAULT_EVERY_CHECKPOINTS == 0
+    ]
+    return {
+        "checkpoints": checkpoints,
+        "concurrency": concurrency,
+        "concurrency_counts": {
+            str(value): concurrency.count(value) for value in CONCURRENCY_STAGES
+        },
+        "verifier_batches": verifier_batches,
+        "verifier_executions": verifier_batches * VERIFIER_BATCH_SIZE,
+        "fault_epochs": fault_epochs,
+        "fault_count": len(fault_epochs),
+        "fault_targets": [index % 3 for index in range(len(fault_epochs))],
+    }
 
 
 def validate_production_arguments(arguments: dict[str, Any]) -> None:
@@ -154,6 +202,7 @@ def validate_production_arguments(arguments: dict[str, Any]) -> None:
         "fault_every_checkpoints": FAULT_EVERY_CHECKPOINTS,
         "cache": NODE_CACHE,
         "sql_memory": NODE_SQL_MEMORY,
+        "store_size": None,
     }
     mismatches = {
         key: {"expected": value, "actual": arguments.get(key)}

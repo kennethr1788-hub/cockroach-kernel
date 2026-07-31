@@ -31,6 +31,7 @@ CANDIDATE = "1c483b1930e629c9ecb6d73418b9554897dc08ad"
 PLAN_SHA256 = "bbda0c8d5d6273de93977000c9fbb6a4be61602686bc53617d43758fede48c24"
 PACKET_NAME = "PDH_3_LOCAL_CANARY_PACKET_R2.md"
 CAMPAIGN_ID = "ck-g7r9-pdh3-local-r1"
+TASK_ID_WIDTH = 4
 TASKS = 500
 EVENTS_PER_TASK = 10
 RECEIPTS_PER_TASK = 2
@@ -65,6 +66,22 @@ class CanaryError(RuntimeError):
     pass
 
 
+def bounded_timeout(
+    deadline: float | None,
+    cap_seconds: int,
+    *,
+    required_seconds: float = 1.0,
+    reserve_seconds: float = 0.0,
+) -> int:
+    """Return a timeout that cannot cross a shared monotonic deadline."""
+    if deadline is None:
+        return cap_seconds
+    available = deadline - time.monotonic() - reserve_seconds
+    if available < required_seconds:
+        raise CanaryError("EPOCH_DEADLINE_EXHAUSTED")
+    return max(1, min(cap_seconds, int(available)))
+
+
 def canonical(value: Any) -> bytes:
     return json.dumps(
         value,
@@ -78,6 +95,19 @@ def canonical(value: Any) -> bytes:
 def digest(value: bytes | Any) -> str:
     raw = value if isinstance(value, bytes) else canonical(value)
     return hashlib.sha256(raw).hexdigest()
+
+
+def verifier_public_salt(campaign_id: str) -> bytes:
+    if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,127}", campaign_id):
+        raise CanaryError("VERIFIER_CAMPAIGN_ID_INVALID")
+    return hashlib.sha256(
+        (
+            CANDIDATE
+            + ":"
+            + campaign_id
+            + ":verifier-public-salt-v1"
+        ).encode("utf-8")
+    ).digest()
 
 
 def atomic_write(path: Path, raw: bytes) -> None:
@@ -152,16 +182,40 @@ def run(
     cwd: Path | None = None,
     stdin: bytes | None = None,
 ) -> subprocess.CompletedProcess[bytes]:
-    result = subprocess.run(
+    process = subprocess.Popen(
         command,
         cwd=cwd,
         env=env,
-        input=stdin,
+        stdin=subprocess.PIPE if stdin is not None else subprocess.DEVNULL,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        timeout=timeout,
-        check=False,
+        start_new_session=True,
     )
+    try:
+        stdout, stderr = process.communicate(input=stdin, timeout=timeout)
+    except subprocess.TimeoutExpired as exc:
+        try:
+            os.killpg(process.pid, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
+        try:
+            stdout, stderr = process.communicate(timeout=5)
+        except subprocess.TimeoutExpired:
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            stdout, stderr = process.communicate(timeout=5)
+        partial = (exc.stdout or b"") + (exc.stderr or b"") + stdout + stderr
+        raise CanaryError(
+            "COMMAND_TIMEOUT:"
+            + Path(command[0]).name
+            + ":"
+            + str(timeout)
+            + ":"
+            + digest(partial)
+        ) from exc
+    result = subprocess.CompletedProcess(command, process.returncode, stdout, stderr)
     if result.returncode != 0:
         raise CanaryError(
             "COMMAND_FAILED:"
@@ -180,6 +234,7 @@ def sql(
     env: dict[str, str],
     database: str | None = None,
     timeout: int = 120,
+    deadline: float | None = None,
 ) -> bytes:
     command = [
         str(binary),
@@ -191,7 +246,11 @@ def sql(
     if database is not None:
         command.append(f"--database={database}")
     command.extend(["--execute", statement])
-    return run(command, env=env, timeout=timeout).stdout
+    return run(
+        command,
+        env=env,
+        timeout=bounded_timeout(deadline, timeout),
+    ).stdout
 
 
 def apply_file(
@@ -301,16 +360,20 @@ def tree_bytes(root: Path) -> int:
 
 def build_dataset(generated: Path) -> dict[str, Any]:
     module = load_module(
-        "pdh3_local_bulk_generator",
-        BASE / "hardening-gate7/live_bulk_controller.py",
+        "pdh3_synthetic_dataset",
+        BASE / "post-dogfood/pdh3_synthetic_dataset.py",
     )
-    module.TASKS = TASKS
-    module.EVENTS_PER_TASK = EVENTS_PER_TASK
-    module.RECEIPTS_PER_TASK = RECEIPTS_PER_TASK
-    module.VECTORS_PER_TASK = VECTORS_PER_TASK
-    module.QUERY_SAMPLES = QUERY_SAMPLES
-    module.CONCURRENCY = STAGES[0]
-    return module.build_sql(CAMPAIGN_ID, generated)
+    return module.build_sql(
+        CAMPAIGN_ID,
+        generated,
+        tasks=TASKS,
+        events_per_task=EVENTS_PER_TASK,
+        receipts_per_task=RECEIPTS_PER_TASK,
+        vectors_per_task=VECTORS_PER_TASK,
+        query_samples=QUERY_SAMPLES,
+        concurrency=STAGES[0],
+        task_id_width=TASK_ID_WIDTH,
+    )
 
 
 def insert_dataset(
@@ -380,7 +443,7 @@ def insert_dataset(
 def build_query_files(root: Path) -> dict[str, dict[str, Any]]:
     rows: list[str] = []
     for index in range(20):
-        task_id = f"{CAMPAIGN_ID}-task-{index:04d}"
+        task_id = f"{CAMPAIGN_ID}-task-{index:0{TASK_ID_WIDTH}d}"
         vector_id = f"{task_id}-vector-00"
         rows.append(
             f"vector-{index:02d}: SELECT count(*) FROM ck.context_vectors "
@@ -388,7 +451,7 @@ def build_query_files(root: Path) -> dict[str, dict[str, Any]]:
             f"AND vector_id='{vector_id}'"
         )
     for index in range(5):
-        task_id = f"{CAMPAIGN_ID}-task-{index:04d}"
+        task_id = f"{CAMPAIGN_ID}-task-{index:0{TASK_ID_WIDTH}d}"
         rows.append(
             f"receipt-{index:02d}: SELECT count(*) FROM ck.mcp_receipt_view "
             f"WHERE task_id='{task_id}'"
@@ -477,6 +540,7 @@ def run_querybench(
     *,
     duration_seconds: int | None = None,
     minimum_operations: int | None = None,
+    deadline: float | None = None,
 ) -> dict[str, Any]:
     if (duration_seconds is None) == (minimum_operations is None):
         raise CanaryError("QUERYBENCH_BOUNDARY_INVALID")
@@ -503,7 +567,11 @@ def run_querybench(
     ]
     if duration_seconds is not None:
         command.append(f"--duration={duration_seconds}s")
-        timeout_seconds = duration_seconds + 60
+        timeout_seconds = bounded_timeout(
+            deadline,
+            duration_seconds + 60,
+            required_seconds=duration_seconds + 1,
+        )
         execution_boundary = {
             "mode": "FIXED_DURATION",
             "duration_seconds": duration_seconds,
@@ -511,7 +579,7 @@ def run_querybench(
         }
     else:
         command.append(f"--max-ops={minimum_operations}")
-        timeout_seconds = 120
+        timeout_seconds = bounded_timeout(deadline, 120)
         execution_boundary = {
             "mode": "BOUNDED_FIXED_OPERATIONS",
             "duration_seconds": None,
@@ -519,14 +587,10 @@ def run_querybench(
             "maximum_operations": minimum_operations + concurrency - 1,
             "querybench_soft_cap": minimum_operations,
         }
-    completed = subprocess.run(
+    completed = run(
         command,
         env=env,
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
         timeout=timeout_seconds,
-        check=False,
     )
     atomic_write(output_path, completed.stdout)
     atomic_write(error_path, completed.stderr)
@@ -555,6 +619,8 @@ def run_stage(
     root: Path,
     concurrency: int,
     env: dict[str, str],
+    *,
+    deadline: float | None = None,
 ) -> dict[str, Any]:
     ack_before = parse_last_integer(
         sql(
@@ -563,6 +629,7 @@ def run_stage(
             "SELECT count(*) FROM ck.pdh3_acknowledged_writes",
             env=env,
             database="cockroach_kernel",
+            deadline=deadline,
         )
     )
     counter_before = parse_last_integer(
@@ -572,6 +639,7 @@ def run_stage(
             "SELECT value FROM ck.pdh3_counter WHERE id='shared'",
             env=env,
             database="cockroach_kernel",
+            deadline=deadline,
         )
     )
     workloads = {
@@ -584,6 +652,7 @@ def run_stage(
             "read_mix",
             env,
             duration_seconds=STAGE_DURATION_SECONDS,
+            deadline=deadline,
         ),
         "ack_write": run_querybench(
             binary,
@@ -594,6 +663,7 @@ def run_stage(
             "ack_write",
             env,
             minimum_operations=MINIMUM_ACK_WRITE_OPERATIONS,
+            deadline=deadline,
         ),
         "contended_update": run_querybench(
             binary,
@@ -604,6 +674,7 @@ def run_stage(
             "contended_update",
             env,
             minimum_operations=MINIMUM_CONTENDED_UPDATE_OPERATIONS,
+            deadline=deadline,
         ),
         "replay": run_querybench(
             binary,
@@ -614,6 +685,7 @@ def run_stage(
             "replay",
             env,
             minimum_operations=MINIMUM_REPLAY_OPERATIONS,
+            deadline=deadline,
         ),
     }
     ack_after = parse_last_integer(
@@ -623,6 +695,7 @@ def run_stage(
             "SELECT count(*) FROM ck.pdh3_acknowledged_writes",
             env=env,
             database="cockroach_kernel",
+            deadline=deadline,
         )
     )
     counter_after = parse_last_integer(
@@ -632,6 +705,7 @@ def run_stage(
             "SELECT value FROM ck.pdh3_counter WHERE id='shared'",
             env=env,
             database="cockroach_kernel",
+            deadline=deadline,
         )
     )
     replay_rows = parse_last_integer(
@@ -641,6 +715,7 @@ def run_stage(
             "SELECT count(*) FROM ck.pdh3_replay_control",
             env=env,
             database="cockroach_kernel",
+            deadline=deadline,
         )
     )
     total_operations = sum(
@@ -699,11 +774,16 @@ def run_stage(
     }
 
 
-def run_verifier_campaign(root: Path, env: dict[str, str]) -> dict[str, Any]:
+def run_verifier_campaign(
+    root: Path,
+    env: dict[str, str],
+    *,
+    deadline: float | None = None,
+) -> dict[str, Any]:
     salt = root / "public-salt.bin"
     vector_set = root / "public-vectors.json"
     output = root / "verifier-campaign"
-    atomic_write(salt, bytes.fromhex("9d" * 32))
+    atomic_write(salt, verifier_public_salt(CAMPAIGN_ID))
     run(
         [
             sys.executable,
@@ -716,7 +796,7 @@ def run_verifier_campaign(root: Path, env: dict[str, str]) -> dict[str, Any]:
             str(vector_set),
         ],
         env=env,
-        timeout=60,
+        timeout=bounded_timeout(deadline, 60, reserve_seconds=1),
         cwd=BASE,
     )
     run(
@@ -735,7 +815,7 @@ def run_verifier_campaign(root: Path, env: dict[str, str]) -> dict[str, Any]:
             str(output),
         ],
         env=env,
-        timeout=180,
+        timeout=bounded_timeout(deadline, 180),
         cwd=BASE,
     )
     aggregate_path = output / "aggregate.json"
@@ -757,19 +837,304 @@ def run_verifier_campaign(root: Path, env: dict[str, str]) -> dict[str, Any]:
     }
 
 
+def verify_query_targets(
+    binary: Path,
+    port: int,
+    env: dict[str, str],
+    *,
+    campaign_id: str,
+    id_width: int,
+    deadline: float | None = None,
+) -> dict[str, Any]:
+    """Prove the generated scale read mix addresses real seeded rows."""
+    if id_width < 1 or id_width > 12:
+        raise CanaryError("TASK_ID_WIDTH_INVALID")
+    vector_ids = [
+        f"{campaign_id}-task-{index:0{id_width}d}" for index in range(20)
+    ]
+    receipt_ids = vector_ids[:5]
+    vector_values = ",".join("'" + value.replace("'", "''") + "'" for value in vector_ids)
+    receipt_values = ",".join("'" + value.replace("'", "''") + "'" for value in receipt_ids)
+    vector_rows = parse_last_integer(
+        sql(
+            binary,
+            port,
+            "SELECT count(*) FROM ck.context_vectors "
+            f"WHERE namespace='{campaign_id}' AND task_id IN ({vector_values})",
+            env=env,
+            database="cockroach_kernel",
+            deadline=deadline,
+        )
+    )
+    receipt_rows = parse_last_integer(
+        sql(
+            binary,
+            port,
+            "SELECT count(*) FROM ck.mcp_receipt_view "
+            f"WHERE task_id IN ({receipt_values})",
+            env=env,
+            database="cockroach_kernel",
+            deadline=deadline,
+        )
+    )
+    expected_vectors = len(vector_ids)
+    expected_receipts = len(receipt_ids) * RECEIPTS_PER_TASK
+    body = {
+        "id_width": id_width,
+        "vector_rows": vector_rows,
+        "expected_vector_rows": expected_vectors,
+        "receipt_rows": receipt_rows,
+        "expected_receipt_rows": expected_receipts,
+        "green": vector_rows == expected_vectors and receipt_rows == expected_receipts,
+    }
+    if not body["green"]:
+        raise CanaryError("QUERY_TARGET_CARDINALITY_MISMATCH")
+    return body
+
+
 def source_hashes(packet: Path) -> dict[str, str]:
     paths = [
         packet,
         Path(__file__).resolve(),
-        BASE / "hardening-gate7/live_bulk_controller.py",
+        BASE / "post-dogfood/pdh3_synthetic_dataset.py",
         BASE / "hardening-gate7/make_vectors.py",
         BASE / "hardening-gate7/run_campaign.py",
         BASE / "hardening-gate7/run_trial.py",
         BASE / "p9-cloud/context_vector.py",
+        BASE / "p9-cloud/records.py",
         BASE / "p9-cloud/migrations/001_cloud.sql",
         BASE / "p9-cloud/migrations/003_collision_safe_vector_digest.sql",
     ]
     return {str(path.relative_to(BASE)): file_sha256(path) for path in paths}
+
+
+def port_is_closed(port: int) -> bool:
+    """Return true only when a new loopback connection is refused."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+        probe.settimeout(0.2)
+        return probe.connect_ex(("127.0.0.1", port)) != 0
+
+
+def finalize_local_teardown(
+    *,
+    output: Path,
+    root: Path,
+    process: subprocess.Popen[bytes] | None,
+    log_handle: Any | None,
+    ports: tuple[int, int],
+    packet_hash: str,
+    workload_exception: BaseException | None,
+) -> dict[str, Any]:
+    """Attempt every teardown step and persist a fail-closed receipt.
+
+    This function never turns a failed step into GREEN.  It records all
+    teardown errors so a process-stop failure cannot prevent the guarded root
+    removal and port checks from being attempted.
+    """
+    errors: list[str] = []
+    database_process_stopped = False
+    if process is None:
+        database_process_stopped = True
+    elif log_handle is None:
+        errors.append("DATABASE_LOG_HANDLE_MISSING")
+        try:
+            if process.poll() is None:
+                process.kill()
+            process.wait(timeout=10)
+            database_process_stopped = process.poll() is not None
+        except Exception as exc:  # pragma: no cover - platform failure path
+            errors.append("DATABASE_FORCE_STOP_FAILED:" + type(exc).__name__)
+    else:
+        try:
+            stop_database(process, log_handle, crash=False)
+            database_process_stopped = process.poll() is not None
+        except Exception as exc:
+            errors.append("DATABASE_STOP_FAILED:" + type(exc).__name__)
+            database_process_stopped = process.poll() is not None
+    if log_handle is not None and not getattr(log_handle, "closed", False):
+        try:
+            log_handle.close()
+        except Exception as exc:  # pragma: no cover - filesystem failure path
+            errors.append("DATABASE_LOG_CLOSE_FAILED:" + type(exc).__name__)
+
+    open_ports: list[int] = []
+    for checked_port in ports:
+        closed = False
+        for _ in range(20):
+            try:
+                if port_is_closed(checked_port):
+                    closed = True
+                    break
+            except OSError as exc:
+                errors.append(
+                    f"PORT_PROBE_FAILED:{checked_port}:{type(exc).__name__}"
+                )
+                break
+            time.sleep(0.05)
+        if not closed:
+            open_ports.append(checked_port)
+    ports_closed = not open_ports
+    if open_ports:
+        errors.append("LOCAL_PORTS_REMAIN_OPEN:" + ",".join(map(str, open_ports)))
+
+    generated_root_removed = False
+    verified_root = root.resolve()
+    if (
+        verified_root.parent != Path("/private/tmp")
+        or not verified_root.name.startswith("ck-pdh3-local-r1.")
+    ):
+        errors.append("GENERATED_ROOT_IDENTITY_INVALID")
+    else:
+        try:
+            if verified_root.exists():
+                shutil.rmtree(verified_root)
+            generated_root_removed = not verified_root.exists()
+        except Exception as exc:
+            errors.append("GENERATED_ROOT_REMOVE_FAILED:" + type(exc).__name__)
+        if not generated_root_removed:
+            errors.append("GENERATED_ROOT_REMAINS")
+
+    checks = {
+        "database_process_stopped": database_process_stopped,
+        "generated_root_removed": generated_root_removed,
+        "ports_closed": ports_closed,
+    }
+    green = all(checks.values()) and not errors
+    teardown_body = {
+        "version": "pdh3-local-canary-teardown-v2",
+        "status": "GREEN" if green else "BLOCKED",
+        "candidate_commit": CANDIDATE,
+        "packet_sha256": packet_hash,
+        **checks,
+        "open_ports": open_ports,
+        "errors": errors,
+        "workload_exception": (
+            None
+            if workload_exception is None
+            else {
+                "type": type(workload_exception).__name__,
+                "message": str(workload_exception)[:500],
+            }
+        ),
+    }
+    teardown_receipt = dict(
+        teardown_body, receipt_sha256=digest(teardown_body)
+    )
+    atomic_write(output / "teardown.json", canonical(teardown_receipt))
+    return teardown_receipt
+
+
+def verified_teardown_receipt(output: Path, packet_hash: str) -> dict[str, Any]:
+    path = output / "teardown.json"
+    try:
+        receipt = json.loads(path.read_bytes())
+    except (OSError, json.JSONDecodeError) as exc:
+        raise CanaryError("TEARDOWN_RECEIPT_UNREADABLE") from exc
+    if not isinstance(receipt, dict):
+        raise CanaryError("TEARDOWN_RECEIPT_INVALID")
+    claimed_hash = receipt.get("receipt_sha256")
+    body = {key: value for key, value in receipt.items() if key != "receipt_sha256"}
+    if (
+        receipt.get("status") != "GREEN"
+        or receipt.get("packet_sha256") != packet_hash
+        or claimed_hash != digest(body)
+        or not all(
+            receipt.get(key) is True
+            for key in (
+                "database_process_stopped",
+                "generated_root_removed",
+                "ports_closed",
+            )
+        )
+        or receipt.get("errors") != []
+    ):
+        raise CanaryError("TEARDOWN_RECEIPT_NOT_GREEN")
+    return receipt
+
+
+def publish_green_result(
+    output: Path,
+    packet_hash: str,
+    pending_result: dict[str, Any],
+) -> dict[str, Any]:
+    """Publish terminal GREEN last, after teardown and manifest are durable."""
+    if (output / "failure.json").exists():
+        raise CanaryError("TERMINAL_FAILURE_ALREADY_EXISTS")
+    if (output / "result.json").exists():
+        raise CanaryError("TERMINAL_RESULT_ALREADY_EXISTS")
+    teardown_receipt = verified_teardown_receipt(output, packet_hash)
+    result_body = {
+        **pending_result,
+        "teardown_receipt_sha256": teardown_receipt["receipt_sha256"],
+    }
+    result = dict(result_body, result_sha256=digest(result_body))
+    result_raw = canonical(result)
+    manifest_body = {
+        "version": "pdh3-local-canary-evidence-manifest-v3",
+        "candidate_commit": CANDIDATE,
+        "packet_sha256": packet_hash,
+        "result_sha256": result["result_sha256"],
+        "teardown_receipt_sha256": teardown_receipt["receipt_sha256"],
+        "files": {
+            "result.json": digest(result_raw),
+            "teardown.json": file_sha256(output / "teardown.json"),
+            **{
+                path.name: file_sha256(path)
+                for path in sorted(output.glob("stage-c*.json"))
+            },
+        },
+    }
+    evidence_manifest = dict(
+        manifest_body, manifest_sha256=digest(manifest_body)
+    )
+    atomic_write(output / "manifest.json", canonical(evidence_manifest))
+    # No filesystem operation follows this terminal commit in the success path.
+    atomic_write(output / "result.json", result_raw)
+    return result
+
+
+def publish_blocked_failure(
+    output: Path,
+    packet: Path,
+    exc: BaseException,
+) -> None:
+    """Ensure a current invocation exposes exactly one terminal outcome."""
+    output.mkdir(parents=True, exist_ok=True)
+    for stale_success in (output / "result.json", output / "manifest.json"):
+        if stale_success.is_file():
+            stale_success.unlink()
+    if (output / "result.json").exists():
+        raise CanaryError("TERMINAL_RESULT_COULD_NOT_BE_WITHHELD")
+    teardown_path = output / "teardown.json"
+    teardown_value = (
+        json.loads(teardown_path.read_bytes()) if teardown_path.is_file() else None
+    )
+    reason = str(exc) if isinstance(exc, CanaryError) else type(exc).__name__
+    failure_body = {
+        "version": "pdh3-local-canary-failure-v2",
+        "status": "BLOCKED",
+        "candidate_commit": CANDIDATE,
+        "plan_sha256": PLAN_SHA256,
+        "packet_sha256": file_sha256(packet) if packet.is_file() else None,
+        "failure_class": reason,
+        "exception_type": type(exc).__name__,
+        "teardown_receipt_sha256": (
+            teardown_value.get("receipt_sha256")
+            if isinstance(teardown_value, dict)
+            else None
+        ),
+        "teardown_file_sha256": (
+            file_sha256(teardown_path) if teardown_path.is_file() else None
+        ),
+        "stage_receipts": {
+            path.name: file_sha256(path)
+            for path in sorted(output.glob("stage-c*.json"))
+        },
+    }
+    atomic_write(
+        output / "failure.json",
+        canonical(dict(failure_body, receipt_sha256=digest(failure_body))),
+    )
 
 
 def execute(output: Path, packet: Path) -> dict[str, Any]:
@@ -796,12 +1161,8 @@ def execute(output: Path, packet: Path) -> dict[str, Any]:
         http_port = reserve_port()
     process: subprocess.Popen[bytes] | None = None
     log_handle: Any | None = None
-    teardown = {
-        "database_process_stopped": False,
-        "generated_root_removed": False,
-        "ports_closed": False,
-    }
-    result: dict[str, Any] | None = None
+    pending_result: dict[str, Any] | None = None
+    teardown_receipt: dict[str, Any] | None = None
     try:
         verifier = run_verifier_campaign(root, env)
         process, log_handle = start_database(
@@ -1083,72 +1444,25 @@ def execute(output: Path, packet: Path) -> dict[str, Any]:
             ],
             "next_gate": "EXACT_PAID_COST_AND_LIFECYCLE_AUTHORIZATION",
         }
-        result = dict(result_body, result_sha256=digest(result_body))
-        atomic_write(output / "result.json", canonical(result))
-        manifest_body = {
-            "version": "pdh3-local-canary-evidence-manifest-v2",
-            "candidate_commit": CANDIDATE,
-            "packet_sha256": packet_hash,
-            "result_sha256": result["result_sha256"],
-            "files": {
-                "result.json": file_sha256(output / "result.json"),
-                **{
-                    path.name: file_sha256(path)
-                    for path in sorted(output.glob("stage-c*.json"))
-                },
-            },
-        }
-        evidence_manifest = dict(
-            manifest_body, manifest_sha256=digest(manifest_body)
-        )
-        atomic_write(output / "manifest.json", canonical(evidence_manifest))
+        pending_result = result_body
     finally:
-        if process is not None and log_handle is not None:
-            stop_database(process, log_handle, crash=False)
-            teardown["database_process_stopped"] = True
-        elif process is None:
-            teardown["database_process_stopped"] = True
-        for checked_port in (port, http_port):
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
-                probe.settimeout(0.2)
-                if probe.connect_ex(("127.0.0.1", checked_port)) == 0:
-                    raise CanaryError("LOCAL_PORT_REMAINS_OPEN")
-        teardown["ports_closed"] = True
-        verified_root = root.resolve()
-        if (
-            verified_root.parent != Path("/private/tmp")
-            or not verified_root.name.startswith("ck-pdh3-local-r1.")
-        ):
-            raise CanaryError("GENERATED_ROOT_IDENTITY_INVALID")
-        shutil.rmtree(verified_root)
-        teardown["generated_root_removed"] = not verified_root.exists()
-        teardown_body = {
-            "version": "pdh3-local-canary-teardown-v1",
-            "candidate_commit": CANDIDATE,
-            "packet_sha256": packet_hash,
-            **teardown,
-        }
-        teardown_receipt = dict(
-            teardown_body, receipt_sha256=digest(teardown_body)
+        teardown_receipt = finalize_local_teardown(
+            output=output,
+            root=root,
+            process=process,
+            log_handle=log_handle,
+            ports=(port, http_port),
+            packet_hash=packet_hash,
+            workload_exception=sys.exc_info()[1],
         )
-        atomic_write(output / "teardown.json", canonical(teardown_receipt))
-        if result is not None:
-            manifest_path = output / "manifest.json"
-            manifest_value = json.loads(manifest_path.read_bytes())
-            body = {
-                key: value
-                for key, value in manifest_value.items()
-                if key != "manifest_sha256"
-            }
-            body["files"]["teardown.json"] = file_sha256(output / "teardown.json")
-            body["teardown_receipt_sha256"] = teardown_receipt["receipt_sha256"]
-            atomic_write(
-                manifest_path,
-                canonical(dict(body, manifest_sha256=digest(body))),
+        if teardown_receipt["status"] != "GREEN":
+            raise CanaryError(
+                "LOCAL_TEARDOWN_BLOCKED:"
+                + ",".join(teardown_receipt["errors"])
             )
-    if result is None:
+    if pending_result is None:
         raise CanaryError("RESULT_NOT_WRITTEN")
-    return result
+    return publish_green_result(output, packet_hash, pending_result)
 
 
 def main() -> int:
@@ -1158,40 +1472,13 @@ def main() -> int:
     args = parser.parse_args()
     output = args.output_root.resolve()
     packet = args.packet.resolve()
+    output_preexisted = output.exists()
     try:
         result = execute(output, packet)
     except Exception as exc:
         reason = str(exc) if isinstance(exc, CanaryError) else type(exc).__name__
-        teardown_path = output / "teardown.json"
-        teardown_value = (
-            json.loads(teardown_path.read_bytes())
-            if teardown_path.is_file()
-            else None
-        )
-        failure_body = {
-            "version": "pdh3-local-canary-failure-v1",
-            "status": "BLOCKED",
-            "candidate_commit": CANDIDATE,
-            "plan_sha256": PLAN_SHA256,
-            "packet_sha256": file_sha256(packet) if packet.is_file() else None,
-            "failure_class": reason,
-            "exception_type": type(exc).__name__,
-            "teardown_receipt_sha256": (
-                teardown_value.get("receipt_sha256") if teardown_value else None
-            ),
-            "teardown_file_sha256": (
-                file_sha256(teardown_path) if teardown_value else None
-            ),
-            "stage_receipts": {
-                path.name: file_sha256(path)
-                for path in sorted(output.glob("stage-c*.json"))
-            },
-        }
-        output.mkdir(parents=True, exist_ok=True)
-        atomic_write(
-            output / "failure.json",
-            canonical(dict(failure_body, receipt_sha256=digest(failure_body))),
-        )
+        if not output_preexisted:
+            publish_blocked_failure(output, packet, exc)
         print(canonical({"status": "BLOCKED", "failure_class": reason}).decode())
         return 2
     print(
