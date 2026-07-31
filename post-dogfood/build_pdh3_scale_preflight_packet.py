@@ -10,9 +10,9 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RUNTIME = ROOT / ".pdh3-runtime" / "preflight-r5"
-PACKET = ROOT / "PDH_3_SCALE_RUNPOD_PREFLIGHT_PACKET_R5.md"
-BINDINGS = ROOT / "PDH_3_SCALE_RUNPOD_PREFLIGHT_BINDINGS_R5.json"
+RUNTIME = ROOT / ".pdh3-runtime" / "preflight-r6"
+PACKET = ROOT / "PDH_3_SCALE_RUNPOD_PREFLIGHT_PACKET_R6.md"
+BINDINGS = ROOT / "PDH_3_SCALE_RUNPOD_PREFLIGHT_BINDINGS_R6.json"
 
 LAUNCH_WINDOW_START = "2026-07-31T04:00:00Z"
 LAUNCH_WINDOW_END = "2026-07-31T05:00:00Z"
@@ -33,9 +33,11 @@ RECEIPTS = (
     "PDH_3_SCALE_AUTHORIZATION_RECEIPT_R1.md",
     "PDH_3_SCALE_LOCAL_SMOKE_PACKET_R1.md",
     "PDH_3_SCALE_LOCAL_SMOKE_REPORT_R1.md",
-    "PDH_3_SCALE_BUNDLE_SCAN_RECEIPT_R5.md",
+    "PDH_3_SCALE_BUNDLE_SCAN_RECEIPT_R6.md",
     "PDH_3_SCALE_RUNPOD_ATTEMPT_01_RECEIPT.md",
     "PDH_3_SCALE_RUNPOD_ATTEMPT_02_RECEIPT.md",
+    "PDH_3_SCALE_RUNPOD_ATTEMPT_03_RECEIPT.md",
+    "PDH_3_SCALE_STRACE_PROVENANCE_R1.md",
 )
 
 
@@ -142,7 +144,7 @@ def main() -> int:
     bindings["bindings_sha256"] = digest(canonical(bindings))
     BINDINGS.write_bytes(canonical(bindings))
 
-    packet = f"""# PDH-3 Production-Shaped Scale RunPod Preflight Packet R5
+    packet = f"""# PDH-3 Production-Shaped Scale RunPod Preflight Packet R6
 
 ## Judge task
 
@@ -261,12 +263,12 @@ runpodctl, checks worker identity on every heartbeat, survives parent-shell
 exit, records a hash chain, performs bounded stop/delete retries, and declares
 teardown only after exact-ID absence plus empty matching active inventory.
 
-Only the R5 archive and this packet are uploaded. Their hashes are verified
+Only the R6 archive and this packet are uploaded. Their hashes are verified
 before extraction. No AWS, CockroachDB Cloud, GitHub, package-registry, model,
 HOME, client, private, or production credential/data is transferred. SSH is
 used only for bounded transfer, start, observation, retrieval, and teardown.
 The RunPod container does not expose an unprivileged network namespace; Attempt
-02 proved this directly and was deleted before upload. R5 therefore makes no
+02 proved this directly and was deleted before upload. R6 therefore makes no
 namespace or firewall claim. Instead, the full measured command is launched
 under `strace -ff` following every descendant and recording every `connect` and
 `sendto`. A 0.5-second fail-fast observer permits only IPv4/IPv6 loopback,
@@ -276,12 +278,16 @@ final claim is exactly `PROCESS_TREE_OBSERVED_ZERO_EXTERNAL_EGRESS`.
 
 ## Remote canary and measured command
 
-Before payload upload, `strace` must already exist in the exact image; record
-its version and SHA-256. If absent, delete the worker rather than installing a
-package or changing the image. After extraction and hash verification, execute
-a classifier canary over fixed loopback, Unix, IPv6 loopback, external,
-unparseable, and non-network lines; it must allow only the first three. Then
-execute a 60-second reduced controller canary through the R5 trace wrapper. It
+After hash-verifying and extracting the R6 archive, verify the exact vendored
+Ubuntu Noble `strace` and `libunwind8` package hashes. Extract both packages
+with `dpkg-deb -x` under the disposable campaign root; do not install them into
+the image or contact a package registry. Verify the extracted tracer binary has
+SHA-256 `28f957c227012de0b18d1bd7fff2d396cb693ea60ed8013be68de071e84b5001`,
+and run its version command with only the campaign-local library directory in
+`LD_LIBRARY_PATH`. Then execute a classifier canary over fixed loopback, Unix,
+IPv6 loopback, external, unparseable, and non-network lines; it must allow only
+the first three. Execute a real trace-wrapper canary, then a 60-second reduced
+controller canary through the R6 trace wrapper. It
 must prove three-node startup, seed, workload, 43 verifier executions, one node
 crash/restart, exact reconciliation, database drop, closed ports, stopped
 processes, removed generated root, and a GREEN zero-external-destination trace
@@ -291,10 +297,13 @@ Only after that canary is GREEN, execute the following wrapper around the exact
 production command:
 
 ```text
-python3 post-dogfood/run_pdh3_traced.py
+env LD_LIBRARY_PATH=/runpod-volume-disabled/ck-pdh3-scale-r1/strace-root/usr/lib/x86_64-linux-gnu
+  python3 post-dogfood/run_pdh3_traced.py
   --trace-prefix /runpod-volume-disabled/ck-pdh3-scale-r1/network-trace
   --receipt /runpod-volume-disabled/ck-pdh3-scale-r1/network-receipt.json
   --packet-sha256 <this packet SHA-256>
+  --strace /runpod-volume-disabled/ck-pdh3-scale-r1/strace-root/usr/bin/strace
+  --strace-sha256 28f957c227012de0b18d1bd7fff2d396cb693ea60ed8013be68de071e84b5001
   --poll-seconds 0.5
   --max-trace-bytes 2147483648
   --
@@ -374,17 +383,21 @@ only authorizes worker creation.
 
 {(ROOT / "PDH_3_SCALE_LOCAL_SMOKE_REPORT_R1.md").read_text(encoding="utf-8")}
 
-{(ROOT / "PDH_3_SCALE_BUNDLE_SCAN_RECEIPT_R5.md").read_text(encoding="utf-8")}
+{(ROOT / "PDH_3_SCALE_BUNDLE_SCAN_RECEIPT_R6.md").read_text(encoding="utf-8")}
 
 {(ROOT / "PDH_3_SCALE_RUNPOD_ATTEMPT_01_RECEIPT.md").read_text(encoding="utf-8")}
 
 {(ROOT / "PDH_3_SCALE_RUNPOD_ATTEMPT_02_RECEIPT.md").read_text(encoding="utf-8")}
 
+{(ROOT / "PDH_3_SCALE_RUNPOD_ATTEMPT_03_RECEIPT.md").read_text(encoding="utf-8")}
+
+{(ROOT / "PDH_3_SCALE_STRACE_PROVENANCE_R1.md").read_text(encoding="utf-8")}
+
 The local smoke used the final controller source but preceded two
 contract-only hardenings that pinned production scheduling parameters and the
 exact remote image/port boundary. Those hardenings do not alter controller
 behavior; they are directly covered by the eight passing unit tests, the
-deterministic R3 archive, compile checks, secret scans, and the extracted R3
+deterministic R6 archive, compile checks, secret scans, and the extracted R6
 43-execution verifier smoke.
 
 The detached guard proof is GREEN:

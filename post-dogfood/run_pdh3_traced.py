@@ -15,7 +15,6 @@ import json
 import os
 from pathlib import Path
 import re
-import shutil
 import signal
 import subprocess
 import time
@@ -184,6 +183,8 @@ def main() -> int:
     parser.add_argument("--trace-prefix", type=Path, required=True)
     parser.add_argument("--receipt", type=Path, required=True)
     parser.add_argument("--packet-sha256", required=True)
+    parser.add_argument("--strace", type=Path, required=True)
+    parser.add_argument("--strace-sha256", required=True)
     parser.add_argument("--poll-seconds", type=float, default=0.5)
     parser.add_argument("--max-trace-bytes", type=int, default=2 * 1024**3)
     parser.add_argument("command", nargs=argparse.REMAINDER)
@@ -206,10 +207,13 @@ def main() -> int:
     trace_prefix.parent.mkdir(parents=True, exist_ok=True)
     if trace_files(trace_prefix) or receipt.exists():
         raise TraceFailure("OUTPUT_EXISTS")
-    strace_raw = shutil.which("strace")
-    if strace_raw is None:
+    strace = args.strace.resolve()
+    if not strace.is_file() or not os.access(strace, os.X_OK):
         raise TraceFailure("STRACE_UNAVAILABLE")
-    strace = Path(strace_raw).resolve()
+    if not re.fullmatch(r"[0-9a-f]{64}", args.strace_sha256):
+        raise TraceFailure("STRACE_SHA256_INVALID")
+    if sha256_file(strace) != args.strace_sha256:
+        raise TraceFailure("STRACE_SHA256_MISMATCH")
     started = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     invocation = [
         str(strace),

@@ -23,6 +23,9 @@ NODE_CACHE = "8GiB"
 NODE_SQL_MEMORY = "8GiB"
 EGRESS_OBSERVATION = "strace-process-tree-connect-sendto-v1"
 EXTERNAL_EGRESS_ALLOWED = 0
+STRACE_DEB_SHA256 = "d588810ae26b06fee6678dc81e5b54f6efcde8e718e4589adb4d11d254b9820b"
+LIBUNWIND8_DEB_SHA256 = "658977d18976149b75391850ba0ccacaf7bde3201f0284189da50cd634334d17"
+STRACE_BINARY_SHA256 = "28f957c227012de0b18d1bd7fff2d396cb693ea60ed8013be68de071e84b5001"
 
 TASKS = 500_000
 EVENTS_PER_TASK = 10
@@ -126,6 +129,9 @@ def production_contract() -> dict[str, Any]:
             "claim": "PROCESS_TREE_OBSERVED_ZERO_EXTERNAL_EGRESS",
             "network_namespace": False,
             "firewall": False,
+            "strace_deb_sha256": STRACE_DEB_SHA256,
+            "libunwind8_deb_sha256": LIBUNWIND8_DEB_SHA256,
+            "strace_binary_sha256": STRACE_BINARY_SHA256,
         },
         "forbidden_runtime_dependencies": list(FORBIDDEN_RUNTIME_DEPENDENCIES),
     }

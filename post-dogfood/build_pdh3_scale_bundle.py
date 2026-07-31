@@ -37,6 +37,10 @@ FILES = (
     "cockroach-v26.2.3.linux-amd64/lib/libgeos.so",
     "p2-cleanroom/vendor/cockroach-v26.2.3-linux/"
     "cockroach-v26.2.3.linux-amd64/lib/libgeos_c.so",
+    "p2-cleanroom/vendor/ubuntu-noble-strace/"
+    "strace_6.8-0ubuntu2_amd64.deb",
+    "p2-cleanroom/vendor/ubuntu-noble-strace/"
+    "libunwind8_1.6.2-3build1_amd64.deb",
 )
 
 
