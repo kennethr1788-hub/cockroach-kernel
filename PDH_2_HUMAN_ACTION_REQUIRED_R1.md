@@ -1,6 +1,6 @@
-# PDH-2 Human Action Required R1
+# PDH-2 Human Action Required R1 — Closed by Deliberate Skip
 
-- `STATUS`: `PDH_2_EXTERNAL_TESTER_BLOCKED`
+- `STATUS`: `SUPERSEDED_BY_PDH_2_SKIP_DECISION_R1`
 - `LAST_GREEN_GATE`: `PDH_1_INFORMATION_BOUNDARY_GREEN`
 - `PRODUCT_CANDIDATE`:
   `1c483b1930e629c9ecb6d73418b9554897dc08ad`
@@ -18,8 +18,8 @@
 - `CONSENT_FORM`: `PDH_2_EXTERNAL_TESTER_CONSENT_FORM_R1.md`
 - `PUBLIC_ACTIONS`: `FORBIDDEN`
 - `PAID_EXECUTION`: `NOT_AUTHORIZED`
-- `NEXT_SAFE_ACTION`: Kenneth selects and obtains consent from one real
-  external developer, then supplies only the completed pre-trial consent fields.
+- `NEXT_SAFE_ACTION`: `PDH_3_LOCAL_CANARY_AND_COST_CALIBRATION`
 
 No model may close this gate, simulate the tester, or manufacture the human
-edit or observation.
+edit or observation. Kenneth instead chose not to run this campaign. No
+external-human GREEN or claim exists.
