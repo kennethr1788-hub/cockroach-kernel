@@ -19,8 +19,8 @@ LOGS = (
     CONTROL / "t12-dependency-preflight-prettier.log",
     CONTROL / "t12-dependency-preflight-tests.log",
 )
-BODY = CONTROL / "EV1_T12_EXECUTION_PREFLIGHT_BODY_R1.md"
-PACKET = CONTROL / "EV1_T12_EXECUTION_PREFLIGHT_PACKET_R1.md"
+BODY = CONTROL / "EV1_T12_EXECUTION_PREFLIGHT_BODY_R2.md"
+PACKET = CONTROL / "EV1_T12_EXECUTION_PREFLIGHT_PACKET_R2.md"
 
 
 def sha256(raw: bytes) -> str:
@@ -122,7 +122,11 @@ def main() -> int:
     parts.append(fenced("Exact frozen runner", "python", runner_raw.decode()))
     body = ("\n".join(parts).rstrip() + "\n").encode()
     review_hash = sha256(body)
-    packet = (f"REVIEW_CONTENT_SHA256: {review_hash}\nReturn this exact hash.\n\n").encode() + body
+    packet = (
+        f"REVIEW_CONTENT_SHA256: {review_hash}\n"
+        "Every judge receives the byte-identical review body below. The transport wrapper may "
+        "separately bind the complete input-file hash and controls its output schema.\n\n"
+    ).encode() + body
     atomic_write(BODY, body)
     atomic_write(PACKET, packet)
     print(json.dumps({"body_bytes": len(body), "packet_bytes": len(packet), "review_content_sha256": review_hash, "transport_sha256": sha256(packet)}, sort_keys=True, separators=(",", ":")))
