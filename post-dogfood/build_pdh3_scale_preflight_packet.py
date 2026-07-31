@@ -10,9 +10,9 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RUNTIME = ROOT / ".pdh3-runtime" / "preflight-r3"
-PACKET = ROOT / "PDH_3_SCALE_RUNPOD_PREFLIGHT_PACKET_R3.md"
-BINDINGS = ROOT / "PDH_3_SCALE_RUNPOD_PREFLIGHT_BINDINGS_R3.json"
+RUNTIME = ROOT / ".pdh3-runtime" / "preflight-r4"
+PACKET = ROOT / "PDH_3_SCALE_RUNPOD_PREFLIGHT_PACKET_R4.md"
+BINDINGS = ROOT / "PDH_3_SCALE_RUNPOD_PREFLIGHT_BINDINGS_R4.json"
 
 LAUNCH_WINDOW_START = "2026-07-31T04:00:00Z"
 LAUNCH_WINDOW_END = "2026-07-31T05:00:00Z"
@@ -32,7 +32,8 @@ RECEIPTS = (
     "PDH_3_SCALE_AUTHORIZATION_RECEIPT_R1.md",
     "PDH_3_SCALE_LOCAL_SMOKE_PACKET_R1.md",
     "PDH_3_SCALE_LOCAL_SMOKE_REPORT_R1.md",
-    "PDH_3_SCALE_BUNDLE_SCAN_RECEIPT_R3.md",
+    "PDH_3_SCALE_BUNDLE_SCAN_RECEIPT_R4.md",
+    "PDH_3_SCALE_RUNPOD_ATTEMPT_01_RECEIPT.md",
 )
 
 
@@ -139,7 +140,7 @@ def main() -> int:
     bindings["bindings_sha256"] = digest(canonical(bindings))
     BINDINGS.write_bytes(canonical(bindings))
 
-    packet = f"""# PDH-3 Production-Shaped Scale RunPod Preflight Packet R3
+    packet = f"""# PDH-3 Production-Shaped Scale RunPod Preflight Packet R4
 
 ## Judge task
 
@@ -190,7 +191,8 @@ begins.
 ## Exact provider and economic envelope
 
 - RunPod Secure Cloud; one `NVIDIA L40S`; one GPU;
-- expected returned shape: 16 vCPU, 94 GB RAM, 48 GB VRAM;
+- accepted returned host range: exactly 16 vCPU, 94 through 188 GB RAM,
+  and 48 GB VRAM;
 - exact image: `runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404`;
 - exposed ports: `22/tcp` only; global networking omitted/disabled;
 - 250 GB disposable container disk;
@@ -245,9 +247,10 @@ there is no replacement, restart, extension, or second measured run.
 
 ## Worker verification and credential boundary
 
-Before upload, verify exact worker ID/name, Secure Cloud, one L40S, 16 vCPU,
-94 GB RAM, one GPU, image, 250 GB container disk, zero volume/network volume,
-rate no greater than `$1.10/hour`, and the frozen stop/terminate request.
+Before upload, verify exact worker ID/name, Secure Cloud, one L40S, exactly 16
+vCPU, RAM between 94 and 188 GB inclusive, one GPU, image, 250 GB container
+disk, zero volume/network volume, rate no greater than `$1.10/hour`, and the
+frozen stop/terminate request.
 Provider deadline readback is recorded if exposed; otherwise retain the exact
 creation request/response without claiming readback.
 
@@ -348,7 +351,9 @@ only authorizes worker creation.
 
 {(ROOT / "PDH_3_SCALE_LOCAL_SMOKE_REPORT_R1.md").read_text(encoding="utf-8")}
 
-{(ROOT / "PDH_3_SCALE_BUNDLE_SCAN_RECEIPT_R3.md").read_text(encoding="utf-8")}
+{(ROOT / "PDH_3_SCALE_BUNDLE_SCAN_RECEIPT_R4.md").read_text(encoding="utf-8")}
+
+{(ROOT / "PDH_3_SCALE_RUNPOD_ATTEMPT_01_RECEIPT.md").read_text(encoding="utf-8")}
 
 The local smoke used the final controller source but preceded two
 contract-only hardenings that pinned production scheduling parameters and the
