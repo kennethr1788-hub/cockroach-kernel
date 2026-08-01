@@ -1361,6 +1361,97 @@ class ScaleCampaignUnitTests(unittest.TestCase):
         self.assertEqual(value["boundary_drift_ns"], 0)
         self.assertTrue(value["trace_progress_at_boundary"]["green"])
 
+    def test_returned_non_green_stage_preserves_exact_failure_evidence(self) -> None:
+        class Canary:
+            MINIMUM_ACK_WRITE_OPERATIONS = 0
+            MINIMUM_CONTENDED_UPDATE_OPERATIONS = 0
+            MINIMUM_REPLAY_OPERATIONS = 0
+
+            @staticmethod
+            def run_stage(
+                _binary: Path,
+                _gateway: int,
+                _query_files: dict[str, object],
+                epoch_root: Path,
+                concurrency: int,
+                _env: dict[str, str],
+                *,
+                deadline: float,
+            ) -> dict[str, object]:
+                self.assertGreater(deadline, campaign.time.monotonic())
+                self.assertEqual(concurrency, 500)
+                (epoch_root / "querybench-c500-read_mix.stdout.log").write_text(
+                    "ops=123\n", encoding="utf-8"
+                )
+                (epoch_root / "querybench-c500-read_mix.stderr.log").write_text(
+                    "", encoding="utf-8"
+                )
+                (epoch_root / "querybench-c500-read_mix.histograms.json").write_text(
+                    "{}\n", encoding="utf-8"
+                )
+                return {
+                    "concurrency": 500,
+                    "checks": {
+                        "zero_errors": True,
+                        "p99_within_limit": False,
+                    },
+                    "green": False,
+                    "maximum_latency_ms": {"p99": 5001.0, "max": 6000.0},
+                    "total_operations": 123,
+                    "workloads": {},
+                }
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "root"
+            output = Path(temporary) / "output"
+            root.mkdir()
+            output.mkdir()
+            boundary_ns = campaign.time.monotonic_ns() + 300_000_000_000
+            with self.assertRaisesRegex(
+                campaign.CampaignError,
+                r"CONCURRENCY_STAGE_BLOCKED:500:[0-9a-f]{64}",
+            ):
+                campaign.run_campaign_epoch(
+                    canary=Canary,
+                    binary=Path("/tmp/cockroach"),
+                    nodes=[mock.Mock(sql_port=26257)],
+                    join="join",
+                    env={"PATH": "/usr/bin:/bin"},
+                    root=root,
+                    output=output,
+                    query_files={},
+                    campaign_id="ck-pdh3-scale-test",
+                    expected_counts=(1, 2, 3, 4),
+                    cache="1GiB",
+                    sql_memory="1GiB",
+                    lane="preflight",
+                    epoch=1,
+                    concurrency=500,
+                    boundary_ns=boundary_ns,
+                    verifier_required=False,
+                    fault_target=None,
+                    disk_used_fraction_limit=0.7,
+                    production=True,
+                )
+
+            receipt_path = output / "preflight-failed-stage-0001.json"
+            receipt = json.loads(receipt_path.read_bytes())
+            receipt_body = {
+                key: value for key, value in receipt.items()
+                if key != "receipt_sha256"
+            }
+            self.assertEqual(receipt["receipt_sha256"], campaign.digest(receipt_body))
+            self.assertEqual(receipt["failed_checks"], {"p99_within_limit": False})
+            self.assertEqual(receipt["stage_sha256"], campaign.digest(receipt["stage"]))
+            raw = output / receipt["raw_evidence"]["path"]
+            self.assertTrue((raw / "raw-epoch-manifest.json").is_file())
+            self.assertEqual(
+                (raw / "querybench-c500-read_mix.stdout.log").read_text(
+                    encoding="utf-8"
+                ),
+                "ops=123\n",
+            )
+
     def test_production_resource_gate_requires_three_measured_nodes(self) -> None:
         resources = {
             "nodes": [

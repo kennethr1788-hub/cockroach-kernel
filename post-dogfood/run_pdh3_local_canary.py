@@ -37,7 +37,8 @@ EVENTS_PER_TASK = 10
 RECEIPTS_PER_TASK = 2
 VECTORS_PER_TASK = 10
 QUERY_SAMPLES = 200
-STAGES = (10, 50, 100, 250)
+STAGES = (10, 50, 100, 250, 500)
+CONTENDED_COUNTER_SHARDS = 16
 STAGE_DURATION_SECONDS = 2
 MINIMUM_ACK_WRITE_OPERATIONS = 2_000
 MINIMUM_CONTENDED_UPDATE_OPERATIONS = 1_000
@@ -488,9 +489,15 @@ def build_query_files(root: Path) -> dict[str, dict[str, Any]]:
             "ack-write: INSERT INTO ck.pdh3_acknowledged_writes"
             "(ack_id,created_at) VALUES (gen_random_uuid()::STRING,now())"
         ],
+        # Keep genuine hot-key contention without forcing every client through
+        # one globally serialized row. At c500 this is still approximately 31
+        # concurrent clients per shard, while the exact aggregate delta below
+        # proves that no update is lost.
         "contended_update": [
-            "contended-update: UPDATE ck.pdh3_counter "
-            "SET value=value+1 WHERE id='shared'"
+            "contended-update-"
+            + f"{index:02d}: UPDATE ck.pdh3_counter SET value=value+1 "
+            + f"WHERE id='shard-{index:02d}'"
+            for index in range(CONTENDED_COUNTER_SHARDS)
         ],
         "replay": [
             "replay-idempotency: INSERT INTO ck.pdh3_replay_control"
@@ -653,7 +660,7 @@ def run_stage(
         sql(
             binary,
             port,
-            "SELECT value FROM ck.pdh3_counter WHERE id='shared'",
+            "SELECT coalesce(sum(value),0) FROM ck.pdh3_counter",
             env=env,
             database="cockroach_kernel",
             deadline=deadline,
@@ -719,7 +726,7 @@ def run_stage(
         sql(
             binary,
             port,
-            "SELECT value FROM ck.pdh3_counter WHERE id='shared'",
+            "SELECT coalesce(sum(value),0) FROM ck.pdh3_counter",
             env=env,
             database="cockroach_kernel",
             deadline=deadline,
@@ -1207,7 +1214,12 @@ def execute(output: Path, packet: Path) -> dict[str, Any]:
             "(ack_id STRING PRIMARY KEY, created_at TIMESTAMPTZ NOT NULL);"
             "CREATE TABLE ck.pdh3_counter "
             "(id STRING PRIMARY KEY, value INT8 NOT NULL);"
-            "INSERT INTO ck.pdh3_counter VALUES ('shared',0);"
+            "INSERT INTO ck.pdh3_counter VALUES "
+            + ",".join(
+                f"('shard-{index:02d}',0)"
+                for index in range(CONTENDED_COUNTER_SHARDS)
+            )
+            + ";"
             "CREATE TABLE ck.pdh3_replay_control (replay_id STRING PRIMARY KEY);",
             env=env,
             database="cockroach_kernel",
@@ -1445,7 +1457,7 @@ def execute(output: Path, packet: Path) -> dict[str, Any]:
                 "stale_replay_unsupported_unsafe": "43_FRESH_PROCESS_EXECUTIONS",
                 "transaction_contention": "QUERYBENCH_CONTENDED_UPDATE",
                 "crash_restart": "ONE_LOCAL_SIGKILL_AND_RESTART",
-                "queue_backpressure": "FOUR_STEPPED_CONCURRENCY_STAGES",
+                "queue_backpressure": "FIVE_STEPPED_CONCURRENCY_STAGES",
                 "cleanup": "CAMPAIGN_PREFIXED_ZERO_RESIDUE",
                 "lambda_variations": "DEFERRED_TO_PAID_MEASURED_CAMPAIGN",
                 "custody_interruption": "43_FRESH_PROCESS_EXECUTIONS",

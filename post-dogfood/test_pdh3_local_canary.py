@@ -103,6 +103,20 @@ class LocalCanaryDeadlineTests(unittest.TestCase):
                 raw,
             )
 
+    def test_contended_updates_use_exact_bounded_hot_shards(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            definitions = canary.build_query_files(Path(temporary))
+            rows = definitions["contended_update"]["path"].read_text().splitlines()
+        self.assertEqual(len(rows), canary.CONTENDED_COUNTER_SHARDS)
+        self.assertEqual(canary.CONTENDED_COUNTER_SHARDS, 16)
+        self.assertEqual(
+            {row.rsplit("'", 2)[1] for row in rows},
+            {f"shard-{index:02d}" for index in range(16)},
+        )
+        self.assertTrue(
+            all("SET value=value+1" in row for row in rows)
+        )
+
     def test_failed_command_preserves_stdout_and_stderr(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

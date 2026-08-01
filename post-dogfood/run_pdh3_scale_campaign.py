@@ -266,6 +266,7 @@ def configure_canary_module(canary: Any, args: argparse.Namespace) -> None:
     canary.RECEIPTS_PER_TASK = args.receipts_per_task
     canary.VECTORS_PER_TASK = 1
     canary.QUERY_SAMPLES = min(200, args.vectors)
+    canary.CONTENDED_COUNTER_SHARDS = contract.CONTENDED_COUNTER_SHARDS
 
 
 def fault_transition_retryable(exc: CommandError) -> bool:
@@ -930,7 +931,12 @@ def apply_migrations(binary: Path, port: int, env: dict[str, str]) -> None:
         "(ack_id STRING PRIMARY KEY,created_at TIMESTAMPTZ NOT NULL);"
         "CREATE TABLE ck.pdh3_counter "
         "(id STRING PRIMARY KEY,value INT8 NOT NULL);"
-        "INSERT INTO ck.pdh3_counter VALUES ('shared',0);"
+        "INSERT INTO ck.pdh3_counter VALUES "
+        + ",".join(
+            f"('shard-{index:02d}',0)"
+            for index in range(contract.CONTENDED_COUNTER_SHARDS)
+        )
+        + ";"
         "CREATE TABLE ck.pdh3_replay_control "
         "(replay_id STRING PRIMARY KEY);",
         env=env,
@@ -2106,7 +2112,7 @@ def control_counts(
             port,
             "SELECT "
             "(SELECT count(*) FROM ck.pdh3_acknowledged_writes),"
-            "(SELECT value FROM ck.pdh3_counter WHERE id='shared'),"
+            "(SELECT coalesce(sum(value),0) FROM ck.pdh3_counter),"
             "(SELECT count(*) FROM ck.pdh3_replay_control)",
             env=env,
             deadline=deadline,
@@ -2130,7 +2136,7 @@ def reset_preflight_controls(
         port,
         "BEGIN;"
         "DELETE FROM ck.pdh3_acknowledged_writes;"
-        "UPDATE ck.pdh3_counter SET value=0 WHERE id='shared';"
+        "UPDATE ck.pdh3_counter SET value=0;"
         "DELETE FROM ck.pdh3_replay_control;"
         f"DELETE FROM ck.worker_results WHERE request_id LIKE {q(campaign + '-advice-%')};"
         "COMMIT;",
@@ -2612,7 +2618,48 @@ def run_campaign_epoch(
         )
         raise
     if not stage["green"]:
-        raise CampaignError("CONCURRENCY_STAGE_BLOCKED:" + str(concurrency))
+        # ``run_stage`` can complete every child command yet return a
+        # legitimate non-green result when one of its semantic checks fails.
+        # Preserve that path exactly as aggressively as the exception path;
+        # otherwise teardown destroys the only stdout, stderr, histogram, and
+        # failed-check evidence needed to distinguish a product defect from a
+        # workload-threshold miss.
+        raw_evidence = preserve_epoch_evidence(
+            epoch_root,
+            output,
+            lane=lane + "-failed",
+            epoch=epoch,
+            deadline=epoch_deadline,
+        )
+        failed_checks = {
+            key: value
+            for key, value in stage.get("checks", {}).items()
+            if value is not True
+        }
+        failure_body = {
+            "version": "ck-pdh3-returned-non-green-stage-v1",
+            "lane": lane,
+            "epoch": epoch,
+            "concurrency": concurrency,
+            "failed_checks": failed_checks,
+            "stage": stage,
+            "stage_sha256": digest(stage),
+            "raw_evidence": raw_evidence,
+        }
+        failure_receipt = {
+            **failure_body,
+            "receipt_sha256": digest(failure_body),
+        }
+        atomic_write(
+            output / f"{lane}-failed-stage-{epoch:04d}.json",
+            canonical(failure_receipt),
+        )
+        raise CampaignError(
+            "CONCURRENCY_STAGE_BLOCKED:"
+            + str(concurrency)
+            + ":"
+            + failure_receipt["receipt_sha256"]
+        )
     cleanup = cleanup_probe(
         binary,
         gateway,

@@ -981,7 +981,7 @@ def _authorization_binding(path: Path, root: Path, contract: Mapping[str, Any]) 
         "86,400",
         "100,800",
         "$35.00",
-        "$38.00",
+        "$39.00",
         "$0.99",
         "$1.10",
         "250 GB",
@@ -1903,7 +1903,7 @@ def _additional_attempt_cost_and_validate(
     if history.get("version") != "ck-pdh3-additional-attempt-history-v1":
         raise PreflightBuildError("ADDITIONAL_ATTEMPT_HISTORY_VERSION_INVALID")
     attempts = history.get("attempts")
-    if not isinstance(attempts, list) or len(attempts) != 9:
+    if not isinstance(attempts, list) or len(attempts) != 10:
         raise PreflightBuildError("ADDITIONAL_ATTEMPT_HISTORY_COUNT_INVALID")
     expected = (
         {
@@ -2008,6 +2008,18 @@ def _additional_attempt_cost_and_validate(
             "failure_sha256": "7e529a6ec5ca90ca11ac8a7cadf4ecc72dd2a0b57ca72cf0ef6dbca92f325463",
             "final_evidence_archive_sha256": "c05fe6add4e05661a309163c65543504b935ac259a941f180d6bb86acc793d4c",
         },
+        {
+            "attempt_id": "R10-PREFLIGHT-01",
+            "campaign_id": "ck-pdh3-scale-r10-relaunch-r1",
+            "pod_name": "ck-pdh3-scale-r10-relaunch-r1-01",
+            "pod_id": "r1t4eo532ipxku",
+            "status": "BLOCKED_COMPLETE",
+            "measured_clock_started": False,
+            "workload_started": True,
+            "blocker": "CONCURRENCY_STAGE_BLOCKED:500",
+            "failure_sha256": "b01cd6830eab82072e9a2a9cbfdba99b2b360267daa967527cc149a41c592a2f",
+            "final_evidence_archive_sha256": "dd18f4a8901ff7ea63bf4dbe1ced4745c7e08f81ecde60dfb56d60e551df0378",
+        },
     )
     total = 0.0
     observed_ids: list[str] = []
@@ -2049,7 +2061,7 @@ def _additional_attempt_cost_and_validate(
             raise PreflightBuildError("ADDITIONAL_ATTEMPT_COST_INVALID")
         observed_ids.append(str(row["attempt_id"]))
         total += float(cost)
-    if history.get("attempt_ids") != observed_ids or history.get("attempt_count") != 9:
+    if history.get("attempt_ids") != observed_ids or history.get("attempt_count") != 10:
         raise PreflightBuildError("ADDITIONAL_ATTEMPT_INDEX_INVALID")
     if abs(float(history.get("cost_usd_upper", -1)) - total) > 1e-12:
         raise PreflightBuildError("ADDITIONAL_ATTEMPT_TOTAL_INVALID")

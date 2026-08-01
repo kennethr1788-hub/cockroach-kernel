@@ -531,7 +531,7 @@ class R8PreflightPacketTests(unittest.TestCase):
         self.authorization = self.root / "PDH_3_SCALE_AUTHORIZATION_RECEIPT_R1.md"
         self.authorization.write_text(
             "NVIDIA L40S; measured 86,400; paid 100,800; $35.00 replacement; "
-            "$38.00 cumulative; $0.99 compute; $1.10 active; 250 GB disposable.\n",
+            "$39.00 cumulative; $0.99 compute; $1.10 active; 250 GB disposable.\n",
             encoding="utf-8",
         )
         self.runpodctl = self.runtime / "runpodctl"
@@ -1137,12 +1137,34 @@ class R8PreflightPacketTests(unittest.TestCase):
                 "active_rate_usd_hour_upper": rate,
                 "attempt_cost_usd_upper": 2_726 / 3_600 * rate,
             },
+            {
+                "attempt_id": "R10-PREFLIGHT-01",
+                "campaign_id": "ck-pdh3-scale-r10-relaunch-r1",
+                "pod_name": "ck-pdh3-scale-r10-relaunch-r1-01",
+                "pod_id": "r1t4eo532ipxku",
+                "status": "BLOCKED_COMPLETE",
+                "measured_clock_started": False,
+                "workload_started": True,
+                "blocker": "CONCURRENCY_STAGE_BLOCKED:500",
+                "failure_sha256": "b01cd6830eab82072e9a2a9cbfdba99b2b360267daa967527cc149a41c592a2f",
+                "final_evidence_archive_sha256": "dd18f4a8901ff7ea63bf4dbe1ced4745c7e08f81ecde60dfb56d60e551df0378",
+                "provider_resource_status": "DELETED",
+                "exact_id_absent": True,
+                "campaign_active_inventory": [],
+                "credential_material_copied": False,
+                "exact_provider_charge_available": False,
+                "active_interval_start_utc": "2026-08-01T19:07:25Z",
+                "absence_proved_utc": "2026-08-01T19:50:44Z",
+                "active_seconds_upper": 2_599,
+                "active_rate_usd_hour_upper": rate,
+                "attempt_cost_usd_upper": 2_599 / 3_600 * rate,
+            },
         ]
         history = {
             "version": "ck-pdh3-additional-attempt-history-v1",
             "attempts": attempts,
             "attempt_ids": [row["attempt_id"] for row in attempts],
-            "attempt_count": 9,
+            "attempt_count": 10,
             "cost_usd_upper": sum(row["attempt_cost_usd_upper"] for row in attempts),
         }
         contract = builder._load_contract(self.root).production_contract()

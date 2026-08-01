@@ -22,6 +22,7 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(value["workload"]["remote_preflight_epochs"], 3)
         self.assertEqual(value["workload"]["remote_preflight_faults"], 3)
         self.assertEqual(value["workload"]["remote_preflight_concurrency"], 500)
+        self.assertEqual(value["workload"]["contended_counter_shards"], 16)
         self.assertLess(
             value["thresholds"]["trace_preflight_projected_bytes"],
             value["thresholds"]["trace_bytes"],
@@ -48,7 +49,7 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(runpod["volume_gb"], 0)
         self.assertIsNone(runpod["network_volume"])
         self.assertEqual(runpod["replacement_cost_usd_max"], 35)
-        self.assertLessEqual(runpod["aggregate_cost_usd_max"], 38)
+        self.assertEqual(runpod["aggregate_cost_usd_max"], 39)
         self.assertEqual(runpod["paid_seconds_max"], 28 * 60 * 60)
 
     def test_production_arguments_fail_closed(self) -> None:

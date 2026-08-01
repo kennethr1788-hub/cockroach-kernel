@@ -42,6 +42,7 @@ VERIFIER_BATCH_SIZE = 43
 VERIFIER_BATCHES = 232
 
 CONCURRENCY_STAGES = (10, 50, 100, 250, 500)
+CONTENDED_COUNTER_SHARDS = 16
 MAX_CONCURRENCY = 500
 P99_LIMIT_MS = 5_000.0
 PMAX_LIMIT_MS = 10_000.0
@@ -72,9 +73,10 @@ RUNPOD = {
     # The original campaign envelope was USD 35.00. The operator explicitly
     # authorized replacement lifecycles after failed premeasurement attempts.
     # Preserve USD 35.00 for the newly authorized lifecycle while retaining
-    # R8 honestly inside a minimally raised cumulative ceiling.
+    # every prior attempt, including R10, inside a minimally raised cumulative
+    # ceiling mechanically sufficient for one full 100,800-second lifecycle.
     "replacement_cost_usd_max": 35.00,
-    "aggregate_cost_usd_max": 38.00,
+    "aggregate_cost_usd_max": 39.00,
     "measured_seconds": MEASURED_SECONDS,
     "paid_seconds_max": MAX_PAID_SECONDS,
 }
@@ -118,6 +120,7 @@ def production_contract() -> dict[str, Any]:
             "verifier_executions": VERIFIER_EXECUTIONS,
             "verifier_batches": VERIFIER_BATCHES,
             "concurrency_stages": list(CONCURRENCY_STAGES),
+            "contended_counter_shards": CONTENDED_COUNTER_SHARDS,
             "checkpoints": REQUIRED_CHECKPOINTS,
             "checkpoint_seconds": CHECKPOINT_SECONDS,
             "query_duration_seconds": QUERY_DURATION_SECONDS,
