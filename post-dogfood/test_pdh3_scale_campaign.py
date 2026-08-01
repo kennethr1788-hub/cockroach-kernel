@@ -642,6 +642,92 @@ class ScaleCampaignUnitTests(unittest.TestCase):
             1,
         )
 
+    def test_vector_index_reconciliation_recovers_failed_gateway_once(self) -> None:
+        statements: list[tuple[int, str]] = []
+        job_polls = 0
+        recoveries: list[tuple[str, int]] = []
+
+        def failure(stage: str, tail: str) -> campaign.SqlOperationError:
+            cause = campaign.CommandError(
+                "FAILED",
+                "cockroach",
+                "a" * 64,
+                returncode=1,
+                output_tail=tail,
+            )
+            return campaign.SqlOperationError(
+                cause,
+                stage=stage,
+                start=None,
+                stop=None,
+                statement_sha256="b" * 64,
+            )
+
+        def fake_sql(*args: object, **kwargs: object) -> bytes:
+            nonlocal job_polls
+            port = int(args[1])
+            statement = str(args[2])
+            statements.append((port, statement))
+            if statement.startswith("CREATE VECTOR INDEX"):
+                raise failure(
+                    "vector_index_create",
+                    "NOTICE: waiting for job(s) to complete: 123\\n"
+                    "If the statement is canceled, jobs will continue in the "
+                    "background.\\nERROR: connection lost.",
+                )
+            if port == 26257 and "SHOW INDEXES" in statement:
+                raise failure(
+                    "vector_index_metadata",
+                    "dial tcp 127.0.0.1:26257: connect: connection refused",
+                )
+            if "SHOW INDEXES FROM ck.context_vectors" in statement:
+                return b"2\t1\t1\t0\n"
+            if "FROM [SHOW JOBS]" in statement:
+                job_polls += 1
+                if job_polls == 1:
+                    return b"job_id\tstatus\tfraction_completed\tdescription\n"
+                return (
+                    b"job_id\tstatus\tfraction_completed\tdescription\n"
+                    b"new-job\tsucceeded\t1\tCREATE VECTOR INDEX "
+                    b"context_vectors_vector_idx ON ck.context_vectors (vector)\n"
+                )
+            if "ORDER BY vector <->" in statement:
+                return b"250000\t250000\n"
+            return b""
+
+        def recover(
+            exc: campaign.SqlOperationError, failed_port: int
+        ) -> tuple[int, dict[str, object]]:
+            recoveries.append((exc.stage, failed_port))
+            return 26258, {
+                "failed_gateway_port": failed_port,
+                "gateway_port": 26258,
+                "green": True,
+            }
+
+        with mock.patch.object(campaign, "sql", side_effect=fake_sql):
+            restored = campaign.restore_vector_index(
+                Path("/tmp/cockroach"),
+                26257,
+                {"PATH": "/usr/bin:/bin"},
+                campaign.time.monotonic() + 60,
+                250_000,
+                10,
+                gateway_recovery=recover,
+            )
+
+        self.assertTrue(restored["green"])
+        self.assertEqual(restored["gateway_port"], 26258)
+        self.assertEqual(recoveries, [("vector_index_metadata", 26257)])
+        self.assertEqual(len(restored["gateway_recoveries"]), 1)
+        self.assertEqual(
+            sum(statement.startswith("CREATE VECTOR INDEX") for _, statement in statements),
+            1,
+        )
+        self.assertTrue(
+            any(port == 26258 and "SHOW INDEXES" in statement for port, statement in statements)
+        )
+
     def test_generic_vector_index_connection_failure_remains_fail_closed(self) -> None:
         cause = campaign.CommandError(
             "FAILED",
@@ -1022,6 +1108,84 @@ class ScaleCampaignUnitTests(unittest.TestCase):
         self.assertTrue(startup["partial_teardown_required"])
         self.assertTrue(startup["partial_teardown_proved"])
         self.assertEqual(startup["open_ports_after_failure"], [])
+
+    def test_cluster_gateway_recovery_restarts_dead_node_and_fails_over(self) -> None:
+        class Process:
+            def __init__(self, pid: int, returncode: int | None) -> None:
+                self.pid = pid
+                self._returncode = returncode
+
+            def poll(self) -> int | None:
+                return self._returncode
+
+        nodes = [
+            campaign.Node(
+                index,
+                26257 + index,
+                8080 + index,
+                Path(f"/tmp/recovery-node-{index}"),
+                Path(f"/tmp/recovery-node-{index}.log"),
+            )
+            for index in range(3)
+        ]
+        nodes[0].process = Process(100, 137)
+        nodes[1].process = Process(101, None)
+        nodes[2].process = Process(102, None)
+
+        def fake_stop(node: campaign.Node, *, crash: bool) -> int:
+            node.process = None
+            return 137
+
+        def fake_start(*args: object, **kwargs: object) -> None:
+            node = args[1]
+            node.process = Process(200, None)
+
+        status = {
+            "nodes": [
+                {"node": index + 1, "pid": 200 + index, "alive": True, "sql_ready": True}
+                for index in range(3)
+            ],
+            "green": True,
+        }
+        with mock.patch.object(campaign, "stop_node", side_effect=fake_stop), \
+             mock.patch.object(campaign, "start_node", side_effect=fake_start), \
+             mock.patch.object(campaign, "cluster_status", return_value=status):
+            gateway, receipt = campaign.recover_cluster_gateway(
+                Path("/tmp/cockroach"),
+                nodes,
+                "127.0.0.1:26257,127.0.0.1:26258,127.0.0.1:26259",
+                "1GiB",
+                "1GiB",
+                {"PATH": "/usr/bin:/bin"},
+                campaign.time.monotonic() + 60,
+                failed_port=26257,
+                reserve_seconds=10,
+            )
+        self.assertEqual(gateway, 26258)
+        self.assertTrue(receipt["green"])
+        self.assertEqual(receipt["restarted"][0]["node"], 1)
+        self.assertEqual(receipt["restarted"][0]["old_returncode"], 137)
+
+    def test_failure_node_diagnostics_preserve_bounded_log_evidence(self) -> None:
+        class Process:
+            pid = 404
+
+            @staticmethod
+            def poll() -> int:
+                return 137
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            log = root / "cockroach.log"
+            log.write_bytes(b"prefix-" + b"x" * 100 + b"-fatal-tail")
+            node = campaign.Node(0, 26257, 8080, root / "store", log)
+            node.process = Process()
+            receipt = campaign.capture_node_diagnostics([node], root / "evidence", tail_bytes=32)
+            persisted = json.loads((root / "evidence/node-diagnostics.json").read_bytes())
+        self.assertEqual(persisted, receipt)
+        self.assertEqual(receipt["nodes"][0]["returncode"], 137)
+        self.assertEqual(receipt["nodes"][0]["log_bytes"], 118)
+        self.assertTrue(receipt["nodes"][0]["log_tail"].endswith("-fatal-tail"))
 
     def test_preflight_control_reset_is_atomic_and_exact(self) -> None:
         control_values = iter([(10, 20, 1), (0, 0, 0)])

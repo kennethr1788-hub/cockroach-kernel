@@ -22,7 +22,7 @@ import subprocess
 import sys
 import tempfile
 import time
-from typing import Any
+from typing import Any, Callable
 
 import pdh3_scale_contract as contract
 
@@ -141,6 +141,13 @@ class SqlOperationError(CampaignError):
     @property
     def server_effect_uncertain(self) -> bool:
         return self.cause.server_effect_uncertain
+
+    @property
+    def connection_transition(self) -> bool:
+        tail = self.cause.output_tail.lower()
+        return self.sqlstate in FAULT_TRANSITION_SQLSTATES or any(
+            marker in tail for marker in FAULT_TRANSITION_MARKERS
+        )
 
 
 class SetupDeadlineError(CampaignError):
@@ -768,6 +775,91 @@ def cluster_status(
     return {"nodes": rows, "green": True}
 
 
+def recover_cluster_gateway(
+    binary: Path,
+    nodes: list[Node],
+    join: str,
+    cache: str,
+    sql_memory: str,
+    env: dict[str, str],
+    setup_deadline: float,
+    *,
+    failed_port: int,
+    reserve_seconds: int,
+    database: str = "cockroach_kernel",
+) -> tuple[int, dict[str, Any]]:
+    """Restore the exact three-node cluster and select a verified SQL gateway."""
+    before: list[dict[str, Any]] = []
+    restarted: list[dict[str, Any]] = []
+    for node in nodes:
+        process = node.process
+        returncode = process.poll() if process is not None else None
+        before.append(
+            {
+                "node": node.index + 1,
+                "pid": process.pid if process is not None else None,
+                "returncode": returncode,
+                "alive": process is not None and returncode is None,
+            }
+        )
+        if process is None or returncode is not None:
+            old_pid = process.pid if process is not None else None
+            old_returncode = stop_node(node, crash=False)
+            start_node(
+                binary,
+                node,
+                join,
+                cache,
+                sql_memory,
+                env,
+                append=True,
+            )
+            restarted.append(
+                {
+                    "node": node.index + 1,
+                    "old_pid": old_pid,
+                    "old_returncode": old_returncode,
+                    "new_pid": node.process.pid if node.process is not None else None,
+                }
+            )
+    recovery_deadline = min(
+        setup_deadline - max(1, reserve_seconds), time.monotonic() + 180
+    )
+    if recovery_deadline <= time.monotonic():
+        raise SetupDeadlineError("CLUSTER_RECOVERY_DEADLINE_EXHAUSTED")
+    while time.monotonic() < recovery_deadline:
+        try:
+            status = cluster_status(
+                binary,
+                nodes,
+                env,
+                deadline=recovery_deadline,
+                database=database,
+            )
+            ordered = sorted(nodes, key=lambda item: item.sql_port == failed_port)
+            gateway_port = next(
+                node.sql_port
+                for node in ordered
+                if any(
+                    row["node"] == node.index + 1
+                    and row["alive"]
+                    and row["sql_ready"]
+                    for row in status["nodes"]
+                )
+            )
+            return gateway_port, {
+                "before": before,
+                "restarted": restarted,
+                "after": status,
+                "failed_gateway_port": failed_port,
+                "gateway_port": gateway_port,
+                "green": True,
+            }
+        except CampaignError:
+            time.sleep(1)
+    raise CampaignError("THREE_NODE_CLUSTER_RECOVERY_TIMEOUT")
+
+
 def apply_migrations(binary: Path, port: int, env: dict[str, str]) -> None:
     sql(binary, port, "CREATE DATABASE cockroach_kernel", env=env, database=None)
     for relative in (
@@ -1389,14 +1481,19 @@ def restore_vector_index(
     setup_deadline: float,
     vector_count: int,
     verification_reserve_seconds: int,
+    gateway_recovery: Callable[
+        [SqlOperationError, int], tuple[int, dict[str, Any]]
+    ] | None = None,
 ) -> dict[str, Any]:
     statement = (
         "CREATE VECTOR INDEX IF NOT EXISTS context_vectors_vector_idx "
         "ON ck.context_vectors (vector)"
     )
+    current_port = port
+    gateway_recoveries: list[dict[str, Any]] = []
     pre_create_jobs = vector_index_jobs(
         binary,
-        port,
+        current_port,
         env,
         setup_deadline,
         reserve_seconds=verification_reserve_seconds,
@@ -1404,12 +1501,38 @@ def restore_vector_index(
     pre_create_job_ids = frozenset(job["job_id"] for job in pre_create_jobs)
     attempts = 0
     uncertain_timeout_reconciled = False
+
+    def prove_after_uncertain_effect() -> dict[str, Any]:
+        nonlocal current_port
+        while True:
+            ensure_setup_deadline(setup_deadline)
+            try:
+                return vector_index_proof(
+                    binary,
+                    current_port,
+                    env,
+                    setup_deadline,
+                    vector_count,
+                    pre_create_job_ids,
+                    reserve_seconds=verification_reserve_seconds,
+                )
+            except SqlOperationError as proof_exc:
+                if proof_exc.connection_transition and gateway_recovery is not None:
+                    current_port, recovery = gateway_recovery(
+                        proof_exc, current_port
+                    )
+                    gateway_recoveries.append(recovery)
+                    continue
+                if not proof_exc.retryable and not proof_exc.server_effect_uncertain:
+                    raise
+                time.sleep(0.25)
+
     while attempts < MAX_SEED_ATTEMPTS:
         attempts += 1
         try:
             sql(
                 binary,
-                port,
+                current_port,
                 statement,
                 env=env,
                 timeout=setup_timeout(
@@ -1428,31 +1551,13 @@ def restore_vector_index(
             # exact post-timeout job/index state before issuing another DDL;
             # otherwise retries can wait on the same job and consume the setup
             # window without adding progress.
-            while True:
-                ensure_setup_deadline(setup_deadline)
-                try:
-                    proof = vector_index_proof(
-                        binary,
-                        port,
-                        env,
-                        setup_deadline,
-                        vector_count,
-                        pre_create_job_ids,
-                        reserve_seconds=verification_reserve_seconds,
-                    )
-                    break
-                except SqlOperationError as proof_exc:
-                    if (
-                        not proof_exc.retryable
-                        and not proof_exc.server_effect_uncertain
-                    ):
-                        raise
-                    uncertain_timeout_reconciled = True
-                    time.sleep(0.25)
+            proof = prove_after_uncertain_effect()
             if proof["green"]:
                 return {
                     "attempts": attempts,
                     "uncertain_timeout_reconciled": True,
+                    "gateway_port": current_port,
+                    "gateway_recoveries": gateway_recoveries,
                     "pre_create_job_ids": sorted(pre_create_job_ids),
                     **proof,
                 }
@@ -1464,19 +1569,13 @@ def restore_vector_index(
             time.sleep(0.25 * attempts)
     while True:
         ensure_setup_deadline(setup_deadline)
-        proof = vector_index_proof(
-            binary,
-            port,
-            env,
-            setup_deadline,
-            vector_count,
-            pre_create_job_ids,
-            reserve_seconds=verification_reserve_seconds,
-        )
+        proof = prove_after_uncertain_effect()
         if proof["green"]:
             return {
                 "attempts": attempts,
                 "uncertain_timeout_reconciled": uncertain_timeout_reconciled,
+                "gateway_port": current_port,
+                "gateway_recoveries": gateway_recoveries,
                 "pre_create_job_ids": sorted(pre_create_job_ids),
                 **proof,
             }
@@ -2642,6 +2741,46 @@ def result_manifest(output: Path) -> dict[str, Any]:
     return value
 
 
+def capture_node_diagnostics(
+    nodes: list[Node], output: Path, *, tail_bytes: int = 65_536
+) -> dict[str, Any]:
+    """Preserve bounded node failure evidence before disposable stores are removed."""
+    records: list[dict[str, Any]] = []
+    for node in nodes:
+        if node.log_handle is not None:
+            try:
+                node.log_handle.flush()
+                os.fsync(node.log_handle.fileno())
+            except (OSError, ValueError):
+                pass
+        process = node.process
+        log_size = node.log.stat().st_size if node.log.is_file() else 0
+        tail = b""
+        if log_size:
+            with node.log.open("rb") as handle:
+                handle.seek(max(0, log_size - tail_bytes))
+                tail = handle.read(tail_bytes)
+        records.append(
+            {
+                "node": node.index + 1,
+                "pid": process.pid if process is not None else None,
+                "returncode": process.poll() if process is not None else None,
+                "log_bytes": log_size,
+                "log_sha256": file_sha256(node.log) if log_size else None,
+                "log_tail_sha256": digest(tail) if tail else None,
+                "log_tail": tail.decode("utf-8", "replace"),
+            }
+        )
+    body = {
+        "version": "ck-pdh3-node-diagnostics-v1",
+        "nodes": records,
+        "tail_byte_limit": tail_bytes,
+    }
+    receipt = {**body, "diagnostics_sha256": digest(body)}
+    atomic_write(output / "node-diagnostics.json", canonical(receipt))
+    return receipt
+
+
 def close_local_campaign(
     nodes: list[Node],
     root: Path,
@@ -2855,12 +2994,37 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
             setup_deadline,
             args.vectors,
             index_verification_reserve_seconds,
+            gateway_recovery=lambda _failure, _failed_port: recover_cluster_gateway(
+                binary,
+                nodes,
+                join,
+                args.cache,
+                args.sql_memory,
+                env,
+                setup_deadline,
+                failed_port=_failed_port,
+                reserve_seconds=index_verification_reserve_seconds,
+            ),
         )
+        gateway = int(restored_index["gateway_port"])
         journal.emit(
             "VECTOR_INDEX_RESTORED",
             {
                 "index": "context_vectors_vector_idx",
                 "proof": restored_index,
+            },
+        )
+        recovered_cluster = cluster_status(
+            binary,
+            nodes,
+            env,
+            deadline=setup_deadline,
+        )
+        journal.emit(
+            "POST_INDEX_CLUSTER_READY",
+            {
+                "gateway_port": gateway,
+                "cluster": recovered_cluster,
             },
         )
         expected_counts = (
@@ -3335,6 +3499,7 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
         for path in (output / "result.json", output / "MEASURED_CAMPAIGN_GREEN"):
             if path.exists():
                 path.unlink()
+        node_diagnostics = capture_node_diagnostics(nodes, output)
         failure_body = {
             "version": "ck-pdh3-scale-failure-v1",
             "campaign_id": args.campaign_id,
@@ -3342,6 +3507,7 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
             "reason": str(exc),
             "journal_prior_hash": journal.previous,
             "startup_evidence": startup_evidence,
+            "node_diagnostics_sha256": node_diagnostics["diagnostics_sha256"],
         }
         if startup_evidence.get("partial_teardown_required"):
             teardown["partial_start"] = startup_evidence
