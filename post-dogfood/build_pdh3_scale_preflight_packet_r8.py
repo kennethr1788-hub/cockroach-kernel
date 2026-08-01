@@ -1017,6 +1017,11 @@ def _validate_launch_v3(
         contract_module.validate_production_arguments(arguments)
     except Exception as exc:
         raise PreflightBuildError("BUNDLE_PRODUCTION_ARGUMENT_MISMATCH") from exc
+    if (
+        arguments.get("setup_success_margin_seconds")
+        != contract_module.SETUP_SUCCESS_MARGIN_SECONDS
+    ):
+        raise PreflightBuildError("BUNDLE_SETUP_MARGIN_BINDING_MISMATCH")
 
     controller = _validate_argv(
         launch.get("controller_argv_template"), "BUNDLE_CONTROLLER_TEMPLATE"
@@ -1476,6 +1481,21 @@ def _command_bindings(
         "traced_argv_runtime_template_sha256": digest(traced_runtime_template),
         "child_controller_argv": controller,
         "child_controller_argv_sha256": child_command_sha256,
+        "internal_setup_margin_binding": {
+            "mechanism": "HASH_BOUND_CONTRACT_CONSTANT_NOT_CLI_DEFAULT",
+            "contract_field": "workload.setup_success_margin_seconds",
+            "contract_value_seconds": contract["workload"][
+                "setup_success_margin_seconds"
+            ],
+            "implementation_symbol": (
+                "post-dogfood/run_pdh3_scale_campaign.py:setup_margin_gate"
+            ),
+            "production_argument_binding_value_seconds": launch[
+                "argument_bindings"
+            ]["setup_success_margin_seconds"],
+            "cli_flag_intentionally_absent": "--setup-success-margin-seconds"
+            not in controller,
+        },
         "packet_sha256_runtime_placeholder": "__FROZEN_PACKET_SHA256__",
         "provider_pod_id_runtime_placeholder": "__PROVIDER_POD_ID__",
         "runtime_substitution_law": {
@@ -2281,7 +2301,7 @@ def build(config: BuildConfig, *, now: datetime | None = None) -> dict[str, Any]
         hash_field="history_manifest_sha256",
         nested_key="history_manifest",
     )
-    prior_cost = _history_cost_and_validate(
+    base_history_cost = _history_cost_and_validate(
         history,
         contract,
         root,
@@ -2292,7 +2312,7 @@ def build(config: BuildConfig, *, now: datetime | None = None) -> dict[str, Any]
         root,
         "ATTEMPT_08",
     )
-    prior_cost += _attempt_08_cost_and_validate(
+    attempt_08_cost = _attempt_08_cost_and_validate(
         attempt_08,
         contract,
         root,
@@ -2301,6 +2321,8 @@ def build(config: BuildConfig, *, now: datetime | None = None) -> dict[str, Any]
     additional_history: dict[str, Any] | None = None
     additional_history_files: list[dict[str, Any]] = []
     additional_history_binding: dict[str, Any] | None = None
+    additional_attempt_cost = 0.0
+    additional_attempt_count = 0
     if config.additional_attempt_history_manifest_json is not None:
         (
             additional_history,
@@ -2311,10 +2333,37 @@ def build(config: BuildConfig, *, now: datetime | None = None) -> dict[str, Any]
             root,
             "ADDITIONAL_ATTEMPT_HISTORY",
         )
-        prior_cost += _additional_attempt_cost_and_validate(
+        additional_attempt_cost = _additional_attempt_cost_and_validate(
             additional_history,
             contract,
         )
+        additional_attempt_count = len(additional_history["attempts"])
+    prior_cost = base_history_cost + attempt_08_cost + additional_attempt_cost
+    prior_cost_components = {
+        "version": "ck-pdh3-prior-cost-components-v1",
+        "components_are_disjoint": True,
+        "base_attempts_01_through_07_usd": round(base_history_cost, 6),
+        "attempt_08_usd": round(attempt_08_cost, 6),
+        "additional_replacement_attempt_count": additional_attempt_count,
+        "additional_replacement_attempts_usd": round(
+            additional_attempt_cost, 6
+        ),
+        "prior_cost_ceiling_usd": round(prior_cost, 6),
+        "formula": (
+            "base_attempts_01_through_07_usd + attempt_08_usd + "
+            "additional_replacement_attempts_usd = prior_cost_ceiling_usd"
+        ),
+        "double_counting_forbidden": True,
+    }
+    if not math.isclose(
+        prior_cost_components["base_attempts_01_through_07_usd"]
+        + prior_cost_components["attempt_08_usd"]
+        + prior_cost_components["additional_replacement_attempts_usd"],
+        prior_cost_components["prior_cost_ceiling_usd"],
+        rel_tol=0,
+        abs_tol=1e-6,
+    ):
+        raise PreflightBuildError("PRIOR_COST_COMPONENT_SUM_MISMATCH")
     offer = _validate_gpu_inventory(
         _read_json(config.gpu_inventory_json, "GPU_INVENTORY"),
         root=root,
@@ -2378,6 +2427,7 @@ def build(config: BuildConfig, *, now: datetime | None = None) -> dict[str, Any]
         "provider": {
             "active_inventory_receipt": active,
             "selected_offer": offer,
+            "prior_cost_components": prior_cost_components,
             "image": contract["runpod"]["image"],
             "ports": contract["runpod"]["ports"],
             "container_disk_gb": contract["runpod"]["container_disk_gb"],
@@ -2482,6 +2532,16 @@ exact-ID teardown. No failure may be relabeled GREEN.
 - aggregate bounded projection: `${offer['aggregate_cost_ceiling_usd']:.6f}`
 - RunPodCTL: `{runpodctl_display}` · `{config.runpodctl_version}` · `{config.runpodctl_sha256}`
 
+The prior-cost ceiling is one sum of three disjoint components, not four values
+to add together: base Attempts 01–07
+`${prior_cost_components['base_attempts_01_through_07_usd']:.6f}` + Attempt 08
+`${prior_cost_components['attempt_08_usd']:.6f}` +
+`{prior_cost_components['additional_replacement_attempt_count']}` additional
+replacement attempts
+`${prior_cost_components['additional_replacement_attempts_usd']:.6f}` =
+`${prior_cost_components['prior_cost_ceiling_usd']:.6f}`. The selected-offer
+`prior_cost_ceiling_usd` repeats that total; it is not another component.
+
 The returned worker must match the selected Secure Cloud L40S offer and the
 contract mechanically: one 48-GiB L40S, 16–32 vCPU inclusive, 94–188 GiB RAM
 inclusive, the exact image, 250-GiB disposable disk, SSH-only port exposure,
@@ -2505,6 +2565,13 @@ argv/environment structures plus canonical hashes. All commands are executed as
 argv; shell interpolation is forbidden. The controller child command is already
 fully concrete and its SHA-256 is the exact `--trace-command-sha256` supplied to
 the supervisor after instantiation.
+
+The 300-second production setup-success margin is not an omitted CLI default.
+It is the hash-bound `SETUP_SUCCESS_MARGIN_SECONDS` constant in
+`post-dogfood/pdh3_scale_contract.py`, copied into the launch contract's
+`argument_bindings`, revalidated by `validate_production_arguments()`, and read
+directly by `setup_margin_gate()` in the controller. The deliberately absent
+`--setup-success-margin-seconds` flag therefore cannot lower or override it.
 
 ## Exact setup and premeasurement gate
 

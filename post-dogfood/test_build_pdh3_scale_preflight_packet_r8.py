@@ -332,6 +332,9 @@ class R8PreflightPacketTests(unittest.TestCase):
             "query_duration_seconds": contract_module.QUERY_DURATION_SECONDS,
             "seed_batch_tasks": contract_module.SEED_BATCH_TASKS,
             "setup_timeout_seconds": contract_module.SETUP_TIMEOUT_SECONDS,
+            "setup_success_margin_seconds": (
+                contract_module.SETUP_SUCCESS_MARGIN_SECONDS
+            ),
             "fault_every_checkpoints": contract_module.FAULT_EVERY_CHECKPOINTS,
             "disk_used_fraction_limit": contract_module.DISK_USED_FRACTION_LIMIT,
             "cache": contract_module.NODE_CACHE,
@@ -883,6 +886,38 @@ class R8PreflightPacketTests(unittest.TestCase):
             bindings["commands"]["child_controller_argv_sha256"],
             sha(canonical(bindings["commands"]["child_controller_argv"])),
         )
+        margin = bindings["commands"]["internal_setup_margin_binding"]
+        self.assertEqual(
+            margin["mechanism"],
+            "HASH_BOUND_CONTRACT_CONSTANT_NOT_CLI_DEFAULT",
+        )
+        self.assertEqual(margin["contract_value_seconds"], 300)
+        self.assertEqual(
+            margin["production_argument_binding_value_seconds"], 300
+        )
+        self.assertTrue(margin["cli_flag_intentionally_absent"])
+        self.assertNotIn(
+            "--setup-success-margin-seconds",
+            bindings["commands"]["child_controller_argv"],
+        )
+        costs = bindings["provider"]["prior_cost_components"]
+        self.assertTrue(costs["components_are_disjoint"])
+        self.assertTrue(costs["double_counting_forbidden"])
+        self.assertEqual(costs["additional_replacement_attempt_count"], 0)
+        self.assertAlmostEqual(
+            costs["base_attempts_01_through_07_usd"]
+            + costs["attempt_08_usd"]
+            + costs["additional_replacement_attempts_usd"],
+            costs["prior_cost_ceiling_usd"],
+            places=6,
+        )
+        self.assertAlmostEqual(
+            costs["prior_cost_ceiling_usd"],
+            bindings["provider"]["selected_offer"]["prior_cost_ceiling_usd"],
+            places=6,
+        )
+        self.assertIn("three disjoint components", packet)
+        self.assertIn("not an omitted CLI default", packet)
         self.assertIn("Reduced and mocked tests", packet)
         self.assertIn("Validation-boundary disclosure", packet)
         self.assertIn("AUDIT_SESSION_ZERO_HOME_MUTATION_NOT_CLAIMED", packet)
