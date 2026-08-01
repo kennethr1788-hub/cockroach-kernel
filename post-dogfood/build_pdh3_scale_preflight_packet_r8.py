@@ -1923,7 +1923,9 @@ def _additional_attempt_cost_and_validate(
     )
     total = 0.0
     observed_ids: list[str] = []
-    for row, required in zip(attempts, expected, strict=True):
+    if len(attempts) != len(expected):
+        raise PreflightBuildError("ADDITIONAL_ATTEMPT_HISTORY_COUNT_INVALID")
+    for row, required in zip(attempts, expected):
         if not isinstance(row, dict) or any(row.get(key) != value for key, value in required.items()):
             raise PreflightBuildError("ADDITIONAL_ATTEMPT_STATE_INVALID")
         if (

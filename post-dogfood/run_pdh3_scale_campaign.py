@@ -92,6 +92,21 @@ class CommandError(CampaignError):
     def retryable(self) -> bool:
         return self.kind == "TIMEOUT" or self.sqlstate == SERIALIZATION_SQLSTATE
 
+    @property
+    def server_effect_uncertain(self) -> bool:
+        """True only when a schema-change job may outlive the SQL client."""
+        if self.kind == "TIMEOUT":
+            return True
+        tail = self.output_tail.lower()
+        return all(
+            marker in tail
+            for marker in (
+                "waiting for job(s) to complete",
+                "jobs will continue in the background",
+                "error: connection lost",
+            )
+        )
+
 
 class SqlOperationError(CampaignError):
     """SQL failure bound to the deterministic operation that produced it."""
@@ -122,6 +137,10 @@ class SqlOperationError(CampaignError):
     @property
     def retryable(self) -> bool:
         return self.cause.retryable
+
+    @property
+    def server_effect_uncertain(self) -> bool:
+        return self.cause.server_effect_uncertain
 
 
 class SetupDeadlineError(CampaignError):
@@ -1402,22 +1421,34 @@ def restore_vector_index(
             )
             break
         except SqlOperationError as exc:
-            if not exc.retryable:
+            if not exc.retryable and not exc.server_effect_uncertain:
                 raise
             # CREATE INDEX is a CockroachDB schema-change job.  A client timeout
             # does not prove that the server-side job stopped.  Reconcile the
             # exact post-timeout job/index state before issuing another DDL;
             # otherwise retries can wait on the same job and consume the setup
             # window without adding progress.
-            proof = vector_index_proof(
-                binary,
-                port,
-                env,
-                setup_deadline,
-                vector_count,
-                pre_create_job_ids,
-                reserve_seconds=verification_reserve_seconds,
-            )
+            while True:
+                ensure_setup_deadline(setup_deadline)
+                try:
+                    proof = vector_index_proof(
+                        binary,
+                        port,
+                        env,
+                        setup_deadline,
+                        vector_count,
+                        pre_create_job_ids,
+                        reserve_seconds=verification_reserve_seconds,
+                    )
+                    break
+                except SqlOperationError as proof_exc:
+                    if (
+                        not proof_exc.retryable
+                        and not proof_exc.server_effect_uncertain
+                    ):
+                        raise
+                    uncertain_timeout_reconciled = True
+                    time.sleep(0.25)
             if proof["green"]:
                 return {
                     "attempts": attempts,

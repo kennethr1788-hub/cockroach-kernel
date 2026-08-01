@@ -510,6 +510,167 @@ class ScaleCampaignUnitTests(unittest.TestCase):
             1,
         )
 
+    def test_vector_index_connection_loss_reconciles_job_without_duplicate_ddl(self) -> None:
+        statements: list[str] = []
+        job_polls = 0
+
+        def fake_sql(*args: object, **kwargs: object) -> bytes:
+            nonlocal job_polls
+            statement = str(args[2])
+            statements.append(statement)
+            if statement.startswith("CREATE VECTOR INDEX"):
+                cause = campaign.CommandError(
+                    "FAILED",
+                    "cockroach",
+                    "a" * 64,
+                    returncode=1,
+                    output_tail=(
+                        "NOTICE: waiting for job(s) to complete: 123\\n"
+                        "If the statement is canceled, jobs will continue in the "
+                        "background.\\nERROR: connection lost."
+                    ),
+                )
+                raise campaign.SqlOperationError(
+                    cause,
+                    stage="vector_index_create",
+                    start=None,
+                    stop=None,
+                    statement_sha256="b" * 64,
+                )
+            if "SHOW INDEXES FROM ck.context_vectors" in statement:
+                return b"2\t1\t1\t0\n"
+            if "FROM [SHOW JOBS]" in statement:
+                job_polls += 1
+                if job_polls == 1:
+                    return b"job_id\tstatus\tfraction_completed\tdescription\n"
+                status = "running" if job_polls == 2 else "succeeded"
+                fraction = "0.5" if status == "running" else "1"
+                return (
+                    b"job_id\tstatus\tfraction_completed\tdescription\n"
+                    + f"new-job\t{status}\t{fraction}\tCREATE VECTOR INDEX "
+                    "context_vectors_vector_idx ON ck.context_vectors (vector)\n".encode()
+                )
+            if "ORDER BY vector <->" in statement:
+                return b"250000\t250000\n"
+            return b""
+
+        with mock.patch.object(campaign, "sql", side_effect=fake_sql), mock.patch.object(
+            campaign.time, "sleep", return_value=None
+        ):
+            restored = campaign.restore_vector_index(
+                Path("/tmp/cockroach"),
+                26257,
+                {"PATH": "/usr/bin:/bin"},
+                campaign.time.monotonic() + 60,
+                250_000,
+                10,
+            )
+
+        self.assertTrue(restored["green"])
+        self.assertTrue(restored["uncertain_timeout_reconciled"])
+        self.assertEqual(restored["attempts"], 1)
+        self.assertEqual(
+            sum(item.startswith("CREATE VECTOR INDEX") for item in statements),
+            1,
+        )
+
+    def test_vector_index_reconciliation_survives_one_connection_loss(self) -> None:
+        statements: list[str] = []
+        metadata_polls = 0
+        job_polls = 0
+
+        def uncertain_failure(stage: str) -> campaign.SqlOperationError:
+            cause = campaign.CommandError(
+                "FAILED",
+                "cockroach",
+                "a" * 64,
+                returncode=1,
+                output_tail=(
+                    "NOTICE: waiting for job(s) to complete: 123\\n"
+                    "If the statement is canceled, jobs will continue in the "
+                    "background.\\nERROR: connection lost."
+                ),
+            )
+            return campaign.SqlOperationError(
+                cause,
+                stage=stage,
+                start=None,
+                stop=None,
+                statement_sha256="b" * 64,
+            )
+
+        def fake_sql(*args: object, **kwargs: object) -> bytes:
+            nonlocal metadata_polls, job_polls
+            statement = str(args[2])
+            statements.append(statement)
+            if statement.startswith("CREATE VECTOR INDEX"):
+                raise uncertain_failure("vector_index_create")
+            if "SHOW INDEXES FROM ck.context_vectors" in statement:
+                metadata_polls += 1
+                if metadata_polls == 1:
+                    raise uncertain_failure("vector_index_metadata")
+                return b"2\t1\t1\t0\n"
+            if "FROM [SHOW JOBS]" in statement:
+                job_polls += 1
+                if job_polls == 1:
+                    return b"job_id\tstatus\tfraction_completed\tdescription\n"
+                return (
+                    b"job_id\tstatus\tfraction_completed\tdescription\n"
+                    b"new-job\tsucceeded\t1\tCREATE VECTOR INDEX "
+                    b"context_vectors_vector_idx ON ck.context_vectors (vector)\n"
+                )
+            if "ORDER BY vector <->" in statement:
+                return b"250000\t250000\n"
+            return b""
+
+        with mock.patch.object(campaign, "sql", side_effect=fake_sql), mock.patch.object(
+            campaign.time, "sleep", return_value=None
+        ):
+            restored = campaign.restore_vector_index(
+                Path("/tmp/cockroach"),
+                26257,
+                {"PATH": "/usr/bin:/bin"},
+                campaign.time.monotonic() + 60,
+                250_000,
+                10,
+            )
+
+        self.assertTrue(restored["green"])
+        self.assertTrue(restored["uncertain_timeout_reconciled"])
+        self.assertEqual(
+            sum(item.startswith("CREATE VECTOR INDEX") for item in statements),
+            1,
+        )
+
+    def test_generic_vector_index_connection_failure_remains_fail_closed(self) -> None:
+        cause = campaign.CommandError(
+            "FAILED",
+            "cockroach",
+            "a" * 64,
+            returncode=1,
+            output_tail="ERROR: connection lost.",
+        )
+        failure = campaign.SqlOperationError(
+            cause,
+            stage="vector_index_create",
+            start=None,
+            stop=None,
+            statement_sha256="b" * 64,
+        )
+        self.assertFalse(failure.retryable)
+        self.assertFalse(failure.server_effect_uncertain)
+
+        with mock.patch.object(campaign, "sql", side_effect=failure):
+            with self.assertRaises(campaign.SqlOperationError):
+                campaign.restore_vector_index(
+                    Path("/tmp/cockroach"),
+                    26257,
+                    {"PATH": "/usr/bin:/bin"},
+                    campaign.time.monotonic() + 60,
+                    250_000,
+                    10,
+                )
+
     def test_vector_index_timeout_without_server_effect_retries_ddl(self) -> None:
         create_calls = 0
 
