@@ -47,7 +47,8 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(runpod["ram_gb_max"], 188)
         self.assertEqual(runpod["volume_gb"], 0)
         self.assertIsNone(runpod["network_volume"])
-        self.assertLessEqual(runpod["aggregate_cost_usd_max"], 35)
+        self.assertEqual(runpod["replacement_cost_usd_max"], 35)
+        self.assertLessEqual(runpod["aggregate_cost_usd_max"], 36)
         self.assertEqual(runpod["paid_seconds_max"], 28 * 60 * 60)
 
     def test_production_arguments_fail_closed(self) -> None:

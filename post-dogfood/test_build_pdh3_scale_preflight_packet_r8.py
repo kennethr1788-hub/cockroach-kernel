@@ -189,6 +189,7 @@ class R8PreflightPacketTests(unittest.TestCase):
         prior_cost = sum(paid_seconds) / 3600 * active_rate
         replacement_cost = 28 * active_rate
         aggregate_cost = prior_cost + replacement_cost
+        aggregate_ceiling = 36.0
         cost_artifact = self.runtime / "history" / "cost-envelope.md"
         cost_artifact.write_text(
             "# Fixture cost envelope\n\n"
@@ -199,8 +200,8 @@ class R8PreflightPacketTests(unittest.TestCase):
             f"- `PRIOR_COST_UPPER_USD`: `{prior_cost}`\n"
             f"- `REPLACEMENT_28_HOUR_COST_UPPER_USD`: `{replacement_cost}`\n"
             f"- `AGGREGATE_COST_UPPER_USD`: `{aggregate_cost}`\n"
-            "- `AUTHORIZED_AGGREGATE_CEILING_USD`: `35.0`\n"
-            f"- `MINIMUM_REMAINING_HEADROOM_USD`: `{35.0 - aggregate_cost}`\n",
+            f"- `AUTHORIZED_AGGREGATE_CEILING_USD`: `{aggregate_ceiling}`\n"
+            f"- `MINIMUM_REMAINING_HEADROOM_USD`: `{aggregate_ceiling - aggregate_cost}`\n",
             encoding="utf-8",
         )
         history_entries.append(
@@ -529,8 +530,8 @@ class R8PreflightPacketTests(unittest.TestCase):
 
         self.authorization = self.root / "PDH_3_SCALE_AUTHORIZATION_RECEIPT_R1.md"
         self.authorization.write_text(
-            "NVIDIA L40S; measured 86,400; paid 100,800; $35.00 aggregate; "
-            "$0.99 compute; $1.10 active; 250 GB disposable.\n",
+            "NVIDIA L40S; measured 86,400; paid 100,800; $35.00 replacement; "
+            "$36.00 cumulative; $0.99 compute; $1.10 active; 250 GB disposable.\n",
             encoding="utf-8",
         )
         self.runpodctl = self.runtime / "runpodctl"
@@ -1050,12 +1051,54 @@ class R8PreflightPacketTests(unittest.TestCase):
                 "active_rate_usd_hour_upper": rate,
                 "attempt_cost_usd_upper": 1_530 / 3_600 * rate,
             },
+            {
+                "attempt_id": "R7-PREWORKLOAD-01",
+                "campaign_id": "ck-pdh3-scale-r8-relaunch-r7",
+                "pod_name": "ck-pdh3-scale-r8-relaunch-r7-01",
+                "pod_id": "6rbcu2lxia4p2m",
+                "status": "DELETED_BEFORE_UPLOAD_HOST_GUARD_DETACH_CHECK",
+                "measured_clock_started": False,
+                "workload_started": False,
+                "blocker": "HOST_GUARD_DETACH_CHECK",
+                "provider_resource_status": "DELETED",
+                "exact_id_absent": True,
+                "campaign_active_inventory": [],
+                "credential_material_copied": False,
+                "exact_provider_charge_available": False,
+                "active_interval_start_utc": "2026-08-01T07:51:17Z",
+                "absence_proved_utc": "2026-08-01T07:51:23Z",
+                "active_seconds_upper": 6,
+                "active_rate_usd_hour_upper": rate,
+                "attempt_cost_usd_upper": 6 / 3_600 * rate,
+            },
+            {
+                "attempt_id": "R7-SETUP-01",
+                "campaign_id": "ck-pdh3-scale-r8-relaunch-r7",
+                "pod_name": "ck-pdh3-scale-r8-relaunch-r7-01",
+                "pod_id": "81y4t6r6t9zmpz",
+                "status": "BLOCKED_COMPLETE",
+                "measured_clock_started": False,
+                "workload_started": True,
+                "blocker": "SETUP_DEADLINE_RESERVE_EXHAUSTED:reserve_seconds=2400",
+                "failure_sha256": "721daedb4a361880d204d162b6ca49ce8c72044279a1d18143fca7cd4975c304",
+                "final_evidence_archive_sha256": "657abfd4a6ee2a4bb880b9e5e2d4588c896f4e0219239b2972122c92e675a2e9",
+                "provider_resource_status": "DELETED",
+                "exact_id_absent": True,
+                "campaign_active_inventory": [],
+                "credential_material_copied": False,
+                "exact_provider_charge_available": False,
+                "active_interval_start_utc": "2026-08-01T07:53:30Z",
+                "absence_proved_utc": "2026-08-01T10:18:07Z",
+                "active_seconds_upper": 8_677,
+                "active_rate_usd_hour_upper": rate,
+                "attempt_cost_usd_upper": 8_677 / 3_600 * rate,
+            },
         ]
         history = {
             "version": "ck-pdh3-additional-attempt-history-v1",
             "attempts": attempts,
             "attempt_ids": [row["attempt_id"] for row in attempts],
-            "attempt_count": 5,
+            "attempt_count": 7,
             "cost_usd_upper": sum(row["attempt_cost_usd_upper"] for row in attempts),
         }
         contract = builder._load_contract(self.root).production_contract()

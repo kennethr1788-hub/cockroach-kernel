@@ -69,7 +69,12 @@ RUNPOD = {
     "network_volume": None,
     "compute_rate_usd_hour_max": 0.99,
     "active_rate_usd_hour_max": 1.10,
-    "aggregate_cost_usd_max": 35.00,
+    # The original campaign envelope was USD 35.00. The operator explicitly
+    # authorized a replacement after R7 closed as failed evidence. Preserve a
+    # USD 35.00 ceiling for that new lifecycle while allowing the mechanically
+    # calculated cumulative upper bound to round up to USD 36.00.
+    "replacement_cost_usd_max": 35.00,
+    "aggregate_cost_usd_max": 36.00,
     "measured_seconds": MEASURED_SECONDS,
     "paid_seconds_max": MAX_PAID_SECONDS,
 }

@@ -82,16 +82,17 @@ evidence.
 
 ## Remote pre-measurement gate
 
-Before the 24-hour measured clock begins, the replacement worker must execute
-a material-scale extracted-bundle vector setup canary on the same worker image
-and topology. It must prove:
+The replacement worker's full-cardinality setup is the material-scale remote
+gate; a smaller preliminary run is not allowed to stand in for it. Before the
+24-hour measured clock begins, that setup must prove:
 
 - four persistent single-row clients;
 - distributed deterministic vectors;
 - full content reconciliation;
 - forced-index coverage;
 - cluster health and teardown;
-- an observed completion-rate projection sufficient for 250,000 vectors
-  inside the frozen setup window with its reserved tail.
+- all 250,000 vectors complete inside the frozen setup window with its
+  reserved tail.
 
-Failure of that canary prohibits starting the 24-hour measured workload.
+Failure of that full-cardinality gate prohibits starting the 24-hour measured
+workload.

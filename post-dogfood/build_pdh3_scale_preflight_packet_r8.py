@@ -104,7 +104,8 @@ RELAUNCH_CHECKLIST = (
     "One monotonic 10,800-second setup deadline includes a protected teardown "
     "tail; setup cannot become GREEN after deadline exhaustion.",
     "The migration-created vector index is proved on the empty table, vectors "
-    "are inserted in independent 250-row batches, and full forced-index "
+    "are inserted through four persistent clients using one parameterized row "
+    "per transaction, and full content reconciliation plus forced-index "
     "queryability is directly evidenced before measurement; no nonempty-table "
     "schema backfill is performed.",
     "Full 500,000-task / 5,000,000-event / 1,000,000-receipt / 250,000-vector "
@@ -140,7 +141,7 @@ CHECKLIST_EVIDENCE = (
     ("R8-03", "LOCAL_BOUND", (("post-dogfood/pdh3_scale_contract.py", "validate_production_arguments"), ("post-dogfood/build_pdh3_scale_bundle.py", "production_launch_contract")), (("post-dogfood/test_pdh3_scale_campaign.py", "test_production_rejects_local_store_size_before_io"), ("post-dogfood/test_build_pdh3_scale_bundle.py", "test_production_launch_binds_contract_and_omits_store_size_flag")), ("commands.child_controller_argv",)),
     ("R8-04", "LOCAL_BOUND", (("post-dogfood/run_pdh3_scale_campaign.py", "sql"), ("post-dogfood/run_pdh3_scale_campaign.py", "reconcile_seed_batch")), (("post-dogfood/test_pdh3_scale_campaign.py", "test_timeout_after_commit_reconciles_exact_without_reinsert"), ("post-dogfood/test_pdh3_scale_campaign.py", "test_timeout_reconciliation_mismatch_fails_closed"), ("post-dogfood/test_pdh3_scale_campaign.py", "test_sqlstate_40001_is_retried_once")), ("local_test_manifest.tests",)),
     ("R8-05", "LOCAL_BOUND", (("post-dogfood/run_pdh3_scale_campaign.py", "seed_reconciliation_statement"), ("post-dogfood/run_pdh3_scale_campaign.py", "campaign_reconciliations")), (("post-dogfood/test_pdh3_scale_campaign.py", "test_reconciliation_detects_missing_and_corrupt_rows"),), ("local_test_manifest.tests",)),
-    ("R8-06", "LOCAL_BOUND", (("post-dogfood/run_pdh3_scale_campaign.py", "prove_preseed_vector_index"), ("post-dogfood/run_pdh3_scale_campaign.py", "vector_seed_statement"), ("post-dogfood/run_pdh3_scale_campaign.py", "prove_seeded_vector_index"), ("post-dogfood/run_pdh3_scale_campaign.py", "recover_cluster_gateway")), (("post-dogfood/test_pdh3_scale_campaign.py", "test_precreated_vector_index_is_proved_without_schema_ddl"), ("post-dogfood/test_pdh3_scale_campaign.py", "test_vectors_seed_in_independent_bounded_batches"), ("post-dogfood/test_pdh3_scale_campaign.py", "test_vector_index_full_coverage_is_exact_and_forced"), ("post-dogfood/test_pdh3_scale_campaign.py", "test_cluster_gateway_recovery_restarts_dead_node_and_fails_over"), ("post-dogfood/test_pdh3_scale_campaign.py", "test_cluster_recovery_restarts_node_that_dies_during_recovery")), ("local_test_manifest.tests",)),
+    ("R8-06", "LOCAL_BOUND", (("post-dogfood/run_pdh3_scale_campaign.py", "prove_preseed_vector_index"), ("post-dogfood/run_pdh3_scale_campaign.py", "vector_seed_statement"), ("post-dogfood/run_pdh3_scale_campaign.py", "prove_seeded_vector_index"), ("post-dogfood/run_pdh3_scale_campaign.py", "recover_cluster_gateway")), (("post-dogfood/test_pdh3_scale_campaign.py", "test_precreated_vector_index_is_proved_without_schema_ddl"), ("post-dogfood/test_pdh3_scale_campaign.py", "test_vectors_seed_through_single_row_concurrent_client"), ("post-dogfood/test_pdh3_scale_campaign.py", "test_seed_vectors_are_distributed_stable_and_sql_reconcilable"), ("post-dogfood/test_pdh3_scale_campaign.py", "test_vector_insert_is_parameterized_single_row"), ("post-dogfood/test_pdh3_scale_campaign.py", "test_vector_client_retry_classification_is_fail_closed"), ("post-dogfood/test_pdh3_scale_campaign.py", "test_vector_index_full_coverage_is_exact_and_forced"), ("post-dogfood/test_pdh3_scale_campaign.py", "test_cluster_gateway_recovery_restarts_dead_node_and_fails_over"), ("post-dogfood/test_pdh3_scale_campaign.py", "test_cluster_recovery_restarts_node_that_dies_during_recovery")), ("local_test_manifest.tests",)),
     ("R8-07", "LOCAL_BOUND", (("post-dogfood/run_pdh3_scale_campaign.py", "setup_timeout"), ("post-dogfood/run_pdh3_scale_campaign.py", "setup_margin_gate")), (("post-dogfood/test_pdh3_scale_campaign.py", "test_expired_reserved_deadline_starts_no_sql"), ("post-dogfood/test_pdh3_scale_campaign.py", "test_setup_margin_gate_is_quantitative_and_fail_closed")), ("contract.workload.setup_timeout_seconds",)),
     ("R8-08", "REMOTE_GATE", (("post-dogfood/run_pdh3_scale_campaign.py", "seed_dataset"), ("post-dogfood/run_pdh3_scale_campaign.py", "campaign_counts")), (("post-dogfood/test_pdh3_scale_campaign.py", "test_seed_statement_counts_and_bounds"),), ("future_remote_setup_receipt",)),
     ("R8-09", "LOCAL_BOUND", (("post-dogfood/run_pdh3_scale_campaign.py", "create_query_files"),), (("post-dogfood/test_pdh3_scale_campaign.py", "test_query_files_use_six_digit_seed_ids"),), ("local_test_manifest.tests",)),
@@ -166,7 +167,7 @@ CHECKLIST_REQUIREMENTS = {
     "R8-03": "Production arguments reject reduced store-size or scale overrides.",
     "R8-04": "Retry/reconciliation permits only declared transient SQL outcomes.",
     "R8-05": "Conflict handling cannot conceal missing or mismatched rows.",
-    "R8-06": "The precreated vector index, bounded incremental seed, full forced-index coverage, queryability, and continuously supervised three-node recovery are proved without nonempty-table DDL.",
+    "R8-06": "The precreated vector index, four persistent single-row clients, deterministic distributed vectors, full content reconciliation, forced-index coverage, queryability, and continuously supervised three-node recovery are proved without nonempty-table DDL.",
     "R8-07": "One setup deadline includes receipt and teardown reserves.",
     "R8-08": "Selected worker completes target cardinality inside 10,800 seconds.",
     "R8-09": "Production reads directly hit nonzero seeded rows.",
@@ -979,6 +980,7 @@ def _authorization_binding(path: Path, root: Path, contract: Mapping[str, Any]) 
         "86,400",
         "100,800",
         "$35.00",
+        "$36.00",
         "$0.99",
         "$1.10",
         "250 GB",
@@ -1897,7 +1899,7 @@ def _additional_attempt_cost_and_validate(
     if history.get("version") != "ck-pdh3-additional-attempt-history-v1":
         raise PreflightBuildError("ADDITIONAL_ATTEMPT_HISTORY_VERSION_INVALID")
     attempts = history.get("attempts")
-    if not isinstance(attempts, list) or len(attempts) != 5:
+    if not isinstance(attempts, list) or len(attempts) != 7:
         raise PreflightBuildError("ADDITIONAL_ATTEMPT_HISTORY_COUNT_INVALID")
     expected = (
         {
@@ -1956,6 +1958,28 @@ def _additional_attempt_cost_and_validate(
             "failure_sha256": "9be0fd49ee93f977cbe494b7ccb97ad693182f0130a9483d50616e50c13d2157",
             "final_evidence_archive_sha256": "d6a7da76b9641443380052d7f55bf546b8ca28f9ab656326a6abfca79e4a5a6f",
         },
+        {
+            "attempt_id": "R7-PREWORKLOAD-01",
+            "campaign_id": "ck-pdh3-scale-r8-relaunch-r7",
+            "pod_name": "ck-pdh3-scale-r8-relaunch-r7-01",
+            "pod_id": "6rbcu2lxia4p2m",
+            "status": "DELETED_BEFORE_UPLOAD_HOST_GUARD_DETACH_CHECK",
+            "measured_clock_started": False,
+            "workload_started": False,
+            "blocker": "HOST_GUARD_DETACH_CHECK",
+        },
+        {
+            "attempt_id": "R7-SETUP-01",
+            "campaign_id": "ck-pdh3-scale-r8-relaunch-r7",
+            "pod_name": "ck-pdh3-scale-r8-relaunch-r7-01",
+            "pod_id": "81y4t6r6t9zmpz",
+            "status": "BLOCKED_COMPLETE",
+            "measured_clock_started": False,
+            "workload_started": True,
+            "blocker": "SETUP_DEADLINE_RESERVE_EXHAUSTED:reserve_seconds=2400",
+            "failure_sha256": "721daedb4a361880d204d162b6ca49ce8c72044279a1d18143fca7cd4975c304",
+            "final_evidence_archive_sha256": "657abfd4a6ee2a4bb880b9e5e2d4588c896f4e0219239b2972122c92e675a2e9",
+        },
     )
     total = 0.0
     observed_ids: list[str] = []
@@ -1997,7 +2021,7 @@ def _additional_attempt_cost_and_validate(
             raise PreflightBuildError("ADDITIONAL_ATTEMPT_COST_INVALID")
         observed_ids.append(str(row["attempt_id"]))
         total += float(cost)
-    if history.get("attempt_ids") != observed_ids or history.get("attempt_count") != 5:
+    if history.get("attempt_ids") != observed_ids or history.get("attempt_count") != 7:
         raise PreflightBuildError("ADDITIONAL_ATTEMPT_INDEX_INVALID")
     if abs(float(history.get("cost_usd_upper", -1)) - total) > 1e-12:
         raise PreflightBuildError("ADDITIONAL_ATTEMPT_TOTAL_INVALID")
@@ -2449,8 +2473,10 @@ The selected worker first performs the complete target setup inside one shared
 receipts, and 250,000 task-bound vectors. Seed operations resolve uncertain
 client timeouts to ZERO, EXACT, or MISMATCH and block MISMATCH. The vector index
 must exist visibly on the empty migrated table before seed. Vectors are then
-inserted in independent batches of at most 250 rows, and the finished dataset
-must prove exact cardinality plus full forced-index queryability. The campaign
+inserted through four persistent clients using one parameterized row per
+transaction, and the finished dataset must prove exact cardinality,
+deterministic distributed-vector content, digest reconciliation, and full
+forced-index queryability. The campaign
 performs no vector-index DDL or nonempty-table backfill during setup and leaves
 teardown time reserved.
 
