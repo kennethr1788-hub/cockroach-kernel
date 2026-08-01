@@ -58,8 +58,10 @@ PREFLIGHT_CONTROL_RESET_VERSION = "ck-pdh3-preflight-control-reset-v1"
 FAULT_TRANSITION_SQLSTATES = {"08003", "08006", "57P01"}
 FAULT_TRANSITION_MARKERS = (
     "client connection is closing",
+    "connection interrupted",
     "connection refused",
     "connection reset by peer",
+    "error while dialing",
     "node is unavailable",
 )
 
@@ -282,8 +284,9 @@ def fault_transition_read(operation: Any, *, deadline: float) -> Any:
         attempts += 1
         try:
             return operation()
-        except CommandError as exc:
-            if not fault_transition_retryable(exc):
+        except (CommandError, SqlOperationError) as exc:
+            command_error = exc.cause if isinstance(exc, SqlOperationError) else exc
+            if not fault_transition_retryable(command_error):
                 raise
             remaining = deadline - time.monotonic()
             if remaining <= 1:
@@ -2586,15 +2589,28 @@ def run_campaign_epoch(
     canary.MINIMUM_ACK_WRITE_OPERATIONS = max(2_000, concurrency * 10)
     canary.MINIMUM_CONTENDED_UPDATE_OPERATIONS = max(1_000, concurrency * 5)
     canary.MINIMUM_REPLAY_OPERATIONS = max(1_000, concurrency * 5)
-    stage = canary.run_stage(
-        binary,
-        gateway,
-        query_files,
-        epoch_root,
-        concurrency,
-        env,
-        deadline=work_deadline,
-    )
+    try:
+        stage = canary.run_stage(
+            binary,
+            gateway,
+            query_files,
+            epoch_root,
+            concurrency,
+            env,
+            deadline=work_deadline,
+        )
+    except Exception:
+        # A failed workload is most valuable when its exact stdout/stderr and
+        # histogram artifacts survive teardown. The prior path deleted the
+        # generated epoch root before those diagnostics could be examined.
+        preserve_epoch_evidence(
+            epoch_root,
+            output,
+            lane=lane + "-failed",
+            epoch=epoch,
+            deadline=epoch_deadline,
+        )
+        raise
     if not stage["green"]:
         raise CampaignError("CONCURRENCY_STAGE_BLOCKED:" + str(concurrency))
     cleanup = cleanup_probe(

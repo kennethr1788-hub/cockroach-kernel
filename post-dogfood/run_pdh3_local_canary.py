@@ -181,6 +181,8 @@ def run(
     timeout: int,
     cwd: Path | None = None,
     stdin: bytes | None = None,
+    stdout_path: Path | None = None,
+    stderr_path: Path | None = None,
 ) -> subprocess.CompletedProcess[bytes]:
     process = subprocess.Popen(
         command,
@@ -206,7 +208,13 @@ def run(
             except ProcessLookupError:
                 pass
             stdout, stderr = process.communicate(timeout=5)
-        partial = (exc.stdout or b"") + (exc.stderr or b"") + stdout + stderr
+        captured_stdout = stdout if stdout else (exc.stdout or b"")
+        captured_stderr = stderr if stderr else (exc.stderr or b"")
+        if stdout_path is not None:
+            atomic_write(stdout_path, captured_stdout)
+        if stderr_path is not None:
+            atomic_write(stderr_path, captured_stderr)
+        partial = captured_stdout + captured_stderr
         raise CanaryError(
             "COMMAND_TIMEOUT:"
             + Path(command[0]).name
@@ -215,6 +223,10 @@ def run(
             + ":"
             + digest(partial)
         ) from exc
+    if stdout_path is not None:
+        atomic_write(stdout_path, stdout)
+    if stderr_path is not None:
+        atomic_write(stderr_path, stderr)
     result = subprocess.CompletedProcess(command, process.returncode, stdout, stderr)
     if result.returncode != 0:
         raise CanaryError(
@@ -222,6 +234,10 @@ def run(
             + command[1 if len(command) > 1 else 0]
             + ":"
             + digest(result.stdout + result.stderr)
+            + ":stdout="
+            + digest(result.stdout)
+            + ":stderr="
+            + digest(result.stderr)
         )
     return result
 
@@ -462,7 +478,8 @@ def build_query_files(root: Path) -> dict[str, dict[str, Any]]:
             "WHERE source_key LIKE 'missing-stale-%'",
             "trajectory-link-read: SELECT count(*) FROM ck.trajectory_events e "
             "JOIN ck.tasks t ON t.task_id=e.task_id "
-            f"WHERE t.campaign_id='{CAMPAIGN_ID}'",
+            f"WHERE t.task_id='{CAMPAIGN_ID}-task-{0:0{TASK_ID_WIDTH}d}' "
+            f"AND t.campaign_id='{CAMPAIGN_ID}'",
         ]
     )
     definitions = {
@@ -591,9 +608,9 @@ def run_querybench(
         command,
         env=env,
         timeout=timeout_seconds,
+        stdout_path=output_path,
+        stderr_path=error_path,
     )
-    atomic_write(output_path, completed.stdout)
-    atomic_write(error_path, completed.stderr)
     if completed.returncode != 0:
         raise CanaryError(f"QUERYBENCH_FAILED_C{concurrency}_{kind}")
     summary = parse_querybench_summary(completed.stdout)

@@ -58,6 +58,48 @@ class ScaleCampaignUnitTests(unittest.TestCase):
         self.assertEqual(value, (1, 2, 3, 4))
         self.assertEqual(operation.call_count, 2)
 
+    def test_fault_transition_retries_observed_connection_interruption(self) -> None:
+        transient = campaign.CommandError(
+            "FAILED",
+            "cockroach",
+            "c" * 64,
+            returncode=1,
+            output_tail=(
+                "rpc error: code = Unavailable desc = connection error: "
+                'desc = "transport: error while dialing: connection interrupted"'
+            ),
+        )
+        operation = mock.Mock(side_effect=[transient, (1, 2, 3, 4)])
+        value = campaign.fault_transition_read(
+            operation,
+            deadline=time.monotonic() + 5,
+        )
+        self.assertEqual(value, (1, 2, 3, 4))
+        self.assertEqual(operation.call_count, 2)
+
+    def test_fault_transition_retries_wrapped_sql_connection_interruption(self) -> None:
+        transient = campaign.CommandError(
+            "FAILED",
+            "cockroach",
+            "d" * 64,
+            returncode=1,
+            output_tail="transport: error while dialing: connection interrupted",
+        )
+        wrapped = campaign.SqlOperationError(
+            transient,
+            stage="control_counts",
+            start=None,
+            stop=None,
+            statement_sha256="e" * 64,
+        )
+        operation = mock.Mock(side_effect=[wrapped, (1, 2, 3)])
+        value = campaign.fault_transition_read(
+            operation,
+            deadline=time.monotonic() + 5,
+        )
+        self.assertEqual(value, (1, 2, 3))
+        self.assertEqual(operation.call_count, 2)
+
     def test_fault_transition_does_not_retry_permanent_sql_failure(self) -> None:
         permanent = campaign.CommandError(
             "FAILED",

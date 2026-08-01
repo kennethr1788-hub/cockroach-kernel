@@ -94,6 +94,37 @@ class LocalCanaryDeadlineTests(unittest.TestCase):
             raw = definitions["read_mix"]["path"].read_text()
             self.assertIn("ck-pdh3-scale-test-task-000000", raw)
             self.assertNotIn("ck-pdh3-scale-test-task-0000'", raw)
+            self.assertIn(
+                "WHERE t.task_id='ck-pdh3-scale-test-task-000000'",
+                raw,
+            )
+            self.assertNotIn(
+                "WHERE t.campaign_id='ck-pdh3-scale-test'",
+                raw,
+            )
+
+    def test_failed_command_preserves_stdout_and_stderr(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            stdout_path = root / "stdout.log"
+            stderr_path = root / "stderr.log"
+            with self.assertRaisesRegex(
+                canary.CanaryError,
+                r"^COMMAND_FAILED:-c:[0-9a-f]{64}:stdout=[0-9a-f]{64}:stderr=[0-9a-f]{64}$",
+            ):
+                canary.run(
+                    [
+                        sys.executable,
+                        "-c",
+                        "import sys; print('out'); print('err', file=sys.stderr); raise SystemExit(7)",
+                    ],
+                    env={"PATH": "/usr/bin:/bin"},
+                    timeout=5,
+                    stdout_path=stdout_path,
+                    stderr_path=stderr_path,
+                )
+            self.assertEqual(stdout_path.read_bytes(), b"out\n")
+            self.assertEqual(stderr_path.read_bytes(), b"err\n")
 
     def test_bounded_timeout_refuses_exhausted_deadline(self) -> None:
         with mock.patch.object(canary.time, "monotonic", return_value=100.0):
