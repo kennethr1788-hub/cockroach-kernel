@@ -189,7 +189,7 @@ class R8PreflightPacketTests(unittest.TestCase):
         prior_cost = sum(paid_seconds) / 3600 * active_rate
         replacement_cost = 28 * active_rate
         aggregate_cost = prior_cost + replacement_cost
-        aggregate_ceiling = 36.0
+        aggregate_ceiling = 35.0
         cost_artifact = self.runtime / "history" / "cost-envelope.md"
         cost_artifact.write_text(
             "# Fixture cost envelope\n\n"

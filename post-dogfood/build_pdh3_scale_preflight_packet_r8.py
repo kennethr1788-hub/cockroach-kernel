@@ -1723,7 +1723,10 @@ def _history_cost_and_validate(
         (replacement_cost, calculated_replacement),
         (aggregate, calculated_aggregate),
         (headroom, calculated_headroom),
-        (authorized, float(contract["runpod"]["aggregate_cost_usd_max"])),
+        # This is the immutable original Attempts 01-07 envelope. The later
+        # operator replacement authorization is validated separately and may
+        # raise only the cumulative ceiling, never rewrite historical custody.
+        (authorized, 35.0),
     )
     if disk_rate < 0 or any(not math.isclose(actual, expected, rel_tol=0, abs_tol=1e-9) for actual, expected in expected_values):
         raise PreflightBuildError("PRIOR_COST_ARITHMETIC_MISMATCH")
