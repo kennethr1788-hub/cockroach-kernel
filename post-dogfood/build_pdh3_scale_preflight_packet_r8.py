@@ -1897,7 +1897,7 @@ def _additional_attempt_cost_and_validate(
     if history.get("version") != "ck-pdh3-additional-attempt-history-v1":
         raise PreflightBuildError("ADDITIONAL_ATTEMPT_HISTORY_VERSION_INVALID")
     attempts = history.get("attempts")
-    if not isinstance(attempts, list) or len(attempts) != 3:
+    if not isinstance(attempts, list) or len(attempts) != 4:
         raise PreflightBuildError("ADDITIONAL_ATTEMPT_HISTORY_COUNT_INVALID")
     expected = (
         {
@@ -1931,6 +1931,18 @@ def _additional_attempt_cost_and_validate(
             "blocker": "VECTOR_INDEX_CREATE_CONNECTION_LOST",
             "failure_sha256": "d9f4c465a9dac360ef12c592e6d7ffdee2c3af5a150882ac58bf6700620204de",
             "final_evidence_archive_sha256": "f1cf48aa3232859f45f0593d23fdb638595f9e25af6b4930a9479ce7df08f4fc",
+        },
+        {
+            "attempt_id": "R5-SETUP-01",
+            "campaign_id": "ck-pdh3-scale-r8-relaunch-r5",
+            "pod_name": "ck-pdh3-scale-r8-relaunch-r5-01",
+            "pod_id": "iycjyztx6elw0k",
+            "status": "BLOCKED_COMPLETE",
+            "measured_clock_started": False,
+            "workload_started": True,
+            "blocker": "VECTOR_INDEX_METADATA_GATEWAY_CONNECTION_REFUSED",
+            "failure_sha256": "e56cb2c69eeb7446f610bbd7c98a84d0c02b794e26a806fa240829fc2a5a5802",
+            "final_evidence_archive_sha256": "54812ca5e53c382781679efdc8e07197d9216a2d6ec420331a4f782866eb4f3e",
         },
     )
     total = 0.0
@@ -1973,7 +1985,7 @@ def _additional_attempt_cost_and_validate(
             raise PreflightBuildError("ADDITIONAL_ATTEMPT_COST_INVALID")
         observed_ids.append(str(row["attempt_id"]))
         total += float(cost)
-    if history.get("attempt_ids") != observed_ids or history.get("attempt_count") != 3:
+    if history.get("attempt_ids") != observed_ids or history.get("attempt_count") != 4:
         raise PreflightBuildError("ADDITIONAL_ATTEMPT_INDEX_INVALID")
     if abs(float(history.get("cost_usd_upper", -1)) - total) > 1e-12:
         raise PreflightBuildError("ADDITIONAL_ATTEMPT_TOTAL_INVALID")
