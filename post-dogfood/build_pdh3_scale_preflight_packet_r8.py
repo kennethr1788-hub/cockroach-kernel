@@ -1902,7 +1902,7 @@ def _additional_attempt_cost_and_validate(
     if history.get("version") != "ck-pdh3-additional-attempt-history-v1":
         raise PreflightBuildError("ADDITIONAL_ATTEMPT_HISTORY_VERSION_INVALID")
     attempts = history.get("attempts")
-    if not isinstance(attempts, list) or len(attempts) != 7:
+    if not isinstance(attempts, list) or len(attempts) != 8:
         raise PreflightBuildError("ADDITIONAL_ATTEMPT_HISTORY_COUNT_INVALID")
     expected = (
         {
@@ -1983,6 +1983,18 @@ def _additional_attempt_cost_and_validate(
             "failure_sha256": "721daedb4a361880d204d162b6ca49ce8c72044279a1d18143fca7cd4975c304",
             "final_evidence_archive_sha256": "657abfd4a6ee2a4bb880b9e5e2d4588c896f4e0219239b2972122c92e675a2e9",
         },
+        {
+            "attempt_id": "R8-SETUP-01",
+            "campaign_id": "ck-pdh3-scale-r8-relaunch-r8",
+            "pod_name": "ck-pdh3-scale-r8-relaunch-r8-01",
+            "pod_id": "klu635c1c1js3g",
+            "status": "BLOCKED_COMPLETE",
+            "measured_clock_started": False,
+            "workload_started": True,
+            "blocker": "FULL_CARDINALITY_SETUP_NOT_GREEN",
+            "failure_sha256": "b95f79e19ab03f4c16ee7163d59cb4afece581a3b5893382f4c574c37b177bff",
+            "final_evidence_archive_sha256": "2c3db6e1f6b509bf8292e2fa4bda199f85de6739f34c2453faac88156b1b4bc7",
+        },
     )
     total = 0.0
     observed_ids: list[str] = []
@@ -2024,7 +2036,7 @@ def _additional_attempt_cost_and_validate(
             raise PreflightBuildError("ADDITIONAL_ATTEMPT_COST_INVALID")
         observed_ids.append(str(row["attempt_id"]))
         total += float(cost)
-    if history.get("attempt_ids") != observed_ids or history.get("attempt_count") != 7:
+    if history.get("attempt_ids") != observed_ids or history.get("attempt_count") != 8:
         raise PreflightBuildError("ADDITIONAL_ATTEMPT_INDEX_INVALID")
     if abs(float(history.get("cost_usd_upper", -1)) - total) > 1e-12:
         raise PreflightBuildError("ADDITIONAL_ATTEMPT_TOTAL_INVALID")
