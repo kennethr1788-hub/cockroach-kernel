@@ -1897,7 +1897,7 @@ def _additional_attempt_cost_and_validate(
     if history.get("version") != "ck-pdh3-additional-attempt-history-v1":
         raise PreflightBuildError("ADDITIONAL_ATTEMPT_HISTORY_VERSION_INVALID")
     attempts = history.get("attempts")
-    if not isinstance(attempts, list) or len(attempts) != 4:
+    if not isinstance(attempts, list) or len(attempts) != 5:
         raise PreflightBuildError("ADDITIONAL_ATTEMPT_HISTORY_COUNT_INVALID")
     expected = (
         {
@@ -1944,6 +1944,18 @@ def _additional_attempt_cost_and_validate(
             "failure_sha256": "e56cb2c69eeb7446f610bbd7c98a84d0c02b794e26a806fa240829fc2a5a5802",
             "final_evidence_archive_sha256": "54812ca5e53c382781679efdc8e07197d9216a2d6ec420331a4f782866eb4f3e",
         },
+        {
+            "attempt_id": "R6-SETUP-01",
+            "campaign_id": "ck-pdh3-scale-r8-relaunch-r6",
+            "pod_name": "ck-pdh3-scale-r8-relaunch-r6-01",
+            "pod_id": "xnlp690a3j3xum",
+            "status": "BLOCKED_COMPLETE",
+            "measured_clock_started": False,
+            "workload_started": True,
+            "blocker": "VECTOR_INDEX_BACKFILL_LOST_CLUSTER_QUORUM",
+            "failure_sha256": "9be0fd49ee93f977cbe494b7ccb97ad693182f0130a9483d50616e50c13d2157",
+            "final_evidence_archive_sha256": "d6a7da76b9641443380052d7f55bf546b8ca28f9ab656326a6abfca79e4a5a6f",
+        },
     )
     total = 0.0
     observed_ids: list[str] = []
@@ -1985,7 +1997,7 @@ def _additional_attempt_cost_and_validate(
             raise PreflightBuildError("ADDITIONAL_ATTEMPT_COST_INVALID")
         observed_ids.append(str(row["attempt_id"]))
         total += float(cost)
-    if history.get("attempt_ids") != observed_ids or history.get("attempt_count") != 4:
+    if history.get("attempt_ids") != observed_ids or history.get("attempt_count") != 5:
         raise PreflightBuildError("ADDITIONAL_ATTEMPT_INDEX_INVALID")
     if abs(float(history.get("cost_usd_upper", -1)) - total) > 1e-12:
         raise PreflightBuildError("ADDITIONAL_ATTEMPT_TOTAL_INVALID")
