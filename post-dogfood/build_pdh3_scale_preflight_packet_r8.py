@@ -2202,6 +2202,8 @@ def build(config: BuildConfig, *, now: datetime | None = None) -> dict[str, Any]
         or isolated_result.get("synthetic_only") is not True
         or isolated_result.get("credentials_used") is not False
         or isolated_result.get("external_cloud_calls") != 0
+        or isolated_result.get("cluster_topology")
+        != "THREE_LOCAL_LOOPBACK_NODES_DISPOSABLE_ROOT"
         or isolated_result.get("generated_root_removed") is not True
         or isolated_result.get("nodes_stopped") is not True
         or isolated_result.get("ports_closed") is not True

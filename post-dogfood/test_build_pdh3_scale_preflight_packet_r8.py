@@ -1186,6 +1186,16 @@ class R8PreflightPacketTests(unittest.TestCase):
             ):
                 builder.build(self.config, now=NOW)
 
+    def test_local_smoke_topology_is_required(self) -> None:
+        observed = json.loads(canonical(self.local_manifest["isolated_smoke_observed_result"]))
+        observed.pop("cluster_topology")
+        self._rewrite_local(isolated_smoke_observed_result=observed)
+        with self.assertRaisesRegex(
+            builder.PreflightBuildError,
+            "ISOLATED_LOCAL_SMOKE_EVIDENCE_INVALID",
+        ):
+            builder.build(self.config, now=NOW)
+
     def test_unsafe_source_and_evidence_are_each_blocked(self) -> None:
         source = self.root / "post-dogfood" / "run_pdh3_local_canary.py"
         original = source.read_bytes()
