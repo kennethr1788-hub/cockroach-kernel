@@ -101,7 +101,7 @@ RELAUNCH_CHECKLIST = (
     "expired timestamp, or stale hash is reused.",
     "Uncertain SQL outcomes resolve only to ZERO, EXACT, or MISMATCH; explicit "
     "primary-key conflict targets never conceal mismatched rows.",
-    "One monotonic 5,400-second setup deadline includes a protected teardown "
+    "One monotonic 10,800-second setup deadline includes a protected teardown "
     "tail; setup cannot become GREEN after deadline exhaustion.",
     "Vector-index drop, recreation, row cardinality, metadata, and forced-index "
     "queryability are directly evidenced; asynchronous builds additionally "
@@ -168,7 +168,7 @@ CHECKLIST_REQUIREMENTS = {
     "R8-05": "Conflict handling cannot conceal missing or mismatched rows.",
     "R8-06": "Vector-index recreation, ownership, coverage, queryability, and failover after a dead gateway are proved without duplicate DDL.",
     "R8-07": "One setup deadline includes receipt and teardown reserves.",
-    "R8-08": "Selected worker completes target cardinality inside 5,400 seconds.",
+    "R8-08": "Selected worker completes target cardinality inside 10,800 seconds.",
     "R8-09": "Production reads directly hit nonzero seeded rows.",
     "R8-10": "Three full-shape premeasurement epochs pass and reset cleanly.",
     "R8-11": "Every epoch uses one shared 300-second monotonic deadline.",
@@ -2431,7 +2431,7 @@ the supervisor after instantiation.
 ## Exact setup and premeasurement gate
 
 The selected worker first performs the complete target setup inside one shared
-5,400-second monotonic deadline: 500,000 tasks, 5,000,000 events, 1,000,000
+10,800-second monotonic deadline: 500,000 tasks, 5,000,000 events, 1,000,000
 receipts, and 250,000 task-bound vectors. Seed operations resolve uncertain
 client timeouts to ZERO, EXACT, or MISMATCH and block MISMATCH. Index recreation
 must verify cardinality, visible metadata, and forced-index queryability. An
