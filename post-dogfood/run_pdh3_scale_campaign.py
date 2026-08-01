@@ -39,6 +39,12 @@ FULL_RECONCILIATION_TIMEOUT_SECONDS = 300
 VECTOR_SEED_WORKERS = 4
 VECTOR_SEED_PROGRESS_SECONDS = 60
 VECTOR_STATEMENT_TIMEOUT_SECONDS = 60
+VECTOR_QUERY_TIMEOUT_SECONDS = 120
+VECTOR_QUERY_PROBES = 8
+VECTOR_QUERY_NEIGHBORS = 10
+VECTOR_QUERY_BEAM_SIZE = 128
+VECTOR_MIN_PROBE_RECALL = 0.8
+VECTOR_MIN_MEAN_RECALL = 0.9
 PRODUCTION_SETUP_TAIL_RESERVE_SECONDS = 2_400
 SETUP_RECEIPT_FINALIZATION_RESERVE_SECONDS = 5
 MAX_SEED_ATTEMPTS = 4
@@ -517,6 +523,20 @@ def parse_count_tuple(raw: bytes, fields: int) -> tuple[int, ...]:
         if len(values) == fields and all(value.isdigit() for value in values):
             return tuple(int(value) for value in values)
     raise CampaignError("COUNT_OUTPUT_INVALID")
+
+
+def parse_vector_ids(raw: bytes, campaign_id: str) -> list[str]:
+    pattern = re.compile(
+        rf"^{re.escape(campaign_id)}-task-[0-9]{{{PRODUCTION_TASK_ID_WIDTH}}}-vector-00$"
+    )
+    values = [
+        line.strip()
+        for line in raw.decode("utf-8", "replace").splitlines()
+        if pattern.fullmatch(line.strip())
+    ]
+    if not values:
+        raise CampaignError("VECTOR_QUERY_OUTPUT_INVALID")
+    return values
 
 
 def tree_bytes(root: Path) -> int:
@@ -1475,47 +1495,105 @@ def vector_index_metadata(
     }
 
 
-def vector_index_coverage(
+def deterministic_vector_probe_indices(vector_count: int) -> list[int]:
+    if vector_count < VECTOR_QUERY_PROBES:
+        raise CampaignError("VECTOR_INDEX_EXPECTED_CARDINALITY_INVALID")
+    return [
+        (probe * (vector_count - 1)) // (VECTOR_QUERY_PROBES - 1)
+        for probe in range(VECTOR_QUERY_PROBES)
+    ]
+
+
+def vector_index_quality(
     binary: Path,
     port: int,
     env: dict[str, str],
     setup_deadline: float,
+    campaign_id: str,
     vector_count: int,
     reserve_seconds: int = 0,
 ) -> dict[str, Any]:
-    if vector_count < 1:
-        raise CampaignError("VECTOR_INDEX_EXPECTED_CARDINALITY_INVALID")
-    statement = (
-        "SELECT count(*),count(DISTINCT vector_id) FROM ("
-        "SELECT vector_id FROM "
-        "ck.context_vectors@context_vectors_vector_idx "
-        f"ORDER BY vector <-> {vector_literal()} LIMIT {vector_count})"
-    )
-    returned_rows, distinct_vector_ids = parse_count_tuple(
-        sql(
+    probes: list[dict[str, Any]] = []
+    for index in deterministic_vector_probe_indices(vector_count):
+        vector = q(deterministic_seed_vector_text(index)) + "::VECTOR(64)"
+        exact_statement = (
+            "SELECT vector_id FROM ck.context_vectors@context_vectors_pkey "
+            f"ORDER BY vector <-> {vector} LIMIT {VECTOR_QUERY_NEIGHBORS}"
+        )
+        ann_statement = (
+            f"SET vector_search_beam_size={VECTOR_QUERY_BEAM_SIZE};"
+            "SELECT vector_id FROM ck.context_vectors@context_vectors_vector_idx "
+            f"ORDER BY vector <-> {vector} LIMIT {VECTOR_QUERY_NEIGHBORS}"
+        )
+        exact_ids = parse_vector_ids(sql(
             binary,
             port,
-            statement,
+            exact_statement,
             env=env,
             timeout=setup_timeout(
                 setup_deadline,
-                FULL_RECONCILIATION_TIMEOUT_SECONDS,
+                VECTOR_QUERY_TIMEOUT_SECONDS,
                 reserve_seconds=reserve_seconds,
             ),
-            stage="vector_index_full_coverage",
-        ),
-        2,
-    )
+            stage=f"vector_exact_probe_{index}",
+        ), campaign_id)
+        ann_ids = parse_vector_ids(sql(
+            binary,
+            port,
+            ann_statement,
+            env=env,
+            timeout=setup_timeout(
+                setup_deadline,
+                VECTOR_QUERY_TIMEOUT_SECONDS,
+                reserve_seconds=reserve_seconds,
+            ),
+            stage=f"vector_ann_probe_{index}",
+        ), campaign_id)
+        expected_id = (
+            f"{campaign_id}-task-{index:0{PRODUCTION_TASK_ID_WIDTH}d}-vector-00"
+        )
+        overlap = len(set(exact_ids) & set(ann_ids))
+        recall = overlap / VECTOR_QUERY_NEIGHBORS
+        probe = {
+            "probe_index": index,
+            "expected_vector_id": expected_id,
+            "exact_result_sha256": digest(canonical(exact_ids)),
+            "ann_result_sha256": digest(canonical(ann_ids)),
+            "exact_count": len(exact_ids),
+            "ann_count": len(ann_ids),
+            "exact_unique": len(set(exact_ids)),
+            "ann_unique": len(set(ann_ids)),
+            "self_in_exact": expected_id in exact_ids,
+            "self_in_ann": expected_id in ann_ids,
+            "overlap": overlap,
+            "recall": recall,
+            "exact_statement_sha256": digest(exact_statement.encode("utf-8")),
+            "ann_statement_sha256": digest(ann_statement.encode("utf-8")),
+        }
+        probe["green"] = (
+            probe["exact_count"] == VECTOR_QUERY_NEIGHBORS
+            and probe["ann_count"] == VECTOR_QUERY_NEIGHBORS
+            and probe["exact_unique"] == VECTOR_QUERY_NEIGHBORS
+            and probe["ann_unique"] == VECTOR_QUERY_NEIGHBORS
+            and probe["self_in_exact"]
+            and probe["self_in_ann"]
+            and recall >= VECTOR_MIN_PROBE_RECALL
+        )
+        probes.append(probe)
+    mean_recall = sum(item["recall"] for item in probes) / len(probes)
     return {
         "expected_vectors": vector_count,
-        "returned_rows": returned_rows,
-        "distinct_vector_ids": distinct_vector_ids,
-        "statement_sha256": digest(statement.encode("utf-8")),
+        "probe_count": len(probes),
+        "neighbors_per_probe": VECTOR_QUERY_NEIGHBORS,
+        "beam_size": VECTOR_QUERY_BEAM_SIZE,
+        "minimum_probe_recall": VECTOR_MIN_PROBE_RECALL,
+        "minimum_mean_recall": VECTOR_MIN_MEAN_RECALL,
+        "mean_recall": mean_recall,
+        "probes": probes,
+        "exact_index": "context_vectors_pkey",
         "forced_index": "context_vectors_vector_idx",
-        "green": (
-            returned_rows == vector_count
-            and distinct_vector_ids == vector_count
-        ),
+        "green": all(item["green"] for item in probes)
+        and mean_recall >= VECTOR_MIN_MEAN_RECALL,
     }
 
 
@@ -1561,10 +1639,11 @@ def prove_seeded_vector_index(
     port: int,
     env: dict[str, str],
     setup_deadline: float,
+    campaign_id: str,
     vector_count: int,
     reserve_seconds: int = 0,
 ) -> dict[str, Any]:
-    """Prove the precreated index retained full forced-index coverage after seed."""
+    """Prove exact row custody plus bounded forced-ANN query quality after seed."""
     metadata = vector_index_metadata(
         binary,
         port,
@@ -1572,20 +1651,21 @@ def prove_seeded_vector_index(
         setup_deadline,
         reserve_seconds=reserve_seconds,
     )
-    coverage = vector_index_coverage(
+    quality = vector_index_quality(
         binary,
         port,
         env,
         setup_deadline,
+        campaign_id,
         vector_count,
         reserve_seconds=reserve_seconds,
     )
     return {
         "mode": "INCREMENTALLY_MAINTAINED_DURING_SEED",
         "metadata": metadata,
-        "coverage": coverage,
-        "queryable": coverage["green"],
-        "green": metadata["green"] and coverage["green"],
+        "quality": quality,
+        "queryable": quality["green"],
+        "green": metadata["green"] and quality["green"],
     }
 
 
@@ -3021,6 +3101,7 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
             gateway,
             env,
             setup_deadline,
+            args.campaign_id,
             args.vectors,
             index_verification_reserve_seconds,
         )

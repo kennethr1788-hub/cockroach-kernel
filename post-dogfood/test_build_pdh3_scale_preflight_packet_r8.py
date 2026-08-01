@@ -531,7 +531,7 @@ class R8PreflightPacketTests(unittest.TestCase):
         self.authorization = self.root / "PDH_3_SCALE_AUTHORIZATION_RECEIPT_R1.md"
         self.authorization.write_text(
             "NVIDIA L40S; measured 86,400; paid 100,800; $35.00 replacement; "
-            "$36.00 cumulative; $0.99 compute; $1.10 active; 250 GB disposable.\n",
+            "$38.00 cumulative; $0.99 compute; $1.10 active; 250 GB disposable.\n",
             encoding="utf-8",
         )
         self.runpodctl = self.runtime / "runpodctl"

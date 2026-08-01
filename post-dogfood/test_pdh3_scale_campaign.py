@@ -5,6 +5,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 import tempfile
@@ -220,7 +221,21 @@ class ScaleCampaignUnitTests(unittest.TestCase):
             if statement == "SELECT count(*) FROM ck.context_vectors":
                 return b"0\n"
             if "ORDER BY vector <->" in statement:
-                return b"250000\t250000\n"
+                match = re.search(r"'\[([0-9]+),([0-9]+),([0-9]+),", statement)
+                assert match is not None
+                index = (
+                    int(match.group(1))
+                    + 101 * int(match.group(2))
+                    + 10_201 * int(match.group(3))
+                )
+                values = [index] + [value for value in range(10) if value != index]
+                return (
+                    "\n".join(
+                        f"ck-pdh3-scale-test-task-{value:06d}-vector-00"
+                        for value in values[:10]
+                    )
+                    + "\n"
+                ).encode()
             return b""
 
         with mock.patch.object(campaign, "sql", side_effect=fake_sql):
@@ -230,7 +245,7 @@ class ScaleCampaignUnitTests(unittest.TestCase):
             )
             postseed = campaign.prove_seeded_vector_index(
                 Path("/tmp/cockroach"), 26257, {"PATH": "/usr/bin:/bin"},
-                time.monotonic() + 60, 250_000,
+                time.monotonic() + 60, "ck-pdh3-scale-test", 250_000,
             )
         self.assertTrue(preseed["green"])
         self.assertTrue(postseed["green"])
@@ -484,45 +499,69 @@ class ScaleCampaignUnitTests(unittest.TestCase):
             with self.assertRaises(campaign.SetupDeadlineError):
                 campaign.setup_timeout(105.9, 900, reserve_seconds=5)
 
-    def test_vector_index_full_coverage_is_exact_and_forced(self) -> None:
+    def test_vector_index_quality_uses_exact_baseline_and_forced_ann(self) -> None:
         statements: list[str] = []
 
         def fake_sql(*args: object, **kwargs: object) -> bytes:
             statement = str(args[2])
             statements.append(statement)
-            if "ORDER BY vector <->" in statement:
-                return b"250000\t250000\n"
-            return b""
+            match = re.search(r"'\[([0-9]+),([0-9]+),([0-9]+),", statement)
+            self.assertIsNotNone(match)
+            assert match is not None
+            index = (
+                int(match.group(1))
+                + 101 * int(match.group(2))
+                + 10_201 * int(match.group(3))
+            )
+            probe_id = f"ck-pdh3-scale-test-task-{index:06d}-vector-00"
+            neighbors = [probe_id] + [
+                f"ck-pdh3-scale-test-task-{value:06d}-vector-00"
+                for value in range(1, 10)
+                if value != index
+            ]
+            while len(neighbors) < 10:
+                value = len(neighbors) + 20
+                neighbors.append(
+                    f"ck-pdh3-scale-test-task-{value:06d}-vector-00"
+                )
+            return ("\n".join(neighbors[:10]) + "\n").encode()
 
         with mock.patch.object(campaign, "sql", side_effect=fake_sql):
-            coverage = campaign.vector_index_coverage(
+            quality = campaign.vector_index_quality(
                 Path("/tmp/cockroach"),
                 26257,
                 {"PATH": "/usr/bin:/bin"},
-                campaign.time.monotonic() + 60,
+                campaign.time.monotonic() + 1_000,
+                "ck-pdh3-scale-test",
                 250_000,
             )
-        self.assertTrue(coverage["green"])
-        self.assertEqual(coverage["returned_rows"], 250_000)
-        self.assertEqual(coverage["distinct_vector_ids"], 250_000)
-        self.assertIn(
-            "ck.context_vectors@context_vectors_vector_idx",
-            statements[0],
-        )
-        self.assertIn("LIMIT 250000", statements[0])
+        self.assertTrue(quality["green"])
+        self.assertEqual(quality["probe_count"], 8)
+        self.assertEqual(quality["mean_recall"], 1.0)
+        self.assertTrue(any("@context_vectors_pkey" in item for item in statements))
+        self.assertTrue(any("@context_vectors_vector_idx" in item for item in statements))
+        self.assertTrue(any("SET vector_search_beam_size=128" in item for item in statements))
 
-    def test_vector_index_partial_or_duplicate_coverage_fails_closed(self) -> None:
-        for observed in (b"249999\t249999\n", b"250000\t249999\n"):
-            with self.subTest(observed=observed):
-                with mock.patch.object(campaign, "sql", return_value=observed):
-                    coverage = campaign.vector_index_coverage(
-                        Path("/tmp/cockroach"),
-                        26257,
-                        {"PATH": "/usr/bin:/bin"},
-                        campaign.time.monotonic() + 60,
-                        250_000,
-                    )
-                self.assertFalse(coverage["green"])
+    def test_vector_index_low_recall_fails_closed(self) -> None:
+        call_count = 0
+
+        def fake_sql(*args: object, **kwargs: object) -> bytes:
+            nonlocal call_count
+            call_count += 1
+            prefix = "ck-pdh3-scale-test-task-"
+            if call_count % 2:
+                values = [f"{prefix}{value:06d}-vector-00" for value in range(10)]
+            else:
+                values = [f"{prefix}{value:06d}-vector-00" for value in range(20, 30)]
+            return ("\n".join(values) + "\n").encode()
+
+        with mock.patch.object(campaign, "sql", side_effect=fake_sql):
+            quality = campaign.vector_index_quality(
+                Path("/tmp/cockroach"), 26257, {"PATH": "/usr/bin:/bin"},
+                campaign.time.monotonic() + 1_000,
+                "ck-pdh3-scale-test", 250_000,
+            )
+        self.assertFalse(quality["green"])
 
     def test_local_store_size_is_explicit_and_optional(self) -> None:
         node = campaign.Node(
