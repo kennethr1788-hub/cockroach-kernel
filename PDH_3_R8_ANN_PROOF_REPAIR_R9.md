@@ -60,7 +60,7 @@ Evidence:
 - `post-dogfood/run_pdh3_scale_campaign.py`: `a2ef071149827fc7913303769a7a7fa3f571e9a7a716b892c9da510d1244bf49`
 - `post-dogfood/test_pdh3_scale_campaign.py`: `7f9bb1794bebadaffd28421c73679a5ee1199ffb456c594e6d7498752daa0278`
 - `post-dogfood/pdh3_scale_contract.py`: `8d5fbf6d94d99abd0ac42177db1c83bf6a1d1830f537045691de7029b602c9c0`
-- `post-dogfood/build_pdh3_scale_preflight_packet_r8.py`: `fa79f494a9fa203875d2f2509ad72e0c7b644c0a7fbb845ac6eb2ecd7f06c634`
+- `post-dogfood/build_pdh3_scale_preflight_packet_r8.py`: `36b4f233abb5ca585995de81578dbd7e9354fc3b3ee5f3c801d2fdcf24bb20a7`
 - `post-dogfood/test_build_pdh3_scale_preflight_packet_r8.py`: `e82c60a81fb9f02ad0d1b1b9bc47596cd7078d163baef1fbb9dca698d9dcb0b1`
 - `post-dogfood/test_pdh3_scale_contract.py`: `3ba0564a123de56ddc7deeb0ff4bb3353792b8c89e0610cab7e7e031b3c0d4aa`
 

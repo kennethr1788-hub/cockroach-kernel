@@ -105,8 +105,9 @@ RELAUNCH_CHECKLIST = (
     "tail; setup cannot become GREEN after deadline exhaustion.",
     "The migration-created vector index is proved on the empty table, vectors "
     "are inserted through four persistent clients using one parameterized row "
-    "per transaction, and full content reconciliation plus forced-index "
-    "queryability is directly evidenced before measurement; no nonempty-table "
+    "per transaction, and exact full content reconciliation plus bounded "
+    "forced-index ANN recall against exact primary-index baselines is directly "
+    "evidenced before measurement; no nonempty-table "
     "schema backfill is performed.",
     "Full 500,000-task / 5,000,000-event / 1,000,000-receipt / 250,000-vector "
     "setup completes on the selected worker shape with recorded margin.",
@@ -2490,8 +2491,8 @@ client timeouts to ZERO, EXACT, or MISMATCH and block MISMATCH. The vector index
 must exist visibly on the empty migrated table before seed. Vectors are then
 inserted through four persistent clients using one parameterized row per
 transaction, and the finished dataset must prove exact cardinality,
-deterministic distributed-vector content, digest reconciliation, and full
-forced-index queryability. The campaign
+deterministic distributed-vector content, digest reconciliation, and bounded
+forced-index ANN recall against exact primary-index baselines. The campaign
 performs no vector-index DDL or nonempty-table backfill during setup and leaves
 teardown time reserved.
 
