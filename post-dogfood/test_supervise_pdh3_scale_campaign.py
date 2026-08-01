@@ -83,7 +83,7 @@ def build_archive(
     )
     setup = signed(
         {
-            "version": "ck-pdh3-scale-setup-v2",
+            "version": "ck-pdh3-scale-setup-v4",
             "campaign_id": CAMPAIGN_ID,
             "expected_counts": expected_counts,
             "actual_counts": expected_counts,
@@ -97,17 +97,18 @@ def build_archive(
                 for label in ("tasks", "events", "receipts", "vectors")
             },
             "wrong_task_vector_links": 0,
-            "vector_index_deferred": {"green": True},
-            "vector_index_restored": {
+            "vector_index_preseed": {
                 "green": True,
-                "queryable": True,
-                "completion_mode": "ASYNCHRONOUS_JOB",
+                "mode": "PRECREATED_ON_EMPTY_TABLE",
+                "vector_rows": 0,
                 "metadata": {"green": True},
-                "job": {
-                    "status": "succeeded",
-                    "fraction_completed": 1.0,
-                    "description_matches_create": True,
-                },
+            },
+            "vector_index_postseed": {
+                "green": True,
+                "mode": "INCREMENTALLY_MAINTAINED_DURING_SEED",
+                "queryable": True,
+                "metadata": {"green": True},
+                "coverage": {"green": True},
             },
             "query_targets": {
                 "green": True,

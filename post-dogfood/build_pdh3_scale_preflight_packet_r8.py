@@ -103,10 +103,10 @@ RELAUNCH_CHECKLIST = (
     "primary-key conflict targets never conceal mismatched rows.",
     "One monotonic 10,800-second setup deadline includes a protected teardown "
     "tail; setup cannot become GREEN after deadline exhaustion.",
-    "Vector-index drop, recreation, row cardinality, metadata, and forced-index "
-    "queryability are directly evidenced; asynchronous builds additionally "
-    "require exact succeeded-job ownership, while synchronous DDL records the "
-    "explicit no-job completion mode.",
+    "The migration-created vector index is proved on the empty table, vectors "
+    "are inserted in independent 250-row batches, and full forced-index "
+    "queryability is directly evidenced before measurement; no nonempty-table "
+    "schema backfill is performed.",
     "Full 500,000-task / 5,000,000-event / 1,000,000-receipt / 250,000-vector "
     "setup completes on the selected worker shape with recorded margin.",
     "Production query targets are proven to address real, nonzero seeded rows.",
@@ -140,7 +140,7 @@ CHECKLIST_EVIDENCE = (
     ("R8-03", "LOCAL_BOUND", (("post-dogfood/pdh3_scale_contract.py", "validate_production_arguments"), ("post-dogfood/build_pdh3_scale_bundle.py", "production_launch_contract")), (("post-dogfood/test_pdh3_scale_campaign.py", "test_production_rejects_local_store_size_before_io"), ("post-dogfood/test_build_pdh3_scale_bundle.py", "test_production_launch_binds_contract_and_omits_store_size_flag")), ("commands.child_controller_argv",)),
     ("R8-04", "LOCAL_BOUND", (("post-dogfood/run_pdh3_scale_campaign.py", "sql"), ("post-dogfood/run_pdh3_scale_campaign.py", "reconcile_seed_batch")), (("post-dogfood/test_pdh3_scale_campaign.py", "test_timeout_after_commit_reconciles_exact_without_reinsert"), ("post-dogfood/test_pdh3_scale_campaign.py", "test_timeout_reconciliation_mismatch_fails_closed"), ("post-dogfood/test_pdh3_scale_campaign.py", "test_sqlstate_40001_is_retried_once")), ("local_test_manifest.tests",)),
     ("R8-05", "LOCAL_BOUND", (("post-dogfood/run_pdh3_scale_campaign.py", "seed_reconciliation_statement"), ("post-dogfood/run_pdh3_scale_campaign.py", "campaign_reconciliations")), (("post-dogfood/test_pdh3_scale_campaign.py", "test_reconciliation_detects_missing_and_corrupt_rows"),), ("local_test_manifest.tests",)),
-    ("R8-06", "LOCAL_BOUND", (("post-dogfood/run_pdh3_scale_campaign.py", "defer_vector_index"), ("post-dogfood/run_pdh3_scale_campaign.py", "restore_vector_index"), ("post-dogfood/run_pdh3_scale_campaign.py", "vector_index_proof"), ("post-dogfood/run_pdh3_scale_campaign.py", "recover_cluster_gateway")), (("post-dogfood/test_pdh3_scale_campaign.py", "test_vector_index_defer_and_restore_are_explicit"), ("post-dogfood/test_pdh3_scale_campaign.py", "test_vector_index_full_coverage_is_exact_and_forced"), ("post-dogfood/test_pdh3_scale_campaign.py", "test_preexisting_successful_job_cannot_prove_async_completion"), ("post-dogfood/test_pdh3_scale_campaign.py", "test_vector_index_reconciliation_recovers_failed_gateway_once"), ("post-dogfood/test_pdh3_scale_campaign.py", "test_cluster_gateway_recovery_restarts_dead_node_and_fails_over")), ("local_test_manifest.tests",)),
+    ("R8-06", "LOCAL_BOUND", (("post-dogfood/run_pdh3_scale_campaign.py", "prove_preseed_vector_index"), ("post-dogfood/run_pdh3_scale_campaign.py", "vector_seed_statement"), ("post-dogfood/run_pdh3_scale_campaign.py", "prove_seeded_vector_index"), ("post-dogfood/run_pdh3_scale_campaign.py", "recover_cluster_gateway")), (("post-dogfood/test_pdh3_scale_campaign.py", "test_precreated_vector_index_is_proved_without_schema_ddl"), ("post-dogfood/test_pdh3_scale_campaign.py", "test_vectors_seed_in_independent_bounded_batches"), ("post-dogfood/test_pdh3_scale_campaign.py", "test_vector_index_full_coverage_is_exact_and_forced"), ("post-dogfood/test_pdh3_scale_campaign.py", "test_cluster_gateway_recovery_restarts_dead_node_and_fails_over"), ("post-dogfood/test_pdh3_scale_campaign.py", "test_cluster_recovery_restarts_node_that_dies_during_recovery")), ("local_test_manifest.tests",)),
     ("R8-07", "LOCAL_BOUND", (("post-dogfood/run_pdh3_scale_campaign.py", "setup_timeout"), ("post-dogfood/run_pdh3_scale_campaign.py", "setup_margin_gate")), (("post-dogfood/test_pdh3_scale_campaign.py", "test_expired_reserved_deadline_starts_no_sql"), ("post-dogfood/test_pdh3_scale_campaign.py", "test_setup_margin_gate_is_quantitative_and_fail_closed")), ("contract.workload.setup_timeout_seconds",)),
     ("R8-08", "REMOTE_GATE", (("post-dogfood/run_pdh3_scale_campaign.py", "seed_dataset"), ("post-dogfood/run_pdh3_scale_campaign.py", "campaign_counts")), (("post-dogfood/test_pdh3_scale_campaign.py", "test_seed_statement_counts_and_bounds"),), ("future_remote_setup_receipt",)),
     ("R8-09", "LOCAL_BOUND", (("post-dogfood/run_pdh3_scale_campaign.py", "create_query_files"),), (("post-dogfood/test_pdh3_scale_campaign.py", "test_query_files_use_six_digit_seed_ids"),), ("local_test_manifest.tests",)),
@@ -166,7 +166,7 @@ CHECKLIST_REQUIREMENTS = {
     "R8-03": "Production arguments reject reduced store-size or scale overrides.",
     "R8-04": "Retry/reconciliation permits only declared transient SQL outcomes.",
     "R8-05": "Conflict handling cannot conceal missing or mismatched rows.",
-    "R8-06": "Vector-index recreation, ownership, coverage, queryability, and failover after a dead gateway are proved without duplicate DDL.",
+    "R8-06": "The precreated vector index, bounded incremental seed, full forced-index coverage, queryability, and continuously supervised three-node recovery are proved without nonempty-table DDL.",
     "R8-07": "One setup deadline includes receipt and teardown reserves.",
     "R8-08": "Selected worker completes target cardinality inside 10,800 seconds.",
     "R8-09": "Production reads directly hit nonzero seeded rows.",
@@ -2433,11 +2433,12 @@ the supervisor after instantiation.
 The selected worker first performs the complete target setup inside one shared
 10,800-second monotonic deadline: 500,000 tasks, 5,000,000 events, 1,000,000
 receipts, and 250,000 task-bound vectors. Seed operations resolve uncertain
-client timeouts to ZERO, EXACT, or MISMATCH and block MISMATCH. Index recreation
-must verify cardinality, visible metadata, and forced-index queryability. An
-asynchronous build additionally binds the exact succeeded 100-percent job; a
-synchronous build records `SYNCHRONOUS_DDL_NO_JOB` rather than inventing a job.
-Both modes leave teardown time reserved.
+client timeouts to ZERO, EXACT, or MISMATCH and block MISMATCH. The vector index
+must exist visibly on the empty migrated table before seed. Vectors are then
+inserted in independent batches of at most 250 rows, and the finished dataset
+must prove exact cardinality plus full forced-index queryability. The campaign
+performs no vector-index DDL or nonempty-table backfill during setup and leaves
+teardown time reserved.
 
 Before the official 24-hour clock, the same worker must run exactly three
 300-second epochs at concurrency 500 with three rotating genuine node faults.

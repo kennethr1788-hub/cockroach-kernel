@@ -34,10 +34,12 @@ SERIALIZATION_SQLSTATE = "40001"
 SEED_STATEMENT_TIMEOUT_SECONDS = 900
 SETUP_SQL_TIMEOUT_SECONDS = 60
 FULL_RECONCILIATION_TIMEOUT_SECONDS = 300
-VECTOR_INDEX_DDL_TIMEOUT_SECONDS = 1_800
+VECTOR_SEED_BATCH_TASKS = 250
 PRODUCTION_SETUP_TAIL_RESERVE_SECONDS = 2_400
 SETUP_RECEIPT_FINALIZATION_RESERVE_SECONDS = 5
 MAX_SEED_ATTEMPTS = 4
+MAX_CLUSTER_RECOVERY_RESTARTS_PER_NODE = 3
+CLUSTER_RECOVERY_STABLE_POLLS = 2
 PRODUCTION_TASK_ID_WIDTH = 6
 EPOCH_FINAL_RESERVE_SECONDS = 15
 CHECKPOINT_DRIFT_SECONDS = 2
@@ -788,9 +790,10 @@ def recover_cluster_gateway(
     reserve_seconds: int,
     database: str = "cockroach_kernel",
 ) -> tuple[int, dict[str, Any]]:
-    """Restore the exact three-node cluster and select a verified SQL gateway."""
+    """Continuously restore all three nodes and select a stable SQL gateway."""
     before: list[dict[str, Any]] = []
     restarted: list[dict[str, Any]] = []
+    restart_counts = {node.index: 0 for node in nodes}
     for node in nodes:
         process = node.process
         returncode = process.poll() if process is not None else None
@@ -802,7 +805,23 @@ def recover_cluster_gateway(
                 "alive": process is not None and returncode is None,
             }
         )
-        if process is None or returncode is not None:
+    recovery_deadline = min(
+        setup_deadline - max(1, reserve_seconds), time.monotonic() + 180
+    )
+    if recovery_deadline <= time.monotonic():
+        raise SetupDeadlineError("CLUSTER_RECOVERY_DEADLINE_EXHAUSTED")
+    stable_polls = 0
+    last_status: dict[str, Any] | None = None
+    while time.monotonic() < recovery_deadline:
+        for node in nodes:
+            process = node.process
+            returncode = process.poll() if process is not None else None
+            if process is not None and returncode is None:
+                continue
+            if restart_counts[node.index] >= MAX_CLUSTER_RECOVERY_RESTARTS_PER_NODE:
+                raise CampaignError(
+                    f"CLUSTER_RECOVERY_RESTART_LIMIT:node={node.index + 1}"
+                )
             old_pid = process.pid if process is not None else None
             old_returncode = stop_node(node, crash=False)
             start_node(
@@ -814,20 +833,16 @@ def recover_cluster_gateway(
                 env,
                 append=True,
             )
+            restart_counts[node.index] += 1
             restarted.append(
                 {
                     "node": node.index + 1,
+                    "attempt": restart_counts[node.index],
                     "old_pid": old_pid,
                     "old_returncode": old_returncode,
                     "new_pid": node.process.pid if node.process is not None else None,
                 }
             )
-    recovery_deadline = min(
-        setup_deadline - max(1, reserve_seconds), time.monotonic() + 180
-    )
-    if recovery_deadline <= time.monotonic():
-        raise SetupDeadlineError("CLUSTER_RECOVERY_DEADLINE_EXHAUSTED")
-    while time.monotonic() < recovery_deadline:
         try:
             status = cluster_status(
                 binary,
@@ -836,28 +851,31 @@ def recover_cluster_gateway(
                 deadline=recovery_deadline,
                 database=database,
             )
-            ordered = sorted(nodes, key=lambda item: item.sql_port == failed_port)
-            gateway_port = next(
-                node.sql_port
-                for node in ordered
-                if any(
-                    row["node"] == node.index + 1
-                    and row["alive"]
-                    and row["sql_ready"]
-                    for row in status["nodes"]
-                )
-            )
-            return gateway_port, {
-                "before": before,
-                "restarted": restarted,
-                "after": status,
-                "failed_gateway_port": failed_port,
-                "gateway_port": gateway_port,
-                "green": True,
-            }
+            last_status = status
+            stable_polls += 1
+            if stable_polls >= CLUSTER_RECOVERY_STABLE_POLLS:
+                ordered = sorted(nodes, key=lambda item: item.sql_port == failed_port)
+                gateway_port = ordered[0].sql_port
+                return gateway_port, {
+                    "before": before,
+                    "restarted": restarted,
+                    "restart_counts": {
+                        str(index + 1): count
+                        for index, count in sorted(restart_counts.items())
+                    },
+                    "stable_polls": stable_polls,
+                    "after": status,
+                    "failed_gateway_port": failed_port,
+                    "gateway_port": gateway_port,
+                    "green": True,
+                }
         except CampaignError:
-            time.sleep(1)
-    raise CampaignError("THREE_NODE_CLUSTER_RECOVERY_TIMEOUT")
+            stable_polls = 0
+        time.sleep(1)
+    raise CampaignError(
+        "THREE_NODE_CLUSTER_RECOVERY_TIMEOUT:"
+        + digest({"restarted": restarted, "last_status": last_status})
+    )
 
 
 def apply_migrations(binary: Path, port: int, env: dict[str, str]) -> None:
@@ -976,6 +994,29 @@ def seed_batch_statements(
             )
         )
     return statements
+
+
+def vector_seed_statement(
+    campaign_id: str,
+    start: int,
+    stop: int,
+) -> str:
+    """Build one bounded vector insert; vector batches stay independent."""
+    if start < 0 or stop <= start or stop - start > VECTOR_SEED_BATCH_TASKS:
+        raise CampaignError("VECTOR_SEED_BATCH_RANGE_INVALID")
+    campaign = q(campaign_id)
+    prefix = q(campaign_id + "-task-")
+    task_expression = f"{prefix} || lpad(i::STRING,6,'0')"
+    return (
+        "INSERT INTO ck.context_vectors"
+        "(vector_id,task_id,event_hash,namespace,vector,vector_digest) "
+        f"SELECT {task_expression} || '-vector-00',{task_expression},"
+        f"decode(sha256(({campaign} || '-event-' || i::STRING || '-0')::BYTES),'hex'),"
+        f"{campaign},{vector_literal()},"
+        f"decode(sha256(({campaign} || '-vector-constant')::BYTES),'hex') "
+        f"FROM generate_series({start},{stop - 1}) AS g(i) "
+        "ON CONFLICT (vector_id) DO NOTHING"
+    )
 
 
 def seed_reconciliation_statement(
@@ -1202,111 +1243,6 @@ def vector_index_metadata(
     }
 
 
-def vector_index_jobs(
-    binary: Path,
-    port: int,
-    env: dict[str, str],
-    setup_deadline: float,
-    reserve_seconds: int = 0,
-) -> list[dict[str, Any]]:
-    statement = (
-        "SELECT job_id::STRING,status,fraction_completed::STRING,description "
-        "FROM [SHOW JOBS] WHERE description ILIKE "
-        "'%context_vectors_vector_idx%' ORDER BY created DESC"
-    )
-    raw = sql(
-        binary,
-        port,
-        statement,
-        env=env,
-        timeout=setup_timeout(
-            setup_deadline,
-            SETUP_SQL_TIMEOUT_SECONDS,
-            reserve_seconds=reserve_seconds,
-        ),
-        stage="vector_index_job",
-    )
-    statuses = {
-        "pending",
-        "running",
-        "pause-requested",
-        "paused",
-        "cancel-requested",
-        "canceled",
-        "failed",
-        "reverting",
-        "succeeded",
-    }
-    jobs: list[dict[str, Any]] = []
-    for line in raw.decode("utf-8", "replace").splitlines():
-        fields = line.strip().split("\t", 3)
-        if not fields or not fields[0] or fields[0].lower() == "job_id":
-            continue
-        if len(fields) != 4 or fields[1].lower() not in statuses:
-            raise CampaignError("VECTOR_INDEX_JOB_RECORD_INVALID")
-        job_id = fields[0]
-        if any(character.isspace() for character in job_id):
-            raise CampaignError("VECTOR_INDEX_JOB_ID_INVALID")
-        try:
-            fraction = float(fields[2])
-        except ValueError as exc:
-            raise CampaignError("VECTOR_INDEX_JOB_FRACTION_INVALID") from exc
-        description = fields[3]
-        jobs.append(
-            {
-                "job_id": job_id,
-                "status": fields[1].lower(),
-                "fraction_completed": fraction,
-                "description_sha256": digest(description.encode("utf-8")),
-                "description_matches_create": (
-                    "create" in description.lower()
-                    and "context_vectors_vector_idx" in description.lower()
-                ),
-            }
-        )
-    if len({job["job_id"] for job in jobs}) != len(jobs):
-        raise CampaignError("VECTOR_INDEX_JOB_ID_DUPLICATE")
-    return jobs
-
-
-def vector_index_job(
-    binary: Path,
-    port: int,
-    env: dict[str, str],
-    setup_deadline: float,
-    pre_create_job_ids: frozenset[str],
-    reserve_seconds: int = 0,
-) -> dict[str, Any]:
-    jobs = vector_index_jobs(
-        binary,
-        port,
-        env,
-        setup_deadline,
-        reserve_seconds=reserve_seconds,
-    )
-    observed_job_ids = sorted(job["job_id"] for job in jobs)
-    new_jobs = [
-        job for job in jobs if job["job_id"] not in pre_create_job_ids
-    ]
-    if len(new_jobs) > 1:
-        raise CampaignError("VECTOR_INDEX_MULTIPLE_NEW_JOBS")
-    provenance = {
-        "pre_create_job_ids": sorted(pre_create_job_ids),
-        "observed_job_ids": observed_job_ids,
-        "new_job_ids": sorted(job["job_id"] for job in new_jobs),
-    }
-    if new_jobs:
-        return {**new_jobs[0], **provenance}
-    return {
-        "job_id": None,
-        "status": "missing",
-        "fraction_completed": 0.0,
-        "description_sha256": None,
-        "description_matches_create": False,
-        **provenance,
-    }
-
-
 def vector_index_coverage(
     binary: Path,
     port: int,
@@ -1351,15 +1287,14 @@ def vector_index_coverage(
     }
 
 
-def vector_index_proof(
+def prove_preseed_vector_index(
     binary: Path,
     port: int,
     env: dict[str, str],
     setup_deadline: float,
-    vector_count: int,
-    pre_create_job_ids: frozenset[str],
     reserve_seconds: int = 0,
 ) -> dict[str, Any]:
+    """Prove migration created the visible index before any vector is inserted."""
     metadata = vector_index_metadata(
         binary,
         port,
@@ -1367,219 +1302,59 @@ def vector_index_proof(
         setup_deadline,
         reserve_seconds=reserve_seconds,
     )
-    job = vector_index_job(
-        binary,
-        port,
-        env,
-        setup_deadline,
-        pre_create_job_ids,
-        reserve_seconds=reserve_seconds,
-    )
-    terminal_failure = job["status"] in {
-        "pause-requested",
-        "paused",
-        "cancel-requested",
-        "canceled",
-        "failed",
-        "reverting",
-    }
-    if terminal_failure:
-        raise CampaignError(f"VECTOR_INDEX_JOB_NOT_SUCCESSFUL:{job['status']}")
-    job_green = (
-        job["status"] == "succeeded"
-        and job["fraction_completed"] == 1.0
-        and job["description_matches_create"]
-    )
-    synchronous_green = job["status"] == "missing" and metadata["green"]
-    coverage = {
-        "expected_vectors": vector_count,
-        "returned_rows": 0,
-        "distinct_vector_ids": 0,
-        "statement_sha256": None,
-        "forced_index": "context_vectors_vector_idx",
-        "green": False,
-    }
-    if metadata["green"] and (job_green or synchronous_green):
-        coverage = vector_index_coverage(
+    vector_rows = parse_last_integer(
+        sql(
             binary,
             port,
-            env,
-            setup_deadline,
-            vector_count,
-            reserve_seconds=reserve_seconds,
+            "SELECT count(*) FROM ck.context_vectors",
+            env=env,
+            timeout=setup_timeout(
+                setup_deadline,
+                SETUP_SQL_TIMEOUT_SECONDS,
+                reserve_seconds=reserve_seconds,
+            ),
+            stage="vector_index_preseed_cardinality",
         )
+    )
     return {
+        "mode": "PRECREATED_ON_EMPTY_TABLE",
         "metadata": metadata,
-        "job": job,
-        "completion_mode": (
-            "ASYNCHRONOUS_JOB"
-            if job_green
-            else "SYNCHRONOUS_DDL_NO_JOB"
-            if synchronous_green
-            else "UNPROVED"
-        ),
-        "coverage": coverage,
-        "queryable": coverage["green"],
-        "green": (
-            metadata["green"]
-            and (job_green or synchronous_green)
-            and coverage["green"]
-        ),
+        "vector_rows": vector_rows,
+        "green": metadata["green"] and vector_rows == 0,
     }
 
 
-def defer_vector_index(
-    binary: Path,
-    port: int,
-    env: dict[str, str],
-    setup_deadline: float,
-    tail_reserve_seconds: int,
-) -> dict[str, Any]:
-    statement = "DROP INDEX IF EXISTS ck.context_vectors@context_vectors_vector_idx"
-    attempts = 0
-    while attempts < MAX_SEED_ATTEMPTS:
-        attempts += 1
-        retryable_failure = False
-        try:
-            sql(
-                binary,
-                port,
-                statement,
-                env=env,
-                timeout=setup_timeout(
-                    setup_deadline,
-                    VECTOR_INDEX_DDL_TIMEOUT_SECONDS,
-                    reserve_seconds=tail_reserve_seconds,
-                ),
-                stage="vector_index_drop",
-            )
-        except SqlOperationError as exc:
-            if not exc.retryable:
-                raise
-            retryable_failure = True
-        metadata = vector_index_metadata(
-            binary,
-            port,
-            env,
-            setup_deadline,
-            reserve_seconds=tail_reserve_seconds,
-        )
-        if metadata["rows"] == 0:
-            return {"attempts": attempts, "metadata": metadata, "green": True}
-        if not retryable_failure:
-            raise CampaignError("VECTOR_INDEX_DEFER_FAILED")
-        if attempts == MAX_SEED_ATTEMPTS:
-            break
-        time.sleep(0.25 * attempts)
-    raise CampaignError("VECTOR_INDEX_DEFER_FAILED")
-
-
-def restore_vector_index(
+def prove_seeded_vector_index(
     binary: Path,
     port: int,
     env: dict[str, str],
     setup_deadline: float,
     vector_count: int,
-    verification_reserve_seconds: int,
-    gateway_recovery: Callable[
-        [SqlOperationError, int], tuple[int, dict[str, Any]]
-    ] | None = None,
+    reserve_seconds: int = 0,
 ) -> dict[str, Any]:
-    statement = (
-        "CREATE VECTOR INDEX IF NOT EXISTS context_vectors_vector_idx "
-        "ON ck.context_vectors (vector)"
-    )
-    current_port = port
-    gateway_recoveries: list[dict[str, Any]] = []
-    pre_create_jobs = vector_index_jobs(
+    """Prove the precreated index retained full forced-index coverage after seed."""
+    metadata = vector_index_metadata(
         binary,
-        current_port,
+        port,
         env,
         setup_deadline,
-        reserve_seconds=verification_reserve_seconds,
+        reserve_seconds=reserve_seconds,
     )
-    pre_create_job_ids = frozenset(job["job_id"] for job in pre_create_jobs)
-    attempts = 0
-    uncertain_timeout_reconciled = False
-
-    def prove_after_uncertain_effect() -> dict[str, Any]:
-        nonlocal current_port
-        while True:
-            ensure_setup_deadline(setup_deadline)
-            try:
-                return vector_index_proof(
-                    binary,
-                    current_port,
-                    env,
-                    setup_deadline,
-                    vector_count,
-                    pre_create_job_ids,
-                    reserve_seconds=verification_reserve_seconds,
-                )
-            except SqlOperationError as proof_exc:
-                if proof_exc.connection_transition and gateway_recovery is not None:
-                    current_port, recovery = gateway_recovery(
-                        proof_exc, current_port
-                    )
-                    gateway_recoveries.append(recovery)
-                    continue
-                if not proof_exc.retryable and not proof_exc.server_effect_uncertain:
-                    raise
-                time.sleep(0.25)
-
-    while attempts < MAX_SEED_ATTEMPTS:
-        attempts += 1
-        try:
-            sql(
-                binary,
-                current_port,
-                statement,
-                env=env,
-                timeout=setup_timeout(
-                    setup_deadline,
-                    VECTOR_INDEX_DDL_TIMEOUT_SECONDS,
-                    reserve_seconds=verification_reserve_seconds,
-                ),
-                stage="vector_index_create",
-            )
-            break
-        except SqlOperationError as exc:
-            if not exc.retryable and not exc.server_effect_uncertain:
-                raise
-            # CREATE INDEX is a CockroachDB schema-change job.  A client timeout
-            # does not prove that the server-side job stopped.  Reconcile the
-            # exact post-timeout job/index state before issuing another DDL;
-            # otherwise retries can wait on the same job and consume the setup
-            # window without adding progress.
-            proof = prove_after_uncertain_effect()
-            if proof["green"]:
-                return {
-                    "attempts": attempts,
-                    "uncertain_timeout_reconciled": True,
-                    "gateway_port": current_port,
-                    "gateway_recoveries": gateway_recoveries,
-                    "pre_create_job_ids": sorted(pre_create_job_ids),
-                    **proof,
-                }
-            if proof["job"]["new_job_ids"] or proof["metadata"]["rows"] > 0:
-                uncertain_timeout_reconciled = True
-                break
-            if attempts == MAX_SEED_ATTEMPTS:
-                break
-            time.sleep(0.25 * attempts)
-    while True:
-        ensure_setup_deadline(setup_deadline)
-        proof = prove_after_uncertain_effect()
-        if proof["green"]:
-            return {
-                "attempts": attempts,
-                "uncertain_timeout_reconciled": uncertain_timeout_reconciled,
-                "gateway_port": current_port,
-                "gateway_recoveries": gateway_recoveries,
-                "pre_create_job_ids": sorted(pre_create_job_ids),
-                **proof,
-            }
-        time.sleep(0.25)
+    coverage = vector_index_coverage(
+        binary,
+        port,
+        env,
+        setup_deadline,
+        vector_count,
+        reserve_seconds=reserve_seconds,
+    )
+    return {
+        "mode": "INCREMENTALLY_MAINTAINED_DURING_SEED",
+        "metadata": metadata,
+        "coverage": coverage,
+        "queryable": coverage["green"],
+        "green": metadata["green"] and coverage["green"],
+    }
 
 
 def seed_dataset(
@@ -1602,6 +1377,82 @@ def seed_dataset(
     uncertain_timeouts = 0
     statement_hashes: list[str] = []
     timeout_reconciliations: list[dict[str, Any]] = []
+
+    def execute_seed_statement(
+        stage: str,
+        statement: str,
+        start: int,
+        stop: int,
+    ) -> None:
+        nonlocal retries, uncertain_timeouts
+        raw_hash = digest(statement.encode("utf-8"))
+        completed = False
+        for attempt in range(MAX_SEED_ATTEMPTS):
+            try:
+                sql(
+                    binary,
+                    port,
+                    statement,
+                    env=env,
+                    timeout=setup_timeout(
+                        setup_deadline,
+                        SEED_STATEMENT_TIMEOUT_SECONDS,
+                        reserve_seconds=tail_reserve_seconds,
+                    ),
+                    stage=f"seed_{stage}",
+                    start=start,
+                    stop=stop,
+                )
+                completed = True
+                break
+            except SqlOperationError as exc:
+                if not exc.retryable:
+                    raise
+                if exc.cause.kind == "TIMEOUT":
+                    uncertain_timeouts += 1
+                    reconciliation = reconcile_seed_batch(
+                        binary,
+                        port,
+                        env,
+                        stage=stage,
+                        campaign_id=campaign_id,
+                        start=start,
+                        stop=stop,
+                        events_per_task=events_per_task,
+                        receipts_per_task=receipts_per_task,
+                        vector_stop=vectors,
+                        setup_deadline=setup_deadline,
+                        reserve_seconds=tail_reserve_seconds,
+                    )
+                    timeout_reconciliations.append(reconciliation)
+                    if reconciliation["state"] == "EXACT":
+                        completed = True
+                        break
+                    if reconciliation["state"] == "MISMATCH":
+                        raise CampaignError(
+                            "SEED_RECONCILIATION_MISMATCH:"
+                            f"stage={stage}:range={start}-{stop}:"
+                            f"statement_sha256={raw_hash}:"
+                            f"mismatch_rows={reconciliation['mismatch_rows']}"
+                        ) from exc
+                if attempt == MAX_SEED_ATTEMPTS - 1:
+                    raise
+                retries += 1
+                time.sleep(0.25 * (attempt + 1))
+        if not completed:
+            raise CampaignError(
+                "SEED_BATCH_INCOMPLETE:"
+                f"stage={stage}:range={start}-{stop}:"
+                f"statement_sha256={raw_hash}"
+            )
+        rows = stop - start
+        if stage == "events":
+            rows *= events_per_task
+        elif stage == "receipts":
+            rows *= receipts_per_task
+        counts[stage] += rows
+        statement_hashes.append(raw_hash)
+
     for start in range(0, tasks, batch_tasks):
         setup_timeout(
             setup_deadline,
@@ -1615,78 +1466,9 @@ def seed_dataset(
             stop,
             events_per_task,
             receipts_per_task,
-            vectors,
+            0,
         ):
-            raw_hash = digest(statement.encode("utf-8"))
-            operation_stop = min(stop, vectors) if stage == "vectors" else stop
-            completed = False
-            for attempt in range(MAX_SEED_ATTEMPTS):
-                try:
-                    sql(
-                        binary,
-                        port,
-                        statement,
-                        env=env,
-                        timeout=setup_timeout(
-                            setup_deadline,
-                            SEED_STATEMENT_TIMEOUT_SECONDS,
-                            reserve_seconds=tail_reserve_seconds,
-                        ),
-                        stage=f"seed_{stage}",
-                        start=start,
-                        stop=operation_stop,
-                    )
-                    completed = True
-                    break
-                except SqlOperationError as exc:
-                    if not exc.retryable:
-                        raise
-                    if exc.cause.kind == "TIMEOUT":
-                        uncertain_timeouts += 1
-                        reconciliation = reconcile_seed_batch(
-                            binary,
-                            port,
-                            env,
-                            stage=stage,
-                            campaign_id=campaign_id,
-                            start=start,
-                            stop=stop,
-                            events_per_task=events_per_task,
-                            receipts_per_task=receipts_per_task,
-                            vector_stop=vectors,
-                            setup_deadline=setup_deadline,
-                            reserve_seconds=tail_reserve_seconds,
-                        )
-                        timeout_reconciliations.append(reconciliation)
-                        if reconciliation["state"] == "EXACT":
-                            completed = True
-                            break
-                        if reconciliation["state"] == "MISMATCH":
-                            raise CampaignError(
-                                "SEED_RECONCILIATION_MISMATCH:"
-                                f"stage={stage}:range={start}-{operation_stop}:"
-                                f"statement_sha256={raw_hash}:"
-                                f"mismatch_rows={reconciliation['mismatch_rows']}"
-                            ) from exc
-                    if attempt == MAX_SEED_ATTEMPTS - 1:
-                        raise
-                    retries += 1
-                    time.sleep(0.25 * (attempt + 1))
-            if not completed:
-                raise CampaignError(
-                    "SEED_BATCH_INCOMPLETE:"
-                    f"stage={stage}:range={start}-{operation_stop}:"
-                    f"statement_sha256={raw_hash}"
-                )
-            rows = stop - start
-            if stage == "events":
-                rows *= events_per_task
-            elif stage == "receipts":
-                rows *= receipts_per_task
-            elif stage == "vectors":
-                rows = max(0, min(stop, vectors) - start)
-            counts[stage] += rows
-            statement_hashes.append(raw_hash)
+            execute_seed_statement(stage, statement, start, stop)
         journal.emit(
             "SEED_BATCH",
             {
@@ -1696,8 +1478,32 @@ def seed_dataset(
                 "statement_set_sha256": digest(statement_hashes),
             },
         )
+    for start in range(0, vectors, VECTOR_SEED_BATCH_TASKS):
+        setup_timeout(
+            setup_deadline,
+            1,
+            reserve_seconds=tail_reserve_seconds,
+        )
+        stop = min(vectors, start + VECTOR_SEED_BATCH_TASKS)
+        execute_seed_statement(
+            "vectors",
+            vector_seed_statement(campaign_id, start, stop),
+            start,
+            stop,
+        )
+        journal.emit(
+            "VECTOR_SEED_BATCH",
+            {
+                "start": start,
+                "stop": stop,
+                "maximum_batch_rows": VECTOR_SEED_BATCH_TASKS,
+                "counts": dict(counts),
+                "statement_set_sha256": digest(statement_hashes),
+            },
+        )
     return {
         "counts": counts,
+        "vector_seed_batch_rows": VECTOR_SEED_BATCH_TASKS,
         "statement_set_sha256": digest(statement_hashes),
         "retries": retries,
         "uncertain_timeouts": uncertain_timeouts,
@@ -2959,18 +2765,20 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
             finalization_reserve_seconds,
             tail_reserve_seconds // 4,
         )
-        deferred_index = defer_vector_index(
+        preseed_index = prove_preseed_vector_index(
             binary,
             gateway,
             env,
             setup_deadline,
             tail_reserve_seconds,
         )
+        if not preseed_index["green"]:
+            raise CampaignError("PRESEED_VECTOR_INDEX_NOT_GREEN")
         journal.emit(
-            "VECTOR_INDEX_DEFERRED",
+            "VECTOR_INDEX_PRESEED_PROVED",
             {
                 "index": "context_vectors_vector_idx",
-                "proof": deferred_index,
+                "proof": preseed_index,
             },
         )
         seed = seed_dataset(
@@ -2987,31 +2795,19 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
             setup_deadline=setup_deadline,
             tail_reserve_seconds=tail_reserve_seconds,
         )
-        restored_index = restore_vector_index(
+        seeded_index = prove_seeded_vector_index(
             binary,
             gateway,
             env,
             setup_deadline,
             args.vectors,
             index_verification_reserve_seconds,
-            gateway_recovery=lambda _failure, _failed_port: recover_cluster_gateway(
-                binary,
-                nodes,
-                join,
-                args.cache,
-                args.sql_memory,
-                env,
-                setup_deadline,
-                failed_port=_failed_port,
-                reserve_seconds=index_verification_reserve_seconds,
-            ),
         )
-        gateway = int(restored_index["gateway_port"])
         journal.emit(
-            "VECTOR_INDEX_RESTORED",
+            "VECTOR_INDEX_POSTSEED_PROVED",
             {
                 "index": "context_vectors_vector_idx",
-                "proof": restored_index,
+                "proof": seeded_index,
             },
         )
         recovered_cluster = cluster_status(
@@ -3109,14 +2905,15 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
                 for result in reconciliations.values()
             )
             and wrong_links == 0
-            and restored_index["green"]
+            and preseed_index["green"]
+            and seeded_index["green"]
             and query_targets["green"]
             and deadline_met
             and setup_margin["setup_margin_met"]
             and pre_fsync_margin_met
         )
         setup_body = {
-            "version": "ck-pdh3-scale-setup-v3",
+            "version": "ck-pdh3-scale-setup-v4",
             "campaign_id": args.campaign_id,
             "seed": seed,
             "expected_counts": list(expected_counts),
@@ -3125,8 +2922,8 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
             "reconciliations": reconciliations,
             "mismatch_counts": mismatch_counts,
             "wrong_task_vector_links": wrong_links,
-            "vector_index_deferred": deferred_index,
-            "vector_index_restored": restored_index,
+            "vector_index_preseed": preseed_index,
+            "vector_index_postseed": seeded_index,
             "query_targets": query_targets,
             "setup_elapsed_seconds": setup_elapsed_seconds,
             "setup_deadline_seconds": args.setup_timeout_seconds,

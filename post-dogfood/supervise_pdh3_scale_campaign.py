@@ -1618,7 +1618,7 @@ def validate_checkpoint_series(
 def validate_setup(setup: dict[str, Any], campaign_id: str) -> None:
     expected_counts = expected_dataset_counts()
     if (
-        setup.get("version") != "ck-pdh3-scale-setup-v2"
+        setup.get("version") != "ck-pdh3-scale-setup-v4"
         or setup.get("campaign_id") != campaign_id
         or setup.get("green") is not True
         or setup.get("expected_counts") != expected_counts
@@ -1646,34 +1646,24 @@ def validate_setup(setup: dict[str, Any], campaign_id: str) -> None:
         )
     ):
         raise ArchiveFailure("PRODUCTION_SETUP_RECONCILIATION_INVALID")
-    deferred = setup.get("vector_index_deferred")
-    restored = setup.get("vector_index_restored")
+    preseed = setup.get("vector_index_preseed")
+    postseed = setup.get("vector_index_postseed")
     query = setup.get("query_targets")
-    restored_job = restored.get("job") if isinstance(restored, dict) else None
-    completion_mode = (
-        restored.get("completion_mode") if isinstance(restored, dict) else None
-    )
-    asynchronous_completion = (
-        completion_mode == "ASYNCHRONOUS_JOB"
-        and isinstance(restored_job, dict)
-        and restored_job.get("status") == "succeeded"
-        and restored_job.get("fraction_completed") == 1.0
-        and restored_job.get("description_matches_create") is True
-    )
-    synchronous_completion = (
-        completion_mode == "SYNCHRONOUS_DDL_NO_JOB"
-        and isinstance(restored_job, dict)
-        and restored_job.get("status") == "missing"
-    )
     if (
-        not isinstance(deferred, dict)
-        or deferred.get("green") is not True
-        or not isinstance(restored, dict)
-        or restored.get("green") is not True
-        or restored.get("queryable") is not True
-        or not isinstance(restored.get("metadata"), dict)
-        or restored["metadata"].get("green") is not True
-        or not (asynchronous_completion or synchronous_completion)
+        not isinstance(preseed, dict)
+        or preseed.get("green") is not True
+        or preseed.get("mode") != "PRECREATED_ON_EMPTY_TABLE"
+        or preseed.get("vector_rows") != 0
+        or not isinstance(preseed.get("metadata"), dict)
+        or preseed["metadata"].get("green") is not True
+        or not isinstance(postseed, dict)
+        or postseed.get("green") is not True
+        or postseed.get("mode") != "INCREMENTALLY_MAINTAINED_DURING_SEED"
+        or postseed.get("queryable") is not True
+        or not isinstance(postseed.get("metadata"), dict)
+        or postseed["metadata"].get("green") is not True
+        or not isinstance(postseed.get("coverage"), dict)
+        or postseed["coverage"].get("green") is not True
         or not isinstance(query, dict)
         or query
         != {
