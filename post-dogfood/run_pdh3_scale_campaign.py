@@ -8,6 +8,7 @@ fault, evidence, cleanup, and teardown paths without making scale claims.
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import hashlib
 import importlib.util
 import json
@@ -21,6 +22,7 @@ import stat as stat_module
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 from typing import Any, Callable
 
@@ -34,7 +36,9 @@ SERIALIZATION_SQLSTATE = "40001"
 SEED_STATEMENT_TIMEOUT_SECONDS = 900
 SETUP_SQL_TIMEOUT_SECONDS = 60
 FULL_RECONCILIATION_TIMEOUT_SECONDS = 300
-VECTOR_SEED_BATCH_TASKS = 250
+VECTOR_SEED_WORKERS = 4
+VECTOR_SEED_PROGRESS_SECONDS = 60
+VECTOR_STATEMENT_TIMEOUT_SECONDS = 60
 PRODUCTION_SETUP_TAIL_RESERVE_SECONDS = 2_400
 SETUP_RECEIPT_FINALIZATION_RESERVE_SECONDS = 5
 MAX_SEED_ATTEMPTS = 4
@@ -921,6 +925,35 @@ def vector_literal() -> str:
     return q("[" + values + "]") + "::VECTOR(64)"
 
 
+def deterministic_seed_vector_text(index: int) -> str:
+    """Return one distributed, byte-stable synthetic VECTOR(64) value.
+
+    R7 inserted one identical vector 250,000 times, a pathological input for
+    the index partitioner.  Three base-101 digits provide more than one
+    million distinct deterministic points while the remaining dimensions stay
+    explicitly zero.  This is synthetic scale evidence, not an embedding.
+    """
+    if index < 0:
+        raise CampaignError("VECTOR_INDEX_INVALID")
+    digits = (
+        index % 101,
+        (index // 101) % 101,
+        (index // (101 * 101)) % 101,
+    )
+    return "[" + ",".join([*(str(value) for value in digits), *(["0"] * 61)]) + "]"
+
+
+def deterministic_seed_vector_sql(index_expression: str = "i") -> str:
+    """SQL expression matching :func:`deterministic_seed_vector_text`."""
+    if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", index_expression):
+        raise CampaignError("VECTOR_INDEX_EXPRESSION_INVALID")
+    value = index_expression
+    first = f"mod({value},101)::INT8::STRING"
+    second = f"mod(floor({value}::DECIMAL/101)::INT8,101)::STRING"
+    third = f"mod(floor({value}::DECIMAL/10201)::INT8,101)::STRING"
+    return "'[' || " + " || ',' || ".join((first, second, third)) + " || '" + ",0" * 61 + "]'"
+
+
 def seed_batch_statements(
     campaign_id: str,
     start: int,
@@ -980,6 +1013,7 @@ def seed_batch_statements(
     ]
     limited_stop = min(stop, vector_stop)
     if start < limited_stop:
+        vector_text = deterministic_seed_vector_sql("i")
         statements.append(
             (
                 "vectors",
@@ -987,8 +1021,8 @@ def seed_batch_statements(
                 "(vector_id,task_id,event_hash,namespace,vector,vector_digest) "
                 f"SELECT {task_expression} || '-vector-00',{task_expression},"
                 f"decode(sha256(({campaign} || '-event-' || i::STRING || '-0')::BYTES),'hex'),"
-                f"{campaign},{vector_literal()},"
-                f"decode(sha256(({campaign} || '-vector-constant')::BYTES),'hex') "
+                f"{campaign},({vector_text})::VECTOR(64),"
+                f"decode(sha256(({vector_text})::BYTES),'hex') "
                 f"FROM generate_series({start},{limited_stop - 1}) AS g(i) "
                 "ON CONFLICT (vector_id) DO NOTHING",
             )
@@ -996,27 +1030,224 @@ def seed_batch_statements(
     return statements
 
 
-def vector_seed_statement(
-    campaign_id: str,
-    start: int,
-    stop: int,
-) -> str:
-    """Build one bounded vector insert; vector batches stay independent."""
-    if start < 0 or stop <= start or stop - start > VECTOR_SEED_BATCH_TASKS:
-        raise CampaignError("VECTOR_SEED_BATCH_RANGE_INVALID")
-    campaign = q(campaign_id)
-    prefix = q(campaign_id + "-task-")
-    task_expression = f"{prefix} || lpad(i::STRING,6,'0')"
+def vector_seed_statement() -> str:
+    """Parameterized one-row insert used by each persistent seed worker."""
     return (
         "INSERT INTO ck.context_vectors"
         "(vector_id,task_id,event_hash,namespace,vector,vector_digest) "
-        f"SELECT {task_expression} || '-vector-00',{task_expression},"
-        f"decode(sha256(({campaign} || '-event-' || i::STRING || '-0')::BYTES),'hex'),"
-        f"{campaign},{vector_literal()},"
-        f"decode(sha256(({campaign} || '-vector-constant')::BYTES),'hex') "
-        f"FROM generate_series({start},{stop - 1}) AS g(i) "
+        "VALUES (%s,%s,%s,%s,%s::VECTOR(64),%s) "
         "ON CONFLICT (vector_id) DO NOTHING"
     )
+
+
+def _load_pg8000() -> Any:
+    wheel_root = BASE / "p2-cleanroom" / "vendor" / "python-wheels"
+    wheels = (
+        wheel_root / "six-1.17.0-py2.py3-none-any.whl",
+        wheel_root / "python_dateutil-2.9.0.post0-py2.py3-none-any.whl",
+        wheel_root / "asn1crypto-1.5.1-py2.py3-none-any.whl",
+        wheel_root / "scramp-1.4.15-py3-none-any.whl",
+        wheel_root / "pg8000-1.31.5-py3-none-any.whl",
+    )
+    if any(not path.is_file() or path.is_symlink() for path in wheels):
+        raise CampaignError("VECTOR_CLIENT_WHEEL_MISSING")
+    for path in reversed(wheels):
+        value = str(path)
+        if value not in sys.path:
+            sys.path.insert(0, value)
+    try:
+        import pg8000.dbapi as pg8000_dbapi
+    except Exception as exc:  # pragma: no cover - exercised by bundle smoke
+        raise CampaignError("VECTOR_CLIENT_IMPORT_FAILED") from exc
+    return pg8000_dbapi
+
+
+def _pg_error_sqlstate(exc: BaseException) -> str | None:
+    if not getattr(exc, "args", None):
+        return None
+    first = exc.args[0]
+    if isinstance(first, dict):
+        value = first.get("C")
+        if isinstance(value, str):
+            return value.upper()
+    return None
+
+
+def _pg_error_retryable(exc: BaseException) -> bool:
+    sqlstate = _pg_error_sqlstate(exc)
+    if sqlstate in {
+        SERIALIZATION_SQLSTATE,
+        "08003",
+        "08006",
+        "57014",
+        "57P01",
+    }:
+        return True
+    return isinstance(exc, (TimeoutError, ConnectionError, OSError)) or (
+        exc.__class__.__name__ in {"InterfaceError", "OperationalError"}
+    )
+
+
+def seed_vectors_concurrently(
+    port: int,
+    journal: ChainLog,
+    *,
+    campaign_id: str,
+    vectors: int,
+    setup_deadline: float,
+    reserve_seconds: int,
+) -> dict[str, Any]:
+    """Insert vectors one row per transaction over four persistent clients.
+
+    This follows CockroachDB's documented vector-ingestion shape and avoids
+    both large vector batches and process-per-row overhead. Every row is
+    parameterized. ON CONFLICT protects uncertain retry outcomes; the caller's
+    full-cardinality content reconciliation prevents it from hiding drift.
+    """
+    if vectors < 1:
+        raise CampaignError("VECTOR_COUNT_INVALID")
+    pg8000_dbapi = _load_pg8000()
+    statement = vector_seed_statement()
+    statement_sha256 = digest(statement.encode("utf-8"))
+    stop = threading.Event()
+    lock = threading.Lock()
+    completed_rows = 0
+    retries = 0
+    worker_connections: dict[int, Any] = {}
+    started = time.monotonic()
+
+    def worker(worker_id: int) -> dict[str, Any]:
+        nonlocal completed_rows, retries
+        connection = None
+        own_completed = 0
+
+        def connect() -> tuple[Any, Any]:
+            opened = pg8000_dbapi.connect(
+                user="root",
+                database="cockroach_kernel",
+                host="127.0.0.1",
+                port=port,
+                ssl_context=False,
+                timeout=VECTOR_STATEMENT_TIMEOUT_SECONDS,
+            )
+            opened.autocommit = True
+            with lock:
+                worker_connections[worker_id] = opened
+            opened_cursor = opened.cursor()
+            opened_cursor.execute(
+                "SET statement_timeout = "
+                + q(f"{VECTOR_STATEMENT_TIMEOUT_SECONDS}s")
+            )
+            return opened, opened_cursor
+
+        def disconnect() -> None:
+            nonlocal connection
+            if connection is not None:
+                try:
+                    connection.close()
+                except Exception:
+                    pass
+            connection = None
+            with lock:
+                worker_connections.pop(worker_id, None)
+
+        try:
+            connection, cursor = connect()
+            for index in range(worker_id, vectors, VECTOR_SEED_WORKERS):
+                if stop.is_set():
+                    raise CampaignError("VECTOR_SEED_CANCELLED")
+                setup_timeout(
+                    setup_deadline,
+                    VECTOR_STATEMENT_TIMEOUT_SECONDS,
+                    reserve_seconds=reserve_seconds,
+                )
+                task_id = f"{campaign_id}-task-{index:06d}"
+                vector_text = deterministic_seed_vector_text(index)
+                parameters = (
+                    task_id + "-vector-00",
+                    task_id,
+                    hashlib.sha256(
+                        f"{campaign_id}-event-{index}-0".encode("utf-8")
+                    ).digest(),
+                    campaign_id,
+                    vector_text,
+                    hashlib.sha256(vector_text.encode("utf-8")).digest(),
+                )
+                for attempt in range(MAX_SEED_ATTEMPTS):
+                    try:
+                        if connection is None:
+                            connection, cursor = connect()
+                        cursor.execute(statement, parameters)
+                        break
+                    except Exception as exc:
+                        sqlstate = _pg_error_sqlstate(exc)
+                        retryable = _pg_error_retryable(exc)
+                        disconnect()
+                        if not retryable or attempt + 1 >= MAX_SEED_ATTEMPTS:
+                            stop.set()
+                            raise CampaignError(
+                                "VECTOR_ROW_INSERT_FAILED:"
+                                f"worker={worker_id}:index={index}:"
+                                f"sqlstate={sqlstate or 'UNKNOWN'}:"
+                                f"retryable={str(retryable).lower()}"
+                            ) from exc
+                        with lock:
+                            retries += 1
+                        time.sleep(0.05 * (attempt + 1))
+                own_completed += 1
+                with lock:
+                    completed_rows += 1
+            if connection is not None:
+                cursor.close()
+            return {"worker": worker_id, "completed_rows": own_completed}
+        finally:
+            disconnect()
+
+    futures: list[concurrent.futures.Future[dict[str, Any]]] = []
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=VECTOR_SEED_WORKERS,
+        thread_name_prefix="pdh3-vector-seed",
+    ) as executor:
+        futures = [executor.submit(worker, value) for value in range(VECTOR_SEED_WORKERS)]
+        last_reported = -1
+        while not all(future.done() for future in futures):
+            done, _ = concurrent.futures.wait(
+                futures,
+                timeout=VECTOR_SEED_PROGRESS_SECONDS,
+                return_when=concurrent.futures.FIRST_EXCEPTION,
+            )
+            with lock:
+                progress = completed_rows
+            if progress != last_reported:
+                journal.emit(
+                    "VECTOR_SEED_PROGRESS",
+                    {
+                        "completed_rows": progress,
+                        "expected_rows": vectors,
+                        "workers": VECTOR_SEED_WORKERS,
+                        "elapsed_seconds": time.monotonic() - started,
+                        "statement_sha256": statement_sha256,
+                    },
+                )
+                last_reported = progress
+            failed = [future for future in done if future.exception() is not None]
+            if failed:
+                stop.set()
+                break
+        results = [future.result() for future in futures]
+    if completed_rows != vectors:
+        raise CampaignError(
+            f"VECTOR_SEED_INCOMPLETE:expected={vectors}:actual={completed_rows}"
+        )
+    return {
+        "mode": "SINGLE_ROW_FOUR_CLIENT",
+        "completed_rows": completed_rows,
+        "workers": VECTOR_SEED_WORKERS,
+        "statement_sha256": statement_sha256,
+        "retries": retries,
+        "elapsed_seconds": time.monotonic() - started,
+        "worker_results": sorted(results, key=lambda item: item["worker"]),
+    }
 
 
 def seed_reconciliation_statement(
@@ -1107,12 +1338,13 @@ def seed_reconciliation_statement(
     elif stage == "vectors":
         limited_stop = min(stop, vector_stop)
         expected_count = max(0, limited_stop - start)
+        vector_text = deterministic_seed_vector_sql("i")
         expected = (
             f"SELECT {task_expression} || '-vector-00' AS vector_id,"
             f"{task_expression} AS task_id,"
             f"decode(sha256(({campaign} || '-event-' || i::STRING || '-0')::BYTES),'hex') "
-            f"AS event_hash,{campaign} AS namespace,{vector_literal()} AS vector,"
-            f"decode(sha256(({campaign} || '-vector-constant')::BYTES),'hex') "
+            f"AS event_hash,{campaign} AS namespace,({vector_text})::VECTOR(64) AS vector,"
+            f"decode(sha256(({vector_text})::BYTES),'hex') "
             f"AS vector_digest FROM generate_series({start},{limited_stop - 1}) AS g(i)"
         )
         table = "ck.context_vectors"
@@ -1478,32 +1710,21 @@ def seed_dataset(
                 "statement_set_sha256": digest(statement_hashes),
             },
         )
-    for start in range(0, vectors, VECTOR_SEED_BATCH_TASKS):
-        setup_timeout(
-            setup_deadline,
-            1,
-            reserve_seconds=tail_reserve_seconds,
-        )
-        stop = min(vectors, start + VECTOR_SEED_BATCH_TASKS)
-        execute_seed_statement(
-            "vectors",
-            vector_seed_statement(campaign_id, start, stop),
-            start,
-            stop,
-        )
-        journal.emit(
-            "VECTOR_SEED_BATCH",
-            {
-                "start": start,
-                "stop": stop,
-                "maximum_batch_rows": VECTOR_SEED_BATCH_TASKS,
-                "counts": dict(counts),
-                "statement_set_sha256": digest(statement_hashes),
-            },
-        )
+    vector_seed = seed_vectors_concurrently(
+        port,
+        journal,
+        campaign_id=campaign_id,
+        vectors=vectors,
+        setup_deadline=setup_deadline,
+        reserve_seconds=tail_reserve_seconds,
+    )
+    counts["vectors"] = vector_seed["completed_rows"]
+    retries += vector_seed["retries"]
+    statement_hashes.append(vector_seed["statement_sha256"])
     return {
         "counts": counts,
-        "vector_seed_batch_rows": VECTOR_SEED_BATCH_TASKS,
+        "vector_seed": vector_seed,
+        "vector_seed_batch_rows": 1,
         "statement_set_sha256": digest(statement_hashes),
         "retries": retries,
         "uncertain_timeouts": uncertain_timeouts,

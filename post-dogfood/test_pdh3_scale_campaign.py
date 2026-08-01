@@ -136,7 +136,7 @@ class ScaleCampaignUnitTests(unittest.TestCase):
             self.assertNotIn("ON CONFLICT DO NOTHING", statement)
         self.assertNotIn("AWS", "\n".join(row[1] for row in rows))
 
-    def test_vectors_seed_in_independent_bounded_batches(self) -> None:
+    def test_vectors_seed_through_single_row_concurrent_client(self) -> None:
         calls: list[tuple[str, int, int]] = []
 
         def fake_sql(*args: object, **kwargs: object) -> bytes:
@@ -145,7 +145,21 @@ class ScaleCampaignUnitTests(unittest.TestCase):
                 calls.append((stage, int(kwargs["start"]), int(kwargs["stop"])))
             return b""
 
-        with mock.patch.object(campaign, "sql", side_effect=fake_sql):
+        vector_result = {
+            "mode": "SINGLE_ROW_FOUR_CLIENT",
+            "completed_rows": 501,
+            "workers": 4,
+            "statement_sha256": "a" * 64,
+            "retries": 2,
+            "elapsed_seconds": 1.0,
+            "worker_results": [],
+        }
+        with (
+            mock.patch.object(campaign, "sql", side_effect=fake_sql),
+            mock.patch.object(
+                campaign, "seed_vectors_concurrently", return_value=vector_result
+            ) as vector_seed,
+        ):
             result = campaign.seed_dataset(
                 Path("/tmp/cockroach"),
                 26257,
@@ -159,17 +173,41 @@ class ScaleCampaignUnitTests(unittest.TestCase):
                 batch_tasks=500,
                 setup_deadline=time.monotonic() + 60,
             )
-        vector_calls = [row for row in calls if row[0] == "seed_vectors"]
-        self.assertEqual(
-            vector_calls,
-            [
-                ("seed_vectors", 0, 250),
-                ("seed_vectors", 250, 500),
-                ("seed_vectors", 500, 501),
-            ],
-        )
+        self.assertFalse(any(row[0] == "seed_vectors" for row in calls))
+        vector_seed.assert_called_once()
         self.assertEqual(result["counts"]["vectors"], 501)
-        self.assertEqual(result["vector_seed_batch_rows"], 250)
+        self.assertEqual(result["vector_seed_batch_rows"], 1)
+        self.assertEqual(result["vector_seed"]["workers"], 4)
+        self.assertEqual(result["retries"], 2)
+
+    def test_seed_vectors_are_distributed_stable_and_sql_reconcilable(self) -> None:
+        values = [
+            campaign.deterministic_seed_vector_text(index)
+            for index in (0, 1, 100, 101, 10_201, 249_999)
+        ]
+        self.assertEqual(len(set(values)), len(values))
+        self.assertTrue(all(value.count(",") == 63 for value in values))
+        self.assertEqual(values[0], "[" + ",".join(["0"] * 64) + "]")
+        expression = campaign.deterministic_seed_vector_sql("i")
+        self.assertIn("mod(i,101)", expression)
+        self.assertIn("floor(i::DECIMAL/10201)", expression)
+        with self.assertRaises(campaign.CampaignError):
+            campaign.deterministic_seed_vector_sql("i); DROP TABLE ck.tasks")
+
+    def test_vector_insert_is_parameterized_single_row(self) -> None:
+        statement = campaign.vector_seed_statement()
+        self.assertEqual(statement.count("%s"), 6)
+        self.assertNotIn("generate_series", statement)
+        self.assertIn("ON CONFLICT (vector_id) DO NOTHING", statement)
+
+    def test_vector_client_retry_classification_is_fail_closed(self) -> None:
+        serialization = RuntimeError({"C": "40001"})
+        cancelled = RuntimeError({"C": "57014"})
+        constraint = RuntimeError({"C": "23505"})
+        self.assertTrue(campaign._pg_error_retryable(serialization))
+        self.assertTrue(campaign._pg_error_retryable(cancelled))
+        self.assertTrue(campaign._pg_error_retryable(TimeoutError()))
+        self.assertFalse(campaign._pg_error_retryable(constraint))
 
     def test_precreated_vector_index_is_proved_without_schema_ddl(self) -> None:
         statements: list[str] = []
@@ -269,7 +307,16 @@ class ScaleCampaignUnitTests(unittest.TestCase):
                 return b"actual_rows\tcontent_mismatches\n2\t0\n"
             raise AssertionError(f"unexpected SQL: {stage}")
 
-        with mock.patch.object(campaign, "sql", side_effect=fake_sql):
+        vector_result = {
+            "completed_rows": 2, "retries": 0, "statement_sha256": "a" * 64,
+            "mode": "SINGLE_ROW_FOUR_CLIENT", "workers": 4,
+        }
+        with (
+            mock.patch.object(campaign, "sql", side_effect=fake_sql),
+            mock.patch.object(
+                campaign, "seed_vectors_concurrently", return_value=vector_result
+            ),
+        ):
             result = campaign.seed_dataset(
                 Path("/tmp/cockroach"),
                 26257,
@@ -381,7 +428,16 @@ class ScaleCampaignUnitTests(unittest.TestCase):
                     )
             return b""
 
-        with mock.patch.object(campaign, "sql", side_effect=fake_sql):
+        vector_result = {
+            "completed_rows": 1, "retries": 0, "statement_sha256": "b" * 64,
+            "mode": "SINGLE_ROW_FOUR_CLIENT", "workers": 4,
+        }
+        with (
+            mock.patch.object(campaign, "sql", side_effect=fake_sql),
+            mock.patch.object(
+                campaign, "seed_vectors_concurrently", return_value=vector_result
+            ),
+        ):
             with mock.patch.object(campaign.time, "sleep"):
                 result = campaign.seed_dataset(
                     Path("/tmp/cockroach"),

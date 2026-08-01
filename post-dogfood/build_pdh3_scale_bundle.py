@@ -71,6 +71,16 @@ REMOTE_FILES = (
     "strace_6.8-0ubuntu2_amd64.deb",
     "p2-cleanroom/vendor/ubuntu-noble-strace/"
     "libunwind8_1.6.2-3build1_amd64.deb",
+    "p2-cleanroom/vendor/python-wheels/"
+    "pg8000-1.31.5-py3-none-any.whl",
+    "p2-cleanroom/vendor/python-wheels/"
+    "scramp-1.4.15-py3-none-any.whl",
+    "p2-cleanroom/vendor/python-wheels/"
+    "asn1crypto-1.5.1-py2.py3-none-any.whl",
+    "p2-cleanroom/vendor/python-wheels/"
+    "python_dateutil-2.9.0.post0-py2.py3-none-any.whl",
+    "p2-cleanroom/vendor/python-wheels/"
+    "six-1.17.0-py2.py3-none-any.whl",
 )
 
 # Backwards-compatible name used by older packet tooling.  The tuple is kept

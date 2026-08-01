@@ -72,7 +72,8 @@ CREATE INDEX IF NOT EXISTS context_vectors_vector_digest_idx
 -- enabling any prerequisite feature flag is an owner-session action outside
 -- this file.
 CREATE VECTOR INDEX IF NOT EXISTS context_vectors_vector_idx
-  ON ck.context_vectors (vector);
+  ON ck.context_vectors (vector)
+  WITH (min_partition_size=16, max_partition_size=4096);
 
 -- Lambda request/response hashes, stable provenance, and retry lineage.
 -- request_id is the idempotency key: duplicate request IDs are replayed, not
