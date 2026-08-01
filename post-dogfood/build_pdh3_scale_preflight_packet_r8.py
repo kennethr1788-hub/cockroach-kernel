@@ -1903,7 +1903,7 @@ def _additional_attempt_cost_and_validate(
     if history.get("version") != "ck-pdh3-additional-attempt-history-v1":
         raise PreflightBuildError("ADDITIONAL_ATTEMPT_HISTORY_VERSION_INVALID")
     attempts = history.get("attempts")
-    if not isinstance(attempts, list) or len(attempts) != 8:
+    if not isinstance(attempts, list) or len(attempts) != 9:
         raise PreflightBuildError("ADDITIONAL_ATTEMPT_HISTORY_COUNT_INVALID")
     expected = (
         {
@@ -1996,6 +1996,18 @@ def _additional_attempt_cost_and_validate(
             "failure_sha256": "b95f79e19ab03f4c16ee7163d59cb4afece581a3b5893382f4c574c37b177bff",
             "final_evidence_archive_sha256": "2c3db6e1f6b509bf8292e2fa4bda199f85de6739f34c2453faac88156b1b4bc7",
         },
+        {
+            "attempt_id": "R9-PREFLIGHT-01",
+            "campaign_id": "ck-pdh3-scale-r9-relaunch-r1",
+            "pod_name": "ck-pdh3-scale-r9-relaunch-r1-01",
+            "pod_id": "qza6pmry5rnox4",
+            "status": "BLOCKED_COMPLETE",
+            "measured_clock_started": False,
+            "workload_started": True,
+            "blocker": "REMOTE_PREFLIGHT_READ_MIX_COMMAND_FAILED",
+            "failure_sha256": "7e529a6ec5ca90ca11ac8a7cadf4ecc72dd2a0b57ca72cf0ef6dbca92f325463",
+            "final_evidence_archive_sha256": "c05fe6add4e05661a309163c65543504b935ac259a941f180d6bb86acc793d4c",
+        },
     )
     total = 0.0
     observed_ids: list[str] = []
@@ -2037,7 +2049,7 @@ def _additional_attempt_cost_and_validate(
             raise PreflightBuildError("ADDITIONAL_ATTEMPT_COST_INVALID")
         observed_ids.append(str(row["attempt_id"]))
         total += float(cost)
-    if history.get("attempt_ids") != observed_ids or history.get("attempt_count") != 8:
+    if history.get("attempt_ids") != observed_ids or history.get("attempt_count") != 9:
         raise PreflightBuildError("ADDITIONAL_ATTEMPT_INDEX_INVALID")
     if abs(float(history.get("cost_usd_upper", -1)) - total) > 1e-12:
         raise PreflightBuildError("ADDITIONAL_ATTEMPT_TOTAL_INVALID")
