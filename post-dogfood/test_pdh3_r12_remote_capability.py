@@ -4,6 +4,7 @@ import importlib.util
 from pathlib import Path
 import tempfile
 import unittest
+from unittest import mock
 
 
 HERE = Path(__file__).resolve().parent
@@ -40,6 +41,51 @@ class CapabilityTests(unittest.TestCase):
             capability.percentile([], 0.99)
         with self.assertRaises(capability.CapabilityError):
             capability.percentile([1.0], 0.0)
+
+    def test_cpuset_parser_counts_ranges_without_host_leakage(self) -> None:
+        self.assertEqual(capability.parse_cpuset("0-3,8,10-11\n"), 7)
+        with self.assertRaisesRegex(capability.CapabilityError, "CPUSET_INVALID"):
+            capability.parse_cpuset("4-2")
+
+    def test_effective_resources_bind_provider_and_cgroup_limits(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "cpuset.cpus.effective").write_text("0-31\n")
+            (root / "cpu.max").write_text("1600000 100000\n")
+            (root / "memory.max").write_text(str(96 * 1024**3) + "\n")
+            with (
+                mock.patch.object(
+                    capability.os,
+                    "sched_getaffinity",
+                    return_value=set(range(64)),
+                    create=True,
+                ),
+                mock.patch.object(capability.os, "cpu_count", return_value=256),
+                mock.patch.object(capability, "memory_total_bytes", return_value=1024 * 1024**3),
+            ):
+                values = capability.effective_resources(32, 125, root)
+        self.assertEqual(values["effective_vcpus"], 16)
+        self.assertEqual(values["effective_memory_bytes"], 96 * 1024**3)
+        self.assertEqual(values["cpu"]["host_logical"], 256)
+
+    def test_provider_allocation_remains_a_hard_upper_bound(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "cpu.max").write_text("max 100000\n")
+            (root / "memory.max").write_text("max\n")
+            with (
+                mock.patch.object(
+                    capability.os,
+                    "sched_getaffinity",
+                    return_value=set(range(256)),
+                    create=True,
+                ),
+                mock.patch.object(capability.os, "cpu_count", return_value=256),
+                mock.patch.object(capability, "memory_total_bytes", return_value=1024 * 1024**3),
+            ):
+                values = capability.effective_resources(16, 125, root)
+        self.assertEqual(values["effective_vcpus"], 16)
+        self.assertEqual(values["effective_memory_bytes"], 125 * 1024**3)
 
 
 if __name__ == "__main__":

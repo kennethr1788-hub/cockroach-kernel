@@ -63,6 +63,31 @@ class TraceClassifierTests(unittest.TestCase):
             ("PERMITTED_LOCAL_KERNEL", "sendto"),
         )
 
+    def test_sendmsg_destination_is_classified(self) -> None:
+        self.assertEqual(
+            classify_line(
+                'sendmsg(3, {msg_name={sa_family=AF_INET, '
+                'sin_port=htons(26257), sin_addr=inet_addr("127.0.0.1")}, '
+                'msg_namelen=16, msg_iov=[], msg_iovlen=0}, 0) = 0'
+            ),
+            ("PERMITTED_LOOPBACK", "sendmsg"),
+        )
+        self.assertEqual(
+            classify_line(
+                'sendmsg(3, {msg_name={sa_family=AF_INET, '
+                'sin_port=htons(443), sin_addr=inet_addr("198.51.100.7")}, '
+                'msg_namelen=16, msg_iov=[], msg_iovlen=0}, 0) = 0'
+            ),
+            ("BLOCK_EXTERNAL", "sendmsg"),
+        )
+        self.assertEqual(
+            classify_line(
+                'sendmsg(3, {msg_name=NULL, msg_namelen=0, msg_iov=[], '
+                'msg_iovlen=0}, 0) = 0'
+            ),
+            ("PERMITTED_CONNECTED_NO_DESTINATION", "sendmsg"),
+        )
+
     def test_blocks_external_addresses(self) -> None:
         line = (
             'connect(3, {sa_family=AF_INET, sin_port=htons(443), '

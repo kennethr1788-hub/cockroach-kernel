@@ -87,6 +87,94 @@ def memory_total_bytes() -> int:
     raise CapabilityError("MEMTOTAL_UNAVAILABLE")
 
 
+def parse_cpuset(raw: str) -> int:
+    values: set[int] = set()
+    for item in raw.strip().split(","):
+        if not item:
+            continue
+        if "-" in item:
+            first, last = item.split("-", 1)
+            start, end = int(first), int(last)
+            if start < 0 or end < start:
+                raise CapabilityError("CPUSET_INVALID")
+            values.update(range(start, end + 1))
+        else:
+            value = int(item)
+            if value < 0:
+                raise CapabilityError("CPUSET_INVALID")
+            values.add(value)
+    if not values:
+        raise CapabilityError("CPUSET_EMPTY")
+    return len(values)
+
+
+def cgroup_cpu_limit(root: Path = Path("/sys/fs/cgroup")) -> dict[str, Any]:
+    candidates: dict[str, int] = {}
+    affinity = len(os.sched_getaffinity(0)) if hasattr(os, "sched_getaffinity") else 0
+    if affinity:
+        candidates["sched_affinity"] = affinity
+    cpuset = root / "cpuset.cpus.effective"
+    if cpuset.is_file() and cpuset.read_text(encoding="utf-8").strip():
+        candidates["cpuset"] = parse_cpuset(cpuset.read_text(encoding="utf-8"))
+    cpu_max = root / "cpu.max"
+    if cpu_max.is_file():
+        fields = cpu_max.read_text(encoding="utf-8").split()
+        if len(fields) != 2:
+            raise CapabilityError("CPU_MAX_INVALID")
+        if fields[0] != "max":
+            quota, period = int(fields[0]), int(fields[1])
+            if quota <= 0 or period <= 0:
+                raise CapabilityError("CPU_MAX_INVALID")
+            candidates["quota"] = max(1, quota // period)
+    return {
+        "host_logical": os.cpu_count() or 0,
+        "constraints": candidates,
+        "cgroup_effective": min(candidates.values()) if candidates else None,
+    }
+
+
+def cgroup_memory_limit(root: Path = Path("/sys/fs/cgroup")) -> dict[str, Any]:
+    host = memory_total_bytes()
+    finite: int | None = None
+    memory_max = root / "memory.max"
+    if memory_max.is_file():
+        raw = memory_max.read_text(encoding="utf-8").strip()
+        if raw != "max":
+            finite = int(raw)
+            if finite <= 0:
+                raise CapabilityError("MEMORY_MAX_INVALID")
+    return {
+        "host_bytes": host,
+        "cgroup_max_bytes": finite,
+        "cgroup_effective_bytes": min(host, finite) if finite is not None else None,
+    }
+
+
+def effective_resources(
+    allocated_vcpus: int,
+    allocated_memory_gib: int,
+    root: Path = Path("/sys/fs/cgroup"),
+) -> dict[str, Any]:
+    if allocated_vcpus < 1 or allocated_memory_gib < 1:
+        raise CapabilityError("PROVIDER_ALLOCATION_INVALID")
+    cpu = cgroup_cpu_limit(root)
+    memory = cgroup_memory_limit(root)
+    cpu_candidates = [allocated_vcpus]
+    if cpu["cgroup_effective"] is not None:
+        cpu_candidates.append(int(cpu["cgroup_effective"]))
+    memory_candidates = [allocated_memory_gib * 1024**3]
+    if memory["cgroup_effective_bytes"] is not None:
+        memory_candidates.append(int(memory["cgroup_effective_bytes"]))
+    return {
+        "provider_allocated_vcpus": allocated_vcpus,
+        "provider_allocated_memory_gib": allocated_memory_gib,
+        "cpu": cpu,
+        "memory": memory,
+        "effective_vcpus": min(cpu_candidates),
+        "effective_memory_bytes": min(memory_candidates),
+    }
+
+
 def percentile(values: list[float], fraction: float) -> float:
     if not values or not 0 < fraction <= 1:
         raise CapabilityError("PERCENTILE_INPUT_INVALID")
@@ -199,15 +287,26 @@ def thresholds() -> dict[str, Any]:
     }
 
 
-def execute(workdir: Path, output: Path, observer: Path) -> dict[str, Any]:
+def execute(
+    workdir: Path,
+    output: Path,
+    observer: Path,
+    *,
+    allocated_vcpus: int,
+    allocated_memory_gib: int,
+    packet_sha256: str,
+    tracer: Path,
+    tracer_sha256: str,
+) -> dict[str, Any]:
     if sys.platform != "linux" or platform.machine() not in {"x86_64", "amd64"}:
         raise CapabilityError("LINUX_AMD64_REQUIRED")
     if output.exists() or workdir.exists():
         raise CapabilityError("OUTPUT_OR_WORKDIR_EXISTS")
     workdir.mkdir(parents=True)
     usage_before = shutil.disk_usage(workdir)
-    cpu_count = os.cpu_count() or 0
-    ram_bytes = memory_total_bytes()
+    resources = effective_resources(allocated_vcpus, allocated_memory_gib)
+    cpu_count = int(resources["effective_vcpus"])
+    ram_bytes = int(resources["effective_memory_bytes"])
     used_fraction = (usage_before.used / usage_before.total) if usage_before.total else 1.0
     monotonic_before = time.monotonic_ns()
     time.sleep(0.05)
@@ -223,6 +322,12 @@ def execute(workdir: Path, output: Path, observer: Path) -> dict[str, Any]:
             str(observer_output),
             "--receipt",
             str(observer_receipt),
+            "--packet-sha256",
+            packet_sha256,
+            "--tracer",
+            str(tracer.resolve()),
+            "--tracer-sha256",
+            tracer_sha256,
         ]
     )
     cgroup_files = {
@@ -276,6 +381,7 @@ def execute(workdir: Path, output: Path, observer: Path) -> dict[str, Any]:
         "observed": {
             "cpu_count": cpu_count,
             "ram_bytes": ram_bytes,
+            "resource_accounting": resources,
             "disk_before": usage_before._asdict(),
             "disk_after": usage_after._asdict(),
             "disk_used_fraction_before": used_fraction,
@@ -316,13 +422,27 @@ def parser() -> argparse.ArgumentParser:
     value.add_argument("--workdir", type=Path, required=True)
     value.add_argument("--output", type=Path, required=True)
     value.add_argument("--observer", type=Path, required=True)
+    value.add_argument("--allocated-vcpus", type=int, required=True)
+    value.add_argument("--allocated-memory-gib", type=int, required=True)
+    value.add_argument("--packet-sha256", required=True)
+    value.add_argument("--tracer", type=Path, required=True)
+    value.add_argument("--tracer-sha256", required=True)
     return value
 
 
 def main(argv: Iterable[str] | None = None) -> int:
     args = parser().parse_args(list(argv) if argv is not None else None)
     try:
-        execute(args.workdir, args.output, args.observer)
+        execute(
+            args.workdir,
+            args.output,
+            args.observer,
+            allocated_vcpus=args.allocated_vcpus,
+            allocated_memory_gib=args.allocated_memory_gib,
+            packet_sha256=args.packet_sha256,
+            tracer=args.tracer,
+            tracer_sha256=args.tracer_sha256,
+        )
         return 0
     except (CapabilityError, OSError, subprocess.SubprocessError) as exc:
         print(f"PDH3_R12_PF4_BLOCKED:{type(exc).__name__}:{exc}", file=sys.stderr)

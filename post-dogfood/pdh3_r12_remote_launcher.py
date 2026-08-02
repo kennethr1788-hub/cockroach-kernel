@@ -56,6 +56,10 @@ def launch_argv(args: argparse.Namespace) -> list[str]:
         str(args.network_output.resolve()),
         "--packet-sha256",
         args.packet_sha256,
+        "--tracer",
+        str(args.tracer.resolve()),
+        "--tracer-sha256",
+        args.tracer_sha256,
         "--interval-seconds",
         "30",
         "--max-evidence-bytes",
@@ -114,9 +118,11 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
         raise LaunchError("PACKET_SHA256_INVALID")
     if not args.campaign_id.startswith("ck-pdh3-r12-preflight-"):
         raise LaunchError("CAMPAIGN_ID_INVALID")
-    for path in (args.observer, args.runner, args.binary, args.packet):
+    for path in (args.observer, args.runner, args.binary, args.packet, args.tracer):
         if not path.resolve().is_file():
             raise LaunchError("LAUNCH_INPUT_MISSING:" + path.name)
+    if hashlib.sha256(args.tracer.resolve().read_bytes()).hexdigest() != args.tracer_sha256:
+        raise LaunchError("TRACER_SHA256_MISMATCH")
     if args.receipt.exists() or args.log.exists():
         raise LaunchError("LAUNCH_OUTPUT_EXISTS")
     argv = launch_argv(args)
@@ -177,6 +183,8 @@ def parser() -> argparse.ArgumentParser:
     value.add_argument("--binary", type=Path, required=True)
     value.add_argument("--packet", type=Path, required=True)
     value.add_argument("--packet-sha256", required=True)
+    value.add_argument("--tracer", type=Path, required=True)
+    value.add_argument("--tracer-sha256", required=True)
     value.add_argument("--campaign-id", required=True)
     value.add_argument("--workdir", type=Path, required=True)
     value.add_argument("--empty-home", type=Path, required=True)

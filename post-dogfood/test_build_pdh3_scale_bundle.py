@@ -162,7 +162,7 @@ class BundleTests(unittest.TestCase):
         self.assertIn("__TRACER_ROOT__", launch["tracer_binary_template"])
         self.assertEqual(
             launch["traced_argv_template"][
-                launch["traced_argv_template"].index("--strace") + 1
+                launch["traced_argv_template"].index("--tracer") + 1
             ],
             launch["tracer_binary_template"],
         )

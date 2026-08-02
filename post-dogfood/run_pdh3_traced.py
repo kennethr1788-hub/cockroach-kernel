@@ -25,7 +25,7 @@ from typing import Any, Callable
 
 
 VERSION = "ck-pdh3-process-tree-egress-observer-v2"
-SYSCALL = re.compile(r"\b(connect|sendto)\(")
+SYSCALL = re.compile(r"\b(connect|sendto|sendmsg)\(")
 IPV4 = re.compile(r'inet_addr\("([^"]+)"\)')
 IPV6 = re.compile(r'inet_pton\(AF_INET6,\s*"([^"]+)"')
 SOCKADDR_FAMILY = re.compile(r"\bsa_family=(AF_[A-Z0-9_]+)\b")
@@ -184,10 +184,22 @@ def sockaddr_argument(
     syscall: str,
 ) -> str | None:
     arguments = syscall_arguments(line, match)
-    destination_index = 1 if syscall == "connect" else 4
+    if syscall == "connect":
+        destination_index = 1
+    elif syscall == "sendto":
+        destination_index = 4
+    else:
+        destination_index = 1
     if len(arguments) <= destination_index:
         return None
-    return arguments[destination_index]
+    destination = arguments[destination_index]
+    if syscall != "sendmsg":
+        return destination
+    matched = re.search(
+        r"\bmsg_name=(NULL|\{.*?\})(?:,\s*msg_namelen=|\})",
+        destination,
+    )
+    return matched.group(1) if matched is not None else None
 
 
 def classify_line(line: str) -> tuple[str, str] | None:
@@ -202,7 +214,7 @@ def classify_line(line: str) -> tuple[str, str] | None:
     # strace begins before exec and traces every descendant, so any external
     # connection that could make this send egress is independently observed
     # and blocked by the connect classifier.
-    if syscall == "sendto" and destination == "NULL":
+    if syscall in {"sendto", "sendmsg"} and destination == "NULL":
         return ("PERMITTED_CONNECTED_NO_DESTINATION", syscall)
     families = set(SOCKADDR_FAMILY.findall(destination))
     if "AF_INET6" in families:
@@ -271,6 +283,7 @@ def empty_counts() -> dict[str, int]:
     return {
         "connect": 0,
         "sendto": 0,
+        "sendmsg": 0,
         "permitted_loopback": 0,
         "permitted_local_kernel": 0,
         "permitted_connected_no_destination": 0,
@@ -526,7 +539,7 @@ def build_strace_invocation(
         "256",
         "-v",
         "-e",
-        "trace=connect,sendto",
+        "trace=connect,sendto,sendmsg",
         "-o",
         str(trace_prefix),
         *command,
@@ -751,7 +764,7 @@ def observe_process(
         ),
         "limitations": [
             "OBSERVATION_NOT_NETWORK_NAMESPACE_OR_FIREWALL",
-            "ONLY_CONNECT_AND_SENDTO_SYSCALLS_ARE_CLASSIFIED",
+            "ONLY_CONNECT_SENDTO_AND_SENDMSG_SYSCALLS_ARE_CLASSIFIED",
             "DESTINATIONLESS_SENDTO_RELIES_ON_COMPLETE_PRE_EXEC_CONNECT_TRACING",
             "UNRELATED_HOST_OR_CONTAINER_PROCESSES_ARE_OUT_OF_SCOPE",
         ],

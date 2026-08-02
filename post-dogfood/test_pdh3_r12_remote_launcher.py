@@ -25,6 +25,8 @@ class LauncherTests(unittest.TestCase):
             binary=root / "cockroach",
             packet=root / "packet.md",
             packet_sha256="a" * 64,
+            tracer=root / "tracer/usr/bin/strace",
+            tracer_sha256="b" * 64,
             campaign_id="ck-pdh3-r12-preflight-r1",
             workdir=root,
             empty_home=root / "empty-home",
@@ -46,6 +48,8 @@ class LauncherTests(unittest.TestCase):
         self.assertIn("pdh3_r12_network_observer.py", " ".join(argv))
         self.assertIn("pdh3_r12_remote_preflight.py", " ".join(argv))
         self.assertEqual(argv.count("a" * 64), 2)
+        self.assertIn(str(self.arguments().tracer), argv)
+        self.assertIn("b" * 64, argv)
         self.assertNotIn("86400", argv)
         self.assertNotIn("--production", argv)
 

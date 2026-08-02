@@ -43,7 +43,11 @@ declared checks:
 1. `ram`: the probe used host-wide `os.cpu_count() == 256` and host-wide
    `/proc/meminfo` instead of the container's effective cgroup CPU and memory
    limits. This created a false requirement of roughly 1 TiB for a provider
-   allocation independently verified as 32 vCPU and 125 GB RAM.
+   allocation independently verified as 32 vCPU and 125 GB RAM. Correcting the
+   host leak does not make this R5 allocation compliant: `125 / 32 == 3.90625`
+   GiB per provider-returned vCPU, below the frozen `4 GiB` ratio. A future
+   worker must pass both provider-shape and effective-cgroup accounting; the
+   repair may not cap or relabel the returned 32-vCPU allocation as 16 vCPU.
 2. `network_namespace`: the exact unprivileged user/network/PID namespace probe
    exited `2`. The wrapper retained only hashes of the child output, so the
    provider-side rejection mechanism was not directly preserved.

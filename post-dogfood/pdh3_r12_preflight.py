@@ -42,6 +42,7 @@ SOURCE_FILES = (
     "post-dogfood/pdh3_r12_preflight.py",
     "post-dogfood/pdh3_r12_plan_ab.py",
     "post-dogfood/pdh3_r12_network_observer.py",
+    "post-dogfood/pdh3_r12_lifecycle_launch.py",
     "post-dogfood/pdh3_r12_checkpoint.py",
     "post-dogfood/pdh3_r12_preflight_supervisor.py",
     "post-dogfood/pdh3_r12_remote_preflight.py",
