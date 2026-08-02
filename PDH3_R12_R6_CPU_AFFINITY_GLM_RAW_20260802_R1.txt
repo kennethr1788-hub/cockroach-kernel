@@ -1,0 +1,14 @@
+glm-zai: served by glm-5.2
+{
+  "packet_sha256": "0c3039d1e502b77c18c7985a1f91c9437c4474e63d2fe4007684b062cc3cddf4",
+  "judge": "GLM 5.2",
+  "verdict": "GREEN",
+  "affinity_math": "GREEN",
+  "kernel_enforcement": "GREEN",
+  "inheritance_proof": "GREEN",
+  "fail_closed_semantics": "GREEN",
+  "threshold_preservation": "GREEN",
+  "evidence_classification": "GREEN",
+  "authority_boundary": "GREEN",
+  "findings": []
+}
