@@ -1,0 +1,13 @@
+glm-zai: served by glm-5.2
+```text
+SERVED_MODEL: glm-5.2
+TARGET_PACKET_SHA256: 3c8ba8be17590bb248f79c127a348e630199c204b426622fdc6e3dbcc4e2c60a
+VERDICT: GREEN
+CRITICAL_FINDINGS:
+- NONE
+HIGH_FINDINGS:
+- NONE
+REQUIRED_CORRECTIONS:
+- NONE
+RATIONALE: The packet is internally coherent and sufficiently bounded for the first R6 creation request. Authority is pinned to a named authorization envelope with SHA-256 and explicitly excludes the 24-hour campaign; the remote entry point is required to emit measured_24h_started: false. Cost math is consistent and stays under ceiling: aggregate lineage upper bound $10.09 against operator ceiling $12.00, with total active rate $1.0247/hour over a 9.75-hour max paid window; terminate deadline precedes stop deadline, preventing retry multiplication. Retry law is strict: max 3 creation attempts, one worker at a time, no replacement after PF-4 semantic result or upload begins, and every Pod ID must be proven absent before retry. Provider snapshot shows empty inventory and sufficient balance ($85.38 vs lineage ceiling). Worker contract pins cloud, GPU shape, minVcpuCount 24 / minMemoryInGb 94, measured effective CPU >= 16, >= 4 GiB per effective CPU, zero volumes, rate cap, and allowed datacenter set with post-create readback rejection of all other shapes. Credential containment is explicit: read-only on host, HTTPS Bearer only, never persisted in URL/body/argv/output/hash/archive/worker/commit, raw error bodies suppressed, worker receives no private credentials. Fail-closed stop/teardown conditions are comprehensive across shape, secret, egress, semantic, evidence, deadline, and exact-ID-absence dimensions. Terminal states are correctly gated: remote success is only GREEN_PENDING_PF8 and final R6 GREEN requires a new frozen result packet plus independent GLM 5.2 GREEN over that hash. Package custody is pinned by archive, manifest, receipt, and source-set SHA-256 values with A/B smoke GREEN. Honest limitations are stated: tracer is observation-plus-fail-closed, not a firewall; three CockroachDB processes on one worker are not independent failure domains. No threshold weakening, silent substitution, or 24-hour start is permitted. The packet cannot self-approve and correctly requests independent judgment only. This GREEN means the design is coherent enough to issue the first creation request; it is not execution evidence.
+```
