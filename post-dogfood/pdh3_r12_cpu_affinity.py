@@ -97,7 +97,6 @@ def apply_effective_vcpu_limit(
     }
     return {**body, "receipt_sha256": digest(body)}
 
-
 def verify_current_affinity(
     expected: int,
     *,
@@ -120,4 +119,3 @@ def verify_current_affinity(
         "exact": True,
     }
     return {**body, "receipt_sha256": digest(body)}
-
