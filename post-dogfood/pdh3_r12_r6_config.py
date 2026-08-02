@@ -83,9 +83,14 @@ def load(path: Path | None = None) -> dict[str, Any]:
         "aggregate_cost_ceiling_usd", "archive", "archive_sha256",
         "bundle_receipt", "bundle_receipt_sha256", "tracer_binary_sha256",
     }
+    version = config.get("version")
+    if version == "ck-pdh3-r12-r6-config-v3":
+        required.add("data_center_ids")
     if set(config) != required:
         raise R6ConfigError("CONFIG_FIELDS_INVALID")
-    if config["version"] != "ck-pdh3-r12-r6-config-v2":
+    if version not in {
+        "ck-pdh3-r12-r6-config-v2", "ck-pdh3-r12-r6-config-v3"
+    }:
         raise R6ConfigError("CONFIG_VERSION_INVALID")
     root = _require_path(config["root"], "ROOT", file=False)
     runtime = Path(config["runtime"]).resolve()
@@ -127,8 +132,16 @@ def load(path: Path | None = None) -> dict[str, Any]:
         raise R6ConfigError("LAUNCH_WINDOW_TOO_LONG")
     if (terminate - launch_start).total_seconds() > 36_000:
         raise R6ConfigError("PAID_LIFETIME_TOO_LONG")
-    if config["max_attempts"] != 1:
+    maximum_attempts = config["max_attempts"]
+    if (
+        isinstance(maximum_attempts, bool)
+        or not isinstance(maximum_attempts, int)
+        or maximum_attempts < 1
+        or maximum_attempts > (3 if version.endswith("v3") else 1)
+    ):
         raise R6ConfigError("MAX_ATTEMPTS_INVALID")
+    if version.endswith("v3") and config["data_center_ids"] != ["US-MO-1"]:
+        raise R6ConfigError("DATA_CENTER_IDS_INVALID")
     if config["rate_ceiling_usd_per_hour"] != 0.99:
         raise R6ConfigError("RATE_CEILING_INVALID")
     if config["aggregate_cost_ceiling_usd"] != 12.0:

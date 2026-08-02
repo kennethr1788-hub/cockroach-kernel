@@ -101,7 +101,8 @@ def delete_and_prove(
 
 
 def shape_plan(
-    body: dict[str, Any], *, name: str, image: str, ceiling: float
+    body: dict[str, Any], *, name: str, image: str, ceiling: float,
+    data_center_ids: tuple[str, ...] = (),
 ) -> dict[str, Any] | None:
     machine = body.get("machine") if isinstance(body.get("machine"), dict) else {}
     vcpus = int(body.get("vcpuCount", 0))
@@ -117,6 +118,10 @@ def shape_plan(
         and vcpus >= 16
         and memory >= 94
         and machine.get("secureCloud") is True
+        and (
+            not data_center_ids
+            or machine.get("dataCenterId") in data_center_ids
+        )
         and (machine.get("gpuId") == "NVIDIA L40S"
              or "L40S" in str(machine.get("gpuDisplayName", "")))
     )
@@ -128,8 +133,32 @@ def shape_plan(
         return None
 
 
-def exact_shape(body: dict[str, Any], *, name: str, image: str, ceiling: float) -> bool:
-    return shape_plan(body, name=name, image=image, ceiling=ceiling) is not None
+def exact_shape(
+    body: dict[str, Any], *, name: str, image: str, ceiling: float,
+    data_center_ids: tuple[str, ...] = (),
+) -> bool:
+    return shape_plan(
+        body, name=name, image=image, ceiling=ceiling,
+        data_center_ids=data_center_ids,
+    ) is not None
+
+
+def creation_argv(
+    cli: Path, *, pod_name: str, config: dict[str, Any]
+) -> list[str]:
+    argv = [
+        str(cli), "pod", "create", "--cloud-type", "SECURE",
+        "--compute-type", "GPU", "--gpu-id", "NVIDIA L40S",
+        "--gpu-count", "1", "--image", config["image"], "--name", pod_name,
+        "--container-disk-in-gb", "250", "--volume-in-gb", "0",
+        "--ports", "22/tcp", "--stop-after", config["stop_utc"],
+        "--terminate-after", config["terminate_utc"],
+    ]
+    if config.get("data_center_ids"):
+        argv.extend([
+            "--data-center-ids", ",".join(config["data_center_ids"])
+        ])
+    return [*argv, "--output", "json"]
 
 
 def ssh_ready(
@@ -259,14 +288,7 @@ def main() -> int:
         attempt_root = runtime / f"attempt-{attempt:02d}"
         attempt_root.mkdir(mode=0o700)
         pod_name = f"{campaign}-{attempt:02d}"
-        create = [
-            str(cli), "pod", "create", "--cloud-type", "SECURE",
-            "--compute-type", "GPU", "--gpu-id", "NVIDIA L40S",
-            "--gpu-count", "1", "--image", config["image"], "--name", pod_name,
-            "--container-disk-in-gb", "250", "--volume-in-gb", "0",
-            "--ports", "22/tcp", "--stop-after", config["stop_utc"],
-            "--terminate-after", config["terminate_utc"], "--output", "json",
-        ]
+        create = creation_argv(cli, pod_name=pod_name, config=config)
         started = time.monotonic()
         created = run(root, create, 180)
         atomic_new(attempt_root / "create.stdout", created.stdout)
@@ -307,6 +329,7 @@ def main() -> int:
             affinity_plan = shape_plan(
                 detailed, name=pod_name, image=config["image"],
                 ceiling=config["rate_ceiling_usd_per_hour"],
+                data_center_ids=tuple(config.get("data_center_ids", ())),
             )
             if affinity_plan is None:
                 raise R6LaunchError("RETURNED_WORKER_MISMATCH")
@@ -319,6 +342,7 @@ def main() -> int:
                 "guard_pid": guard_pid, "guard_bound_event_hash": bound["event_hash"],
                 "ssh_config": str(ssh_config), "cost_per_hr": detailed["costPerHr"],
                 "vcpu_count": detailed["vcpuCount"], "memory_gib": detailed["memoryInGb"],
+                "data_center_id": detailed["machine"]["dataCenterId"],
                 "effective_vcpu_limit": affinity_plan["effective_vcpu_limit"],
                 "cpu_affinity_plan": affinity_plan,
                 "stop_utc": config["stop_utc"], "terminate_utc": config["terminate_utc"],

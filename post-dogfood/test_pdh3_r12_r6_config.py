@@ -66,6 +66,18 @@ class R6ConfigTests(unittest.TestCase):
             with self.assertRaisesRegex(module.R6ConfigError, "MAX_ATTEMPTS_INVALID"):
                 module.load(retry_config)
 
+            body["version"] = "ck-pdh3-r12-r6-config-v3"
+            body["data_center_ids"] = ["US-MO-1"]
+            accepted = root / "accepted-retry-config.json"
+            accepted.write_text(json.dumps(body))
+            self.assertEqual(module.load(accepted)["max_attempts"], 3)
+
+            body["data_center_ids"] = ["US-NC-1"]
+            wrong_dc = root / "wrong-dc-config.json"
+            wrong_dc.write_text(json.dumps(body))
+            with self.assertRaisesRegex(module.R6ConfigError, "DATA_CENTER_IDS_INVALID"):
+                module.load(wrong_dc)
+
 
 if __name__ == "__main__":
     unittest.main()

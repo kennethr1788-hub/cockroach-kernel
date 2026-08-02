@@ -24,7 +24,10 @@ class R6LaunchTests(unittest.TestCase):
             "imageName": "runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404",
             "containerDiskInGb": 250, "volumeInGb": 0, "costPerHr": 0.99,
             "vcpuCount": vcpus, "memoryInGb": memory,
-            "machine": {"secureCloud": True, "gpuId": "NVIDIA L40S"},
+            "machine": {
+                "secureCloud": True, "gpuId": "NVIDIA L40S",
+                "dataCenterId": "US-MO-1",
+            },
         }
 
     def test_official_shape_is_accepted(self) -> None:
@@ -68,6 +71,39 @@ class R6LaunchTests(unittest.TestCase):
             image="runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404",
             ceiling=0.99,
         ))
+
+    def test_frozen_datacenter_is_enforced(self) -> None:
+        worker = self.worker(vcpus=32, memory=125)
+        self.assertTrue(module.exact_shape(
+            worker,
+            name="ck-pdh3-r12-preflight-r6-test-01",
+            image="runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404",
+            ceiling=0.99,
+            data_center_ids=("US-MO-1",),
+        ))
+        worker["machine"]["dataCenterId"] = "US-NC-1"
+        self.assertFalse(module.exact_shape(
+            worker,
+            name="ck-pdh3-r12-preflight-r6-test-01",
+            image="runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404",
+            ceiling=0.99,
+            data_center_ids=("US-MO-1",),
+        ))
+
+    def test_creation_argv_places_datacenter_after_subcommand(self) -> None:
+        config = {
+            "image": "runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404",
+            "stop_utc": "2026-08-02T15:00:00Z",
+            "terminate_utc": "2026-08-02T15:15:00Z",
+            "data_center_ids": ["US-MO-1"],
+        }
+        argv = module.creation_argv(
+            Path("/tmp/runpodctl"), pod_name="campaign-01", config=config
+        )
+        self.assertEqual(argv[:3], ["/tmp/runpodctl", "pod", "create"])
+        index = argv.index("--data-center-ids")
+        self.assertEqual(argv[index + 1], "US-MO-1")
+        self.assertEqual(argv[-2:], ["--output", "json"])
 
 
 if __name__ == "__main__":
