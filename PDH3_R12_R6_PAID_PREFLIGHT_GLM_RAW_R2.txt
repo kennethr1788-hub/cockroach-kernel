@@ -1,0 +1,13 @@
+glm-zai: served by glm-5.2
+```text
+SERVED_MODEL: glm-5.2
+TARGET_PACKET_SHA256: 29ffc52144045a12afdea754a5183c9c39d8739d3b936547b00e74b9906e8fbb
+VERDICT: GREEN
+CRITICAL_FINDINGS:
+- NONE
+HIGH_FINDINGS:
+- NONE
+REQUIRED_CORRECTIONS:
+- NONE
+RATIONALE: The packet is internally coherent and scoped strictly to the R6 paid preflight first-creation request, with explicit denial of 24-hour campaign authority. The R1 invalidation root cause (host credential canary occurring after provider creation) is correctly diagnosed and remediated by commit 0b71d51 moving the canary before every provider mutation; the gate is also bound to RUNPOD_API_KEY environment presence and fails closed as HOST_CREDENTIAL_BINDING_REQUIRED if absent. Cost bound is deterministic and consistent: 9.75 h ceiling × $0.99/h = $9.6525 plus disk bound $0.338542 totals $9.991042, leaving ~17% margin under the $12 ceiling, with independent attempt-time recomputation and terminal-fail on uncertainty. Deadline ordering is sound (host closeout 17:35 precedes provider-native stop 17:50 and terminate 18:05; 9.75 h equals launch-window-start to terminate-deadline). Phase boundaries are enforced: returned-shape + lifecycle readiness gate precede PF-4, PF-4 GREEN is the sole permission for main-bundle upload, immutable replacement_forbidden marker is written before transfer, and replacement is forbidden after PF-4 semantic result or upload start. One-worker-at-a-time, max-three-attempts, exact-ID absence and empty-inventory verification between attempts, and negative-fixture rejection of the R5 32-vCPU/125-GiB shape without CPU relabeling are all stated. Authority envelope and R5 immutable-failed evidence are properly bound by SHA-256. No critical or high-severity gaps identified for the narrow question of design coherence sufficient to issue the first creation request within the frozen envelope.
+```
