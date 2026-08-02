@@ -1,0 +1,23 @@
+glm-zai: served by glm-5.2
+```text
+SERVED_MODEL: glm-5.2
+TARGET_PACKET_SHA256: 938d8c1c34c4ca73986a60b1d18f8c8149c80c20628258dd5d88247d496fda64
+VERDICT: GREEN
+BOUNDARY_CHECK: PASS
+EVIDENCE_CHECK: PASS
+COST_CHECK: PASS
+LIFECYCLE_CHECK: PASS
+FINDINGS:
+- Packet is bounded to R6-only preflight with no 24-hour branch; every terminal receipt must state `measured_24h_started: false`.
+- Hard phase boundary is explicit: strict three-attempt creation ceiling, exactly one paid worker at a time, no replacement after main upload, `$0.99/hour` rate ceiling, and `$12.00` aggregate lineage ceiling.
+- Prior failed R2 campaign is preserved as immutable evidence with exact Pod ID, 404 teardown, and empty active inventory; the failure is correctly not treated as product or durability evidence.
+- Prospective repair (`fdd576572a5125481e5005c22862d55fc28b9e97`) is scope-limited to receipt retrieval/validation and smoke timeout normalization; it does not alter target cardinality, thresholds, topology, or teardown law.
+- Source custody is complete: 15 bound files with SHA-256 values, deterministic package root, archive, manifest, source-set, and verification hashes all present.
+- Worker contract is pinned: one L40S, minimum 24 vCPU / 94 GiB RAM, effective cgroup CPU floor 16, at least 4 GiB/effective CPU, disposable 250 GB disk, zero persistent volume, pinned SSH host key, and exact allowed datacenter set.
+- Cost math is conservative and under ceiling: `$10.1239118889` aggregate lineage upper bound against `$12.00` operator ceiling, with `9.75 hours` paid window and shared absolute terminate deadline preventing retry multiplication.
+- Credential containment is fail-closed: API key host-only, never in URL/body/argv/stdout/stderr/receipt/archive/worker/commit; raw provider error bodies not persisted; exposure is terminal.
+- Data boundary forbids AWS/CockroachDB Cloud/GitHub/model/private credentials and live HOME/runtime/Qdrant/StateV2/launchd/production data; only frozen synthetic input enters worker.
+- Proof obligations are complete and terminal: PF-4 capability, repaired extracted smoke (13 tests, 35 files, receipt retrieved on GREEN/FAIL/TIMEOUT), PF-2R A/B plan, PF-5 exact 500k/5M/1M/250k setup, PF-6 concurrency matrix 10-500 with p99 ≤ 5,000 ms and max ≤ 10,000 ms, PF-7 900s c500 growth with kill/restart/interruption refusal, PF-8 teardown with exact-ID absence and empty inventory.
+- Terminal law is fail-closed: any source/hash/receipt mismatch, smoke failure, missing evidence, threshold breach, secret exposure, undeclared egress, cost uncertainty, shape mismatch, process leak, observer gap, or teardown inability triggers immediate kill.
+- Remote success is only `GREEN_PENDING_PF8`; host success is only `GREEN_PENDING_FINAL_GLM`; final R6 GREEN requires a newly frozen result packet and direct GLM 5.2 GREEN over its exact hash, blocking any tuning or relabeling of a non-GREEN run.
+```
