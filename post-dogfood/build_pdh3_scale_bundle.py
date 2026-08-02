@@ -196,6 +196,8 @@ SMOKE_TESTS = (
     "p4-verifier/test_verifier.py",
 )
 
+SMOKE_DIAGNOSTIC_TAIL_BYTES = 4096
+
 
 class BundleError(RuntimeError):
     """Fail-closed bundle construction or verification error."""
@@ -221,6 +223,55 @@ def file_digest(path: Path) -> str:
         for block in iter(lambda: handle.read(1 << 20), b""):
             hasher.update(block)
     return hasher.hexdigest()
+
+
+def bounded_diagnostic_tail(raw: bytes | str | None) -> str:
+    """Return a deterministic, bounded UTF-8 tail for synthetic smoke output."""
+    if raw is None:
+        return ""
+    encoded = raw.encode("utf-8", "replace") if isinstance(raw, str) else raw
+    return encoded[-SMOKE_DIAGNOSTIC_TAIL_BYTES:].decode("utf-8", "replace")
+
+
+def smoke_command_evidence(
+    *,
+    path: str,
+    completed: subprocess.CompletedProcess[bytes] | None = None,
+    timeout: subprocess.TimeoutExpired | None = None,
+) -> dict[str, Any]:
+    """Normalize one smoke command without losing bounded failure diagnostics."""
+    if (completed is None) == (timeout is None):
+        raise BundleError("SMOKE_COMMAND_RESULT_INVALID")
+
+    def as_bytes(value: bytes | str | None) -> bytes:
+        if value is None:
+            return b""
+        return value.encode("utf-8", "replace") if isinstance(value, str) else value
+    if completed is not None:
+        stdout = as_bytes(completed.stdout)
+        stderr = as_bytes(completed.stderr)
+        returncode: int | None = completed.returncode
+        status = "PASS" if completed.returncode == 0 else "FAIL"
+        timeout_seconds: int | None = None
+    else:
+        assert timeout is not None
+        stdout = as_bytes(timeout.stdout)
+        stderr = as_bytes(timeout.stderr)
+        returncode = None
+        status = "TIMEOUT"
+        timeout_seconds = int(timeout.timeout) if timeout.timeout is not None else None
+    return {
+        "path": path,
+        "status": status,
+        "returncode": returncode,
+        "timeout_seconds": timeout_seconds,
+        "stdout_bytes": len(stdout),
+        "stdout_sha256": digest(stdout),
+        "stdout_tail": bounded_diagnostic_tail(stdout),
+        "stderr_bytes": len(stderr),
+        "stderr_sha256": digest(stderr),
+        "stderr_tail": bounded_diagnostic_tail(stderr),
+    }
 
 
 def validate_relative(name: str) -> None:
@@ -773,56 +824,73 @@ def run_extracted_bundle_smoke(
     }
     Path(environment["HOME"]).mkdir()
     Path(environment["TMPDIR"]).mkdir()
-    compile_result = subprocess.run(
-        [sys.executable, "-m", "py_compile", *(str(path) for path in python_files)],
-        cwd=extraction_root,
-        env=environment,
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        timeout=180,
-        check=False,
+    compile_result: subprocess.CompletedProcess[bytes] | None = None
+    compile_timeout: subprocess.TimeoutExpired | None = None
+    try:
+        compile_result = subprocess.run(
+            [sys.executable, "-m", "py_compile", *(str(path) for path in python_files)],
+            cwd=extraction_root,
+            env=environment,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=180,
+            check=False,
+        )
+    except subprocess.TimeoutExpired as exc:
+        compile_timeout = exc
+    compile_evidence = smoke_command_evidence(
+        path="PY_COMPILE",
+        completed=compile_result,
+        timeout=compile_timeout,
     )
     executions: list[dict[str, Any]] = []
-    if compile_result.returncode == 0:
+    if compile_evidence["status"] == "PASS":
         for relative in SMOKE_TESTS:
             if relative not in REMOTE_FILES:
                 raise BundleError("SMOKE_TEST_NOT_BUNDLED:" + relative)
-            completed = subprocess.run(
-                [sys.executable, relative],
-                cwd=extraction_root,
-                env=environment,
-                stdin=subprocess.DEVNULL,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                timeout=300,
-                check=False,
-            )
+            completed = None
+            timed_out = None
+            try:
+                completed = subprocess.run(
+                    [sys.executable, relative],
+                    cwd=extraction_root,
+                    env=environment,
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    timeout=300,
+                    check=False,
+                )
+            except subprocess.TimeoutExpired as exc:
+                timed_out = exc
             executions.append(
-                {
-                    "path": relative,
-                    "returncode": completed.returncode,
-                    "stdout_bytes": len(completed.stdout),
-                    "stdout_sha256": digest(completed.stdout),
-                    "stderr_bytes": len(completed.stderr),
-                    "stderr_sha256": digest(completed.stderr),
-                }
+                smoke_command_evidence(
+                    path=relative,
+                    completed=completed,
+                    timeout=timed_out,
+                )
             )
-    green = compile_result.returncode == 0 and len(executions) == len(SMOKE_TESTS) and all(
-        row["returncode"] == 0 for row in executions
+    green = (
+        compile_evidence["status"] == "PASS"
+        and len(executions) == len(SMOKE_TESTS)
+        and all(row["status"] == "PASS" for row in executions)
     )
+    failed_checks = (
+        [compile_evidence["path"]]
+        if compile_evidence["status"] != "PASS"
+        else []
+    )
+    failed_checks.extend(row["path"] for row in executions if row["status"] != "PASS")
     body = {
-        "version": "ck-pdh3-extracted-bundle-smoke-v2",
+        "version": "ck-pdh3-extracted-bundle-smoke-v3",
         "evidence_class": "EXTRACTED_BUNDLE_INTEGRITY_SMOKE_ONLY",
         "archive_sha256": receipt["archive_sha256"],
         "archive_verification_sha256": verification["verification_sha256"],
-        "compile": {
-            "returncode": compile_result.returncode,
-            "python_files": len(python_files),
-            "stdout_sha256": digest(compile_result.stdout),
-            "stderr_sha256": digest(compile_result.stderr),
-        },
+        "compile": {**compile_evidence, "python_files": len(python_files)},
         "tests": executions,
+        "failed_checks": failed_checks,
+        "diagnostic_tail_bytes_max": SMOKE_DIAGNOSTIC_TAIL_BYTES,
         "target_scale_proof": False,
         "production_claim_allowed": False,
         "limitations": [

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+import hashlib
 import importlib.util
 import json
 from pathlib import Path
@@ -124,6 +125,43 @@ class R6ConfigTests(unittest.TestCase):
                 module.R6ConfigError, "SSH_CONFIG_FILE_INVALID"
             ):
                 module.require_runtime_file(runtime, str(link), "SSH_CONFIG")
+
+    def test_remote_smoke_receipt_validates_hash_archive_and_bounds(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "remote-smoke.json"
+            check = {
+                "path": "synthetic", "status": "PASS", "returncode": 0,
+                "timeout_seconds": None, "stdout_bytes": 0,
+                "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stdout_tail": "", "stderr_bytes": 0,
+                "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "stderr_tail": "",
+            }
+            body = {
+                "version": "ck-pdh3-extracted-bundle-smoke-v3",
+                "archive_sha256": "a" * 64,
+                "compile": check,
+                "tests": [dict(check, path=f"synthetic-{index}") for index in range(13)],
+                "failed_checks": [],
+                "diagnostic_tail_bytes_max": 4096,
+                "green": True,
+            }
+            body["smoke_sha256"] = hashlib.sha256(
+                json.dumps(
+                    body,
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                    allow_nan=False,
+                ).encode()
+            ).hexdigest()
+            path.write_text(json.dumps(body), encoding="utf-8")
+            self.assertTrue(module.validate_remote_smoke_receipt(path, "a" * 64)["green"])
+            tampered = json.loads(path.read_text())
+            tampered["green"] = False
+            path.write_text(json.dumps(tampered))
+            with self.assertRaisesRegex(module.R6ConfigError, "HASH_INVALID"):
+                module.validate_remote_smoke_receipt(path, "a" * 64)
 
 
 if __name__ == "__main__":

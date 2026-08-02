@@ -247,12 +247,34 @@ def main() -> int:
                      "--verify-smoke-receipt", REMOTE + "/remote-smoke.json"], 3600)
         atomic_write(RUNTIME / "remote-smoke.stdout", smoke.stdout)
         atomic_write(RUNTIME / "remote-smoke.stderr", smoke.stderr)
-        if smoke.returncode != 0:
-            raise RuntimeError("REMOTE_EXTRACTED_SMOKE_FAILED")
         smoke_get = run([*scp_base, f"{POD_NAME}:{REMOTE}/remote-smoke.json",
                          str(RUNTIME / "remote-smoke.json")], 300)
-        if smoke_get.returncode != 0 or json.loads((RUNTIME / "remote-smoke.json").read_bytes()).get("green") is not True:
+        atomic_write(RUNTIME / "remote-smoke.retrieve.stderr", smoke_get.stderr)
+        if smoke_get.returncode != 0:
+            if smoke.returncode != 0:
+                raise RuntimeError("REMOTE_SMOKE_FAILURE_RECEIPT_UNRETRIEVABLE")
             raise RuntimeError("REMOTE_SMOKE_RECEIPT_INVALID")
+        try:
+            smoke_receipt = r6_config.validate_remote_smoke_receipt(
+                RUNTIME / "remote-smoke.json", ARCHIVE_SHA256
+            )
+        except r6_config.R6ConfigError as exc:
+            raise RuntimeError("REMOTE_SMOKE_RECEIPT_INVALID") from exc
+        diagnostic = {
+            "version": "ck-pdh3-r12-r6-host-smoke-diagnostic-v1",
+            "packet_sha256": PACKET_SHA256,
+            "archive_sha256": ARCHIVE_SHA256,
+            "remote_command_returncode": smoke.returncode,
+            "remote_smoke_sha256": smoke_receipt["smoke_sha256"],
+            "green": smoke_receipt.get("green") is True,
+            "failed_checks": smoke_receipt["failed_checks"],
+        }
+        atomic_write(
+            RUNTIME / "remote-smoke-host-diagnostic.json",
+            canonical(diagnostic),
+        )
+        if smoke.returncode != 0 or smoke_receipt.get("green") is not True:
+            raise RuntimeError("REMOTE_EXTRACTED_SMOKE_FAILED")
         tracer_root = REMOTE + "/tracer"
         tracer = tracer_root + "/usr/bin/strace"
         tracer_library_path = (

@@ -4,6 +4,7 @@ import importlib.util
 import io
 import json
 from pathlib import Path
+import subprocess
 import sys
 import tarfile
 import tempfile
@@ -251,6 +252,31 @@ class BundleTests(unittest.TestCase):
         )
         self.assertIn("NO_FULL_CARDINALITY_SETUP", smoke["limitations"])
         self.assertIn("NO_24_HOUR_MEASUREMENT", smoke["limitations"])
+        self.assertEqual(smoke["version"], "ck-pdh3-extracted-bundle-smoke-v3")
+        self.assertEqual(smoke["failed_checks"], [])
+        self.assertTrue(all(row["status"] == "PASS" for row in smoke["tests"]))
+
+    def test_smoke_command_evidence_preserves_only_bounded_tail(self) -> None:
+        completed = subprocess.CompletedProcess(
+            args=["python3"], returncode=7,
+            stdout=b"a" * 5000,
+            stderr=b"prefix:" + b"b" * 5000,
+        )
+        evidence = bundle.smoke_command_evidence(path="synthetic", completed=completed)
+        self.assertEqual(evidence["status"], "FAIL")
+        self.assertEqual(evidence["returncode"], 7)
+        self.assertEqual(len(evidence["stdout_tail"].encode()), 4096)
+        self.assertEqual(len(evidence["stderr_tail"].encode()), 4096)
+        self.assertEqual(evidence["stdout_sha256"], bundle.digest(completed.stdout))
+
+    def test_smoke_command_timeout_is_normalized(self) -> None:
+        timeout = subprocess.TimeoutExpired(
+            cmd=["python3"], timeout=300, output=b"partial", stderr=b"blocked"
+        )
+        evidence = bundle.smoke_command_evidence(path="synthetic", timeout=timeout)
+        self.assertEqual(evidence["status"], "TIMEOUT")
+        self.assertIsNone(evidence["returncode"])
+        self.assertEqual(evidence["timeout_seconds"], 300)
 
 
 if __name__ == "__main__":

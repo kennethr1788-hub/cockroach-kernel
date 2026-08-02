@@ -56,6 +56,68 @@ def require_runtime_file(runtime: Path, value: Any, label: str) -> Path:
     return path
 
 
+def validate_remote_smoke_receipt(path: Path, archive_sha256: str) -> dict[str, Any]:
+    """Validate the remotely emitted smoke receipt before trusting diagnostics."""
+    path = _require_path(str(path), "REMOTE_SMOKE_RECEIPT")
+    try:
+        receipt = json.loads(path.read_bytes())
+    except json.JSONDecodeError as exc:
+        raise R6ConfigError("REMOTE_SMOKE_RECEIPT_JSON_INVALID") from exc
+    if (
+        not isinstance(receipt, dict)
+        or receipt.get("version") != "ck-pdh3-extracted-bundle-smoke-v3"
+    ):
+        raise R6ConfigError("REMOTE_SMOKE_RECEIPT_VERSION_INVALID")
+    supplied_hash = receipt.get("smoke_sha256")
+    body = {key: value for key, value in receipt.items() if key != "smoke_sha256"}
+    if supplied_hash != hashlib.sha256(
+        json.dumps(
+            body,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+            allow_nan=False,
+        ).encode("utf-8")
+    ).hexdigest():
+        raise R6ConfigError("REMOTE_SMOKE_RECEIPT_HASH_INVALID")
+    if receipt.get("archive_sha256") != _require_hex(archive_sha256, "ARCHIVE_SHA256"):
+        raise R6ConfigError("REMOTE_SMOKE_ARCHIVE_MISMATCH")
+    if receipt.get("diagnostic_tail_bytes_max") != 4096:
+        raise R6ConfigError("REMOTE_SMOKE_DIAGNOSTIC_BOUND_INVALID")
+    tests = receipt.get("tests")
+    failed = receipt.get("failed_checks")
+    if not isinstance(tests, list) or not isinstance(failed, list):
+        raise R6ConfigError("REMOTE_SMOKE_RECEIPT_FIELDS_INVALID")
+    for row in [receipt.get("compile"), *tests]:
+        if (
+            not isinstance(row, dict)
+            or row.get("status") not in {"PASS", "FAIL", "TIMEOUT"}
+            or not isinstance(row.get("path"), str)
+        ):
+            raise R6ConfigError("REMOTE_SMOKE_CHECK_INVALID")
+        for key in ("stdout_tail", "stderr_tail"):
+            if not isinstance(row.get(key), str) or len(row[key].encode("utf-8")) > 12_288:
+                # UTF-8 replacement can expand a 4096-byte source tail by at most 3x.
+                raise R6ConfigError("REMOTE_SMOKE_DIAGNOSTIC_INVALID")
+    compile_check = receipt["compile"]
+    derived_failed = (
+        [compile_check["path"]]
+        if compile_check["status"] != "PASS"
+        else []
+    )
+    derived_failed.extend(
+        row["path"] for row in tests if row["status"] != "PASS"
+    )
+    derived_green = (
+        compile_check["status"] == "PASS"
+        and len(tests) == 13
+        and not derived_failed
+    )
+    if failed != derived_failed or receipt.get("green") is not derived_green:
+        raise R6ConfigError("REMOTE_SMOKE_RESULT_INCONSISTENT")
+    return receipt
+
+
 def _utc(value: Any, label: str) -> datetime:
     if not isinstance(value, str) or not value.endswith("Z"):
         raise R6ConfigError(label + "_INVALID")
