@@ -4,7 +4,14 @@ Status: `FROZEN_FOR_SAME_HASH_GLM_5_2_REVIEW__NO_WORKER_CREATED`
 
 UTC frozen: `2026-08-02T11:50:01Z`
 
-Builder: `Codex / Icarus`\n\nR1 SHA-256 `3c8ba8be17590bb248f79c127a348e630199c204b426622fdc6e3dbcc4e2c60a` remains preserved. R2 changes only the campaign identifier and absolute launch/stop/terminate/closeout timestamps after Kenneth explicitly directed immediate deployment; every cost, workload, threshold, retry, evidence, and phase boundary remains unchanged.
+Builder: `Codex / Icarus`
+
+R1 SHA-256
+`3c8ba8be17590bb248f79c127a348e630199c204b426622fdc6e3dbcc4e2c60a`
+remains preserved. R2 changes only the campaign identifier and absolute
+launch/stop/terminate/closeout timestamps after Kenneth explicitly directed
+immediate deployment; every cost, workload, threshold, retry, evidence, and
+phase boundary remains unchanged.
 
 Decision requested: determine whether this exact prospective R6-only paid
 preflight is sufficiently bounded, fail-closed, evidence-preserving, and safe
@@ -290,4 +297,3 @@ RATIONALE: <concise evidence-based explanation>
 GREEN means only that this exact R6 paid-preflight design is coherent enough
 to issue the first creation request inside the frozen envelope. It is not R6
 execution evidence and does not authorize a 24-hour campaign.
-
