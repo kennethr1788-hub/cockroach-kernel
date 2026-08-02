@@ -1,0 +1,73 @@
+from __future__ import annotations
+
+import importlib.util
+from pathlib import Path
+import sys
+import unittest
+
+
+BASE = Path(__file__).resolve().parents[1]
+MODULE = BASE / "post-dogfood/pdh3_r12_remote_preflight.py"
+sys.path.insert(0, str(MODULE.parent))
+SPEC = importlib.util.spec_from_file_location("pdh3_r12_remote_preflight_tested", MODULE)
+assert SPEC is not None and SPEC.loader is not None
+runner = importlib.util.module_from_spec(SPEC)
+sys.modules[SPEC.name] = runner
+SPEC.loader.exec_module(runner)
+
+
+class R12RemotePreflightTests(unittest.TestCase):
+    def test_named_family_partition_is_exact(self) -> None:
+        names = [name for family in runner.NAMED_FAMILIES.values() for name in family]
+        self.assertEqual(len(names), 27)
+        self.assertEqual(len(set(names)), 27)
+
+    def test_gateway_aggregate_preserves_literal_c500(self) -> None:
+        rows = []
+        for concurrency in runner.GATEWAY_ALLOCATION:
+            rows.append(
+                {
+                    "concurrency": concurrency,
+                    "summary": {
+                        "operations": 100,
+                        "errors": 0,
+                        "latency_ms": {"p99": 10.0, "max": 20.0},
+                    },
+                }
+            )
+        value = runner.aggregate_gateway(rows)
+        self.assertTrue(value["green"])
+        self.assertEqual(value["logical_workers"], 500)
+
+    def test_gateway_aggregate_fails_latency(self) -> None:
+        rows = []
+        for index, concurrency in enumerate(runner.GATEWAY_ALLOCATION):
+            rows.append(
+                {
+                    "concurrency": concurrency,
+                    "summary": {
+                        "operations": 100,
+                        "errors": 0,
+                        "latency_ms": {
+                            "p99": 6000.0 if index == 1 else 10.0,
+                            "max": 7000.0,
+                        },
+                    },
+                }
+            )
+        self.assertFalse(runner.aggregate_gateway(rows)["green"])
+
+    def test_growth_projection_uses_observed_delta(self) -> None:
+        value = runner.growth_projection(
+            [
+                {"database": 100, "evidence": 10, "network": 1},
+                {"database": 200, "evidence": 30, "network": 3},
+            ],
+            100.0,
+        )
+        self.assertGreater(value["projected_24h"]["database"], 200)
+        self.assertGreater(value["projected_24h"]["network"], 3)
+
+
+if __name__ == "__main__":
+    unittest.main()
