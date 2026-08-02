@@ -84,12 +84,17 @@ def load(path: Path | None = None) -> dict[str, Any]:
         "bundle_receipt", "bundle_receipt_sha256", "tracer_binary_sha256",
     }
     version = config.get("version")
-    if version == "ck-pdh3-r12-r6-config-v3":
+    if version in {
+        "ck-pdh3-r12-r6-config-v3", "ck-pdh3-r12-r6-config-v4"
+    }:
         required.add("data_center_ids")
+    if version == "ck-pdh3-r12-r6-config-v4":
+        required.update({"graphql_url", "min_vcpu_count"})
     if set(config) != required:
         raise R6ConfigError("CONFIG_FIELDS_INVALID")
     if version not in {
-        "ck-pdh3-r12-r6-config-v2", "ck-pdh3-r12-r6-config-v3"
+        "ck-pdh3-r12-r6-config-v2", "ck-pdh3-r12-r6-config-v3",
+        "ck-pdh3-r12-r6-config-v4",
     }:
         raise R6ConfigError("CONFIG_VERSION_INVALID")
     root = _require_path(config["root"], "ROOT", file=False)
@@ -137,11 +142,24 @@ def load(path: Path | None = None) -> dict[str, Any]:
         isinstance(maximum_attempts, bool)
         or not isinstance(maximum_attempts, int)
         or maximum_attempts < 1
-        or maximum_attempts > (3 if version.endswith("v3") else 1)
+        or maximum_attempts > (3 if version in {
+            "ck-pdh3-r12-r6-config-v3", "ck-pdh3-r12-r6-config-v4"
+        } else 1)
     ):
         raise R6ConfigError("MAX_ATTEMPTS_INVALID")
     if version.endswith("v3") and config["data_center_ids"] != ["US-MO-1"]:
         raise R6ConfigError("DATA_CENTER_IDS_INVALID")
+    if version.endswith("v4"):
+        allowed = [
+            "EU-NL-1", "EUR-IS-2", "US-IL-1", "US-MO-1", "US-NC-1",
+            "US-TX-3", "US-TX-4",
+        ]
+        if config["data_center_ids"] != allowed:
+            raise R6ConfigError("DATA_CENTER_IDS_INVALID")
+        if config["graphql_url"] != "https://api.runpod.io/graphql":
+            raise R6ConfigError("GRAPHQL_URL_INVALID")
+        if config["min_vcpu_count"] != 24:
+            raise R6ConfigError("MIN_VCPU_COUNT_INVALID")
     if config["rate_ceiling_usd_per_hour"] != 0.99:
         raise R6ConfigError("RATE_CEILING_INVALID")
     if config["aggregate_cost_ceiling_usd"] != 12.0:

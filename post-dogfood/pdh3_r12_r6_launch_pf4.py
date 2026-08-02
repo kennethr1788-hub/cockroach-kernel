@@ -12,6 +12,8 @@ import subprocess
 import sys
 import time
 from typing import Any
+import urllib.error
+import urllib.request
 
 import pdh3_r12_cpu_affinity as cpu_affinity
 import pdh3_r12_lifecycle_launch as lifecycle
@@ -102,7 +104,7 @@ def delete_and_prove(
 
 def shape_plan(
     body: dict[str, Any], *, name: str, image: str, ceiling: float,
-    data_center_ids: tuple[str, ...] = (),
+    data_center_ids: tuple[str, ...] = (), min_provider_vcpus: int = 16,
 ) -> dict[str, Any] | None:
     machine = body.get("machine") if isinstance(body.get("machine"), dict) else {}
     vcpus = int(body.get("vcpuCount", 0))
@@ -115,7 +117,7 @@ def shape_plan(
         and body.get("containerDiskInGb") == 250
         and body.get("volumeInGb") == 0
         and float(body.get("costPerHr", 999.0)) <= ceiling
-        and vcpus >= 16
+        and vcpus >= max(16, min_provider_vcpus)
         and memory >= 94
         and machine.get("secureCloud") is True
         and (
@@ -135,11 +137,12 @@ def shape_plan(
 
 def exact_shape(
     body: dict[str, Any], *, name: str, image: str, ceiling: float,
-    data_center_ids: tuple[str, ...] = (),
+    data_center_ids: tuple[str, ...] = (), min_provider_vcpus: int = 16,
 ) -> bool:
     return shape_plan(
         body, name=name, image=image, ceiling=ceiling,
         data_center_ids=data_center_ids,
+        min_provider_vcpus=min_provider_vcpus,
     ) is not None
 
 
@@ -159,6 +162,82 @@ def creation_argv(
             "--data-center-ids", ",".join(config["data_center_ids"])
         ])
     return [*argv, "--output", "json"]
+
+
+def graphql_creation_payload(
+    *, pod_name: str, config: dict[str, Any]
+) -> dict[str, Any]:
+    """Build the exact credential-free GraphQL creation request."""
+    return {
+        "query": (
+            "mutation createPod($input: PodFindAndDeployOnDemandInput!) { "
+            "podFindAndDeployOnDemand(input: $input) { id name imageName "
+            "desiredStatus costPerHr containerDiskInGb volumeInGb "
+            "memoryInGb vcpuCount } }"
+        ),
+        "variables": {"input": {
+            "cloudType": "SECURE",
+            "containerDiskInGb": 250,
+            "gpuCount": 1,
+            "gpuTypeId": "NVIDIA L40S",
+            "imageName": config["image"],
+            "minMemoryInGb": 94,
+            "minVcpuCount": config["min_vcpu_count"],
+            "name": pod_name,
+            "ports": "22/tcp",
+            "startSsh": True,
+            "stopAfter": config["stop_utc"],
+            "terminateAfter": config["terminate_utc"],
+            "volumeInGb": 0,
+            "volumeMountPath": "/workspace",
+        }},
+    }
+
+
+def create_via_graphql(
+    *, pod_name: str, config: dict[str, Any], timeout: int = 180
+) -> subprocess.CompletedProcess[bytes]:
+    """Create without placing the host-only credential in a URL or argv."""
+    api_key = os.environ.get("RUNPOD_API_KEY", "")
+    safe_args = ["RUNPOD_GRAPHQL_CREATE", pod_name, "MIN_VCPU_24"]
+    if not api_key:
+        return subprocess.CompletedProcess(
+            safe_args, 1, b"", b"GRAPHQL_CREDENTIAL_UNAVAILABLE"
+        )
+    payload = graphql_creation_payload(pod_name=pod_name, config=config)
+    request = urllib.request.Request(
+        config["graphql_url"], data=canonical(payload), method="POST",
+        headers={
+            "Authorization": "Bearer " + api_key,
+            "Content-Type": "application/json",
+            "User-Agent": "cockroach-kernel-pdh3-pf4/1",
+        },
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            raw = response.read()
+    except urllib.error.HTTPError as exc:
+        return subprocess.CompletedProcess(
+            safe_args, 1, b"", f"GRAPHQL_HTTP_{exc.code}".encode("ascii")
+        )
+    except (urllib.error.URLError, TimeoutError, OSError):
+        return subprocess.CompletedProcess(
+            safe_args, 1, b"", b"GRAPHQL_TRANSPORT_ERROR"
+        )
+    try:
+        body = json.loads(raw)
+        errors = body.get("errors")
+        pod = body.get("data", {}).get("podFindAndDeployOnDemand")
+    except (json.JSONDecodeError, AttributeError):
+        return subprocess.CompletedProcess(
+            safe_args, 1, b"", b"GRAPHQL_RESPONSE_INVALID"
+        )
+    if errors or not isinstance(pod, dict) or not pod.get("id"):
+        count = len(errors) if isinstance(errors, list) else 0
+        return subprocess.CompletedProcess(
+            safe_args, 1, b"", f"GRAPHQL_ERROR_COUNT_{count}".encode("ascii")
+        )
+    return subprocess.CompletedProcess(safe_args, 0, canonical(pod), b"")
 
 
 def ssh_ready(
@@ -288,9 +367,14 @@ def main() -> int:
         attempt_root = runtime / f"attempt-{attempt:02d}"
         attempt_root.mkdir(mode=0o700)
         pod_name = f"{campaign}-{attempt:02d}"
-        create = creation_argv(cli, pod_name=pod_name, config=config)
         started = time.monotonic()
-        created = run(root, create, 180)
+        if config["version"] == "ck-pdh3-r12-r6-config-v4":
+            create = graphql_creation_payload(pod_name=pod_name, config=config)
+            atomic_new(attempt_root / "create.request.json", canonical(create))
+            created = create_via_graphql(pod_name=pod_name, config=config)
+        else:
+            create = creation_argv(cli, pod_name=pod_name, config=config)
+            created = run(root, create, 180)
         atomic_new(attempt_root / "create.stdout", created.stdout)
         atomic_new(attempt_root / "create.stderr", created.stderr)
         pod_id = ""
@@ -330,6 +414,7 @@ def main() -> int:
                 detailed, name=pod_name, image=config["image"],
                 ceiling=config["rate_ceiling_usd_per_hour"],
                 data_center_ids=tuple(config.get("data_center_ids", ())),
+                min_provider_vcpus=int(config.get("min_vcpu_count", 16)),
             )
             if affinity_plan is None:
                 raise R6LaunchError("RETURNED_WORKER_MISMATCH")
@@ -352,7 +437,7 @@ def main() -> int:
             atomic_new(runtime / "running-worker-receipt.json", canonical(record))
             atomic_new(runtime / "attempt-ledger.json", canonical(attempt_ledger + [{
                 "attempt": attempt, "pod_id": pod_id, "outcome": "READY_PREUPLOAD",
-                "create_argv_sha256": hashlib.sha256(canonical(create)).hexdigest(),
+                "create_request_sha256": hashlib.sha256(canonical(create)).hexdigest(),
             }]))
             print(canonical(record).decode("utf-8"), flush=True)
             return 0

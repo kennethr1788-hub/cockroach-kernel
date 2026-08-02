@@ -78,6 +78,24 @@ class R6ConfigTests(unittest.TestCase):
             with self.assertRaisesRegex(module.R6ConfigError, "DATA_CENTER_IDS_INVALID"):
                 module.load(wrong_dc)
 
+            body["version"] = "ck-pdh3-r12-r6-config-v4"
+            body["data_center_ids"] = [
+                "EU-NL-1", "EUR-IS-2", "US-IL-1", "US-MO-1", "US-NC-1",
+                "US-TX-3", "US-TX-4",
+            ]
+            body["graphql_url"] = "https://api.runpod.io/graphql"
+            body["min_vcpu_count"] = 24
+            graphql_config = root / "graphql-config.json"
+            graphql_config.write_text(json.dumps(body))
+            loaded = module.load(graphql_config)
+            self.assertEqual(loaded["min_vcpu_count"], 24)
+
+            body["min_vcpu_count"] = 16
+            weak = root / "weak-graphql-config.json"
+            weak.write_text(json.dumps(body))
+            with self.assertRaisesRegex(module.R6ConfigError, "MIN_VCPU_COUNT_INVALID"):
+                module.load(weak)
+
 
 if __name__ == "__main__":
     unittest.main()
