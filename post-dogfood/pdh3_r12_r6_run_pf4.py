@@ -98,6 +98,7 @@ def main() -> int:
     scp = ["/usr/bin/scp", "-F", str(ssh_config)]
     remote = f"/workspace/{config['campaign_id']}/pf4"
     observer = root / "post-dogfood/pdh3_r12_network_observer.py"
+    trace_support = root / "post-dogfood/run_pdh3_traced.py"
     capability = root / "post-dogfood/pdh3_r12_remote_capability.py"
     strace_deb = root / "p2-cleanroom/vendor/ubuntu-noble-strace/strace_6.8-0ubuntu2_amd64.deb"
     unwind_deb = root / "p2-cleanroom/vendor/ubuntu-noble-strace/libunwind8_1.6.2-3build1_amd64.deb"
@@ -108,11 +109,12 @@ def main() -> int:
         make = run(root, [*ssh, "mkdir", "-p", "--", remote], 60)
         if make.returncode != 0:
             raise PF4Error("REMOTE_ROOT_CREATE_FAILED")
-        for local in (observer, capability, strace_deb, unwind_deb):
+        payload = (observer, trace_support, capability, strace_deb, unwind_deb)
+        for local in payload:
             transfer = run(root, [*scp, str(local), f"{pod_name}:{remote}/{local.name}"], 600)
             if transfer.returncode != 0:
                 raise PF4Error("PF4_TRANSFER_FAILED:" + local.name)
-        expected = {path.name: sha256(path) for path in (observer, capability, strace_deb, unwind_deb)}
+        expected = {path.name: sha256(path) for path in payload}
         remote_hashes = run(root, [*ssh, "sha256sum", *[f"{remote}/{name}" for name in expected]], 120)
         text = remote_hashes.stdout.decode("utf-8", "replace")
         if remote_hashes.returncode != 0 or not all(value in text for value in expected.values()):
@@ -129,6 +131,8 @@ def main() -> int:
                 or config["tracer_binary_sha256"] not in tracer_hash.stdout.decode("utf-8", "replace")):
             raise PF4Error("TRACER_BINARY_HASH_MISMATCH")
         output = remote + "/PF4_CAPABILITY_RECEIPT.json"
+        observer_stdout = remote + "/PF4_NETWORK_OBSERVER.stdout"
+        observer_stderr = remote + "/PF4_NETWORK_OBSERVER.stderr"
         command = [
             *ssh, "/usr/bin/env", "-i", "HOME=" + remote + "/empty-home",
             "LANG=C.UTF-8", "LC_ALL=C.UTF-8", "PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
@@ -144,6 +148,12 @@ def main() -> int:
         result = run(root, command, 2400)
         atomic_new(runtime / "pf4-command.stdout", result.stdout)
         atomic_new(runtime / "pf4-command.stderr", result.stderr)
+        for remote_path, local_name in (
+            (observer_stdout, "PF4_NETWORK_OBSERVER.stdout"),
+            (observer_stderr, "PF4_NETWORK_OBSERVER.stderr"),
+        ):
+            captured = run(root, [*scp, f"{pod_name}:{remote_path}", str(runtime / local_name)], 300)
+            atomic_new(runtime / (local_name + ".retrieve.stderr"), captured.stderr)
         retrieve = run(root, [*scp, f"{pod_name}:{output}",
                               str(runtime / "PF4_CAPABILITY_RECEIPT.json")], 300)
         atomic_new(runtime / "pf4-retrieve.stderr", retrieve.stderr)
@@ -155,6 +165,14 @@ def main() -> int:
         if (receipt.get("green") is not True
                 or hashlib.sha256(canonical(core)).hexdigest() != receipt.get("receipt_sha256")):
             raise PF4Error("PF4_RECEIPT_INVALID")
+        observer_record = receipt.get("observed", {}).get("streaming_network_observer", {})
+        if (
+            sha256(runtime / "PF4_NETWORK_OBSERVER.stdout")
+            != observer_record.get("stdout_sha256")
+            or sha256(runtime / "PF4_NETWORK_OBSERVER.stderr")
+            != observer_record.get("stderr_sha256")
+        ):
+            raise PF4Error("PF4_OBSERVER_STREAM_HASH_MISMATCH")
         remote_hash = run(root, [*ssh, "sha256sum", output], 60)
         if (remote_hash.returncode != 0
                 or sha256(receipt_path) not in remote_hash.stdout.decode("utf-8", "replace")):
@@ -176,9 +194,14 @@ def main() -> int:
         return 0
     except BaseException:
         try:
-            failure_remote = remote + "/PF4_CAPABILITY_RECEIPT.json"
-            run(root, [*scp, f"{pod_name}:{failure_remote}",
-                       str(runtime / "PF4_FAILURE_RECEIPT.json")], 300)
+            for remote_path, local_name in (
+                (remote + "/PF4_CAPABILITY_RECEIPT.json", "PF4_FAILURE_RECEIPT.json"),
+                (remote + "/PF4_NETWORK_OBSERVER.stdout", "PF4_FAILURE_NETWORK_OBSERVER.stdout"),
+                (remote + "/PF4_NETWORK_OBSERVER.stderr", "PF4_FAILURE_NETWORK_OBSERVER.stderr"),
+            ):
+                local_path = runtime / local_name
+                if not local_path.exists():
+                    run(root, [*scp, f"{pod_name}:{remote_path}", str(local_path)], 300)
         finally:
             delete_and_prove(root, runtime, guard, cli, config["campaign_id"], pod_id)
         raise

@@ -38,6 +38,7 @@ MAX_FSYNC_P99_MS = 50.0
 RANDOM_SYNC_SAMPLES = 256
 MIN_RANDOM_SYNC_IOPS = 50.0
 MAX_RECEIPT_BYTES = 64 * 1024
+MAX_OBSERVER_STREAM_BYTES = 1024 * 1024
 
 
 class CapabilityError(RuntimeError):
@@ -108,6 +109,86 @@ def parse_cpuset(raw: str) -> int:
     return len(values)
 
 
+def _first_file(root: Path, relatives: Iterable[str]) -> Path | None:
+    for relative in relatives:
+        candidate = root / relative
+        if candidate.is_file() and not candidate.is_symlink():
+            return candidate
+    return None
+
+
+def resource_accounting_backend(
+    cgroup_root: Path = Path("/sys/fs/cgroup"),
+    proc_root: Path = Path("/proc"),
+) -> dict[str, Any]:
+    """Select an observed accounting interface without assuming cgroup v2."""
+    v2 = {
+        name: cgroup_root / name
+        for name in ("cpu.stat", "memory.current", "memory.events", "io.stat", "pids.current")
+    }
+    if all(path.is_file() and not path.is_symlink() for path in v2.values()):
+        return {
+            "available": True,
+            "backend": "CGROUP_V2",
+            "scope": "CONTAINER_CGROUP",
+            "files": {name: str(path) for name, path in v2.items()},
+            "cgroup_isolation_observed": True,
+        }
+
+    v1_candidates = {
+        "cpu": (
+            "cpuacct/cpuacct.usage", "cpu,cpuacct/cpuacct.usage",
+            "cpu/cpu.stat", "cpu,cpuacct/cpu.stat",
+        ),
+        "memory_usage": (
+            "memory/memory.usage_in_bytes", "memory.usage_in_bytes",
+        ),
+        "memory_limit": (
+            "memory/memory.limit_in_bytes", "memory.limit_in_bytes",
+        ),
+        "io": (
+            "blkio/blkio.throttle.io_service_bytes",
+            "blkio/blkio.io_service_bytes",
+            "blkio.throttle.io_service_bytes",
+            "blkio.io_service_bytes",
+        ),
+        "pids": ("pids/pids.current", "pids.current"),
+    }
+    v1 = {
+        name: _first_file(cgroup_root, relatives)
+        for name, relatives in v1_candidates.items()
+    }
+    if all(path is not None for path in v1.values()):
+        return {
+            "available": True,
+            "backend": "CGROUP_V1",
+            "scope": "CONTAINER_CGROUP",
+            "files": {name: str(path) for name, path in v1.items() if path is not None},
+            "cgroup_isolation_observed": True,
+        }
+
+    proc = {
+        "self_status": proc_root / "self/status",
+        "self_io": proc_root / "self/io",
+        "system_stat": proc_root / "stat",
+        "meminfo": proc_root / "meminfo",
+        "net_dev": proc_root / "net/dev",
+    }
+    proc_green = all(path.is_file() and not path.is_symlink() for path in proc.values())
+    affinity_green = hasattr(os, "sched_getaffinity") and bool(os.sched_getaffinity(0))
+    return {
+        "available": proc_green and affinity_green,
+        "backend": "PROCFS_PROCESS_TREE_PROVIDER_BOUND" if proc_green and affinity_green else "UNAVAILABLE",
+        "scope": "PROCESS_TREE_PLUS_PROVIDER_ALLOCATION" if proc_green and affinity_green else "NONE",
+        "files": {
+            name: str(path)
+            for name, path in proc.items()
+            if path.is_file() and not path.is_symlink()
+        },
+        "cgroup_isolation_observed": False,
+    }
+
+
 def cgroup_cpu_limit(root: Path = Path("/sys/fs/cgroup")) -> dict[str, Any]:
     candidates: dict[str, int] = {}
     affinity = len(os.sched_getaffinity(0)) if hasattr(os, "sched_getaffinity") else 0
@@ -126,6 +207,15 @@ def cgroup_cpu_limit(root: Path = Path("/sys/fs/cgroup")) -> dict[str, Any]:
             if quota <= 0 or period <= 0:
                 raise CapabilityError("CPU_MAX_INVALID")
             candidates["quota"] = max(1, quota // period)
+    for base in (root / "cpu", root / "cpu,cpuacct", root):
+        quota_path = base / "cpu.cfs_quota_us"
+        period_path = base / "cpu.cfs_period_us"
+        if quota_path.is_file() and period_path.is_file():
+            quota = int(quota_path.read_text(encoding="utf-8").strip())
+            period = int(period_path.read_text(encoding="utf-8").strip())
+            if quota > 0 and period > 0:
+                candidates["v1_quota"] = max(1, quota // period)
+            break
     return {
         "host_logical": os.cpu_count() or 0,
         "constraints": candidates,
@@ -143,6 +233,13 @@ def cgroup_memory_limit(root: Path = Path("/sys/fs/cgroup")) -> dict[str, Any]:
             finite = int(raw)
             if finite <= 0:
                 raise CapabilityError("MEMORY_MAX_INVALID")
+    if finite is None:
+        for candidate in (root / "memory/memory.limit_in_bytes", root / "memory.limit_in_bytes"):
+            if candidate.is_file():
+                value = int(candidate.read_text(encoding="utf-8").strip())
+                if 0 < value < (1 << 60):
+                    finite = value
+                break
     return {
         "host_bytes": host,
         "cgroup_max_bytes": finite,
@@ -251,7 +348,13 @@ def random_sync_iops(path: Path) -> float:
     return RANDOM_SYNC_SAMPLES / elapsed
 
 
-def command_receipt(command: list[str], timeout: int = 60) -> dict[str, Any]:
+def command_receipt(
+    command: list[str],
+    timeout: int = 60,
+    *,
+    stdout_path: Path | None = None,
+    stderr_path: Path | None = None,
+) -> dict[str, Any]:
     completed = subprocess.run(
         command,
         stdin=subprocess.DEVNULL,
@@ -260,11 +363,19 @@ def command_receipt(command: list[str], timeout: int = 60) -> dict[str, Any]:
         timeout=timeout,
         check=False,
     )
+    if len(completed.stdout) > MAX_OBSERVER_STREAM_BYTES or len(completed.stderr) > MAX_OBSERVER_STREAM_BYTES:
+        raise CapabilityError("OBSERVER_STREAM_TOO_LARGE")
+    if stdout_path is not None:
+        atomic_write(stdout_path, completed.stdout)
+    if stderr_path is not None:
+        atomic_write(stderr_path, completed.stderr)
     return {
         "argv_sha256": digest(command),
         "returncode": completed.returncode,
         "stdout_sha256": digest(completed.stdout),
         "stderr_sha256": digest(completed.stderr),
+        "stdout_bytes": len(completed.stdout),
+        "stderr_bytes": len(completed.stderr),
         "green": completed.returncode == 0,
     }
 
@@ -313,6 +424,8 @@ def execute(
     monotonic_advanced = time.monotonic_ns() > monotonic_before
     observer_output = workdir / "network-probe.json"
     observer_receipt = workdir / "network-capability.json"
+    observer_stdout = output.parent / "PF4_NETWORK_OBSERVER.stdout"
+    observer_stderr = output.parent / "PF4_NETWORK_OBSERVER.stderr"
     observer_result = command_receipt(
         [
             sys.executable,
@@ -328,8 +441,11 @@ def execute(
             str(tracer.resolve()),
             "--tracer-sha256",
             tracer_sha256,
-        ]
+        ],
+        stdout_path=observer_stdout,
+        stderr_path=observer_stderr,
     )
+    accounting = resource_accounting_backend()
     cgroup_files = {
         name: (Path("/sys/fs/cgroup") / name).is_file()
         for name in ("cpu.stat", "memory.current", "memory.events", "io.stat", "pids.current")
@@ -369,7 +485,7 @@ def execute(
         "sustained": sustained_mib_s >= MIN_SUSTAINED_MIB_S,
         "fsync": fsync["p99_ms"] <= MAX_FSYNC_P99_MS,
         "random_sync": sync_iops >= MIN_RANDOM_SYNC_IOPS,
-        "cgroup": all(cgroup_files.values()),
+        "resource_accounting": accounting["available"],
         "process_tree": process_tree_available,
         "monotonic": monotonic_advanced,
         "streaming_network_observer": observer_result["green"]
@@ -377,12 +493,13 @@ def execute(
         "residue": not any(path.exists() for path in paths.values()),
     }
     body = {
-        "version": "ck-pdh3-r12-pf4-capability-v1",
+        "version": "ck-pdh3-r12-pf4-capability-v2",
         "thresholds": thresholds(),
         "observed": {
             "cpu_count": cpu_count,
             "ram_bytes": ram_bytes,
             "resource_accounting": resources,
+            "resource_accounting_backend": accounting,
             "disk_before": usage_before._asdict(),
             "disk_after": usage_after._asdict(),
             "disk_used_fraction_before": used_fraction,

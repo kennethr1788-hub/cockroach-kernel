@@ -34,6 +34,7 @@ if str(HERE) not in sys.path:
 
 import pdh3_r12_checkpoint as checkpoint
 import pdh3_r12_plan_ab as plan_ab
+import pdh3_r12_remote_capability as remote_capability
 import pdh3_scale_contract as contract
 import run_pdh3_scale_campaign as scale
 
@@ -162,12 +163,11 @@ def read_small(path: Path, maximum: int = 1 << 20) -> bytes:
     return raw
 
 
-def cgroup_snapshot() -> dict[str, Any]:
-    base = Path("/sys/fs/cgroup")
-    names = ("cpu.stat", "memory.current", "memory.events", "io.stat", "pids.current")
+def resource_accounting_snapshot() -> dict[str, Any]:
+    backend = remote_capability.resource_accounting_backend()
     values: dict[str, Any] = {}
-    for name in names:
-        path = base / name
+    for name, raw_path in sorted(backend["files"].items()):
+        path = Path(raw_path)
         values[name] = (
             {
                 "bytes": path.stat().st_size,
@@ -177,7 +177,7 @@ def cgroup_snapshot() -> dict[str, Any]:
             if path.is_file()
             else None
         )
-    return values
+    return {"backend": backend, "values": values}
 
 
 def bounded_metrics(port: int) -> dict[str, Any]:
@@ -233,13 +233,13 @@ class Sampler:
         try:
             while not self.stop_event.wait(0 if self.samples == 0 else self.interval):
                 body = {
-                    "version": "ck-pdh3-r12-resource-sample-v1",
+                    "version": "ck-pdh3-r12-resource-sample-v2",
                     "sequence": self.samples + 1,
                     "monotonic_ns": time.monotonic_ns(),
                     "previous_hash": self.previous,
                     "metrics": [bounded_metrics(node.http_port) for node in self.nodes],
                     "process": scale.process_metrics(self.nodes, self.root, self.output),
-                    "cgroup": cgroup_snapshot(),
+                    "resource_accounting": resource_accounting_snapshot(),
                 }
                 record = {**body, "sample_sha256": digest(body)}
                 with self.path.open("ab") as handle:
