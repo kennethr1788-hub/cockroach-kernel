@@ -64,6 +64,14 @@ def digest(raw: bytes | Any) -> str:
     return hashlib.sha256(raw if isinstance(raw, bytes) else canonical(raw)).hexdigest()
 
 
+def file_sha256(path: Path) -> str:
+    value = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            value.update(chunk)
+    return value.hexdigest()
+
+
 def atomic_write(path: Path, raw: bytes) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
@@ -87,6 +95,16 @@ def write_record(path: Path, body: dict[str, Any], field: str) -> dict[str, Any]
     value = {**body, field: digest(body)}
     atomic_write(path, canonical(value))
     return value
+
+
+def preserve_database_log(
+    root: Path, trial_output: Path, teardown: dict[str, Any]
+) -> None:
+    database_log = root / "cockroach.log"
+    if database_log.is_file():
+        copied_log = trial_output / "cockroach.log"
+        shutil.copyfile(database_log, copied_log)
+        teardown["database_log_sha256"] = file_sha256(copied_log)
 
 
 def full_scan(plan: str) -> bool:
@@ -420,11 +438,7 @@ def scale_trial(
         if process is not None and log is not None:
             canary.stop_database(process, log, crash=False)
             teardown["process_stopped"] = process.poll() is not None
-        database_log = root / "cockroach.log"
-        if database_log.is_file():
-            copied_log = trial_output / "cockroach.log"
-            shutil.copyfile(database_log, copied_log)
-            teardown["database_log_sha256"] = file_sha256(copied_log)
+        preserve_database_log(root, trial_output, teardown)
         shutil.rmtree(root, ignore_errors=False)
         teardown["root_removed"] = not root.exists()
         write_record(

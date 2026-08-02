@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 from pathlib import Path
+import tempfile
 import unittest
 
 
@@ -32,6 +33,22 @@ class PlanABTests(unittest.TestCase):
             "CREATE INDEX receipts_task_id_idx ON ck.receipts(task_id) STORING(status,event_hash)",
         )
         self.assertNotIn("IF NOT EXISTS", plan_ab.RECEIPT_INDEX_DDL)
+
+    def test_teardown_preserves_and_hashes_database_log(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            parent = Path(temporary)
+            root = parent / "runtime"
+            output = parent / "evidence"
+            root.mkdir()
+            output.mkdir()
+            raw = b"synthetic cockroach log\n"
+            (root / "cockroach.log").write_bytes(raw)
+            teardown: dict[str, object] = {}
+
+            plan_ab.preserve_database_log(root, output, teardown)
+
+            self.assertEqual((output / "cockroach.log").read_bytes(), raw)
+            self.assertEqual(teardown["database_log_sha256"], plan_ab.digest(raw))
 
 
 if __name__ == "__main__":

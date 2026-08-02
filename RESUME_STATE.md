@@ -1,11 +1,15 @@
 # Resume State
 
-- `CURRENT_PHASE`: `POST_DOGFOOD_PDH3_PRODUCTION_SHAPED_SCALE_AUTHORIZATION_GATE`
+- `CURRENT_PHASE`: `PDH3_R12_R6_FULL_CARDINALITY_PREFLIGHT_REPAIR`
 - `LAST_GREEN_GATE`: `PDH_3_LOCAL_CANARY_GREEN`
-- `NEXT_ALLOWED_ACTION`: Freeze a paid PDH-3 measured campaign only after Kenneth supplies exact hourly and total cost ceilings, maximum paid lifetime, creation-attempt ceiling, and teardown authorization; otherwise remain paused
-- `FORBIDDEN_ACTIONS`: Claim external-user validation; impersonate or simulate an external tester; modify product behavior or Gate 3–8/EV3 evidence; provision paid PDH-3/PDH-4 resources without a separate exact cost ceiling and explicit authorization; omit failed evidence; begin Gate 9, Gate 10, release, publication, video, or submission; mutate HOME/live memory
-- `CURRENT_COMMIT`: `16c7bcc115c85a22699a777a6928e57f4dc446cc`
-- `LAST_VERIFIED_UTC`: `2026-07-31T02:49:50Z`
+- `NEXT_ALLOWED_ACTION`: Preserve the R6 R5 BLOCKED attempt; repair only the undefined teardown log-hash helper; run local and extracted-bundle regressions; freeze a prospective replacement packet; obtain exact same-hash GLM 5.2 GREEN; stop before any new paid worker pending a replacement lifecycle authorization that supersedes the post-upload no-replacement marker
+- `FORBIDDEN_ACTIONS`: Relabel R6 R5 as GREEN; omit the R5 failure; reuse revealed remote output as hidden evidence; create a replacement worker from the R5 packet; begin the measured 24-hour campaign; claim external-user or production-scale validation; modify Gate 3–8 or EV3 evidence; begin Gate 9, Gate 10, release, publication, video, or submission; mutate HOME/live memory; read, stage, modify, or commit the operator-owned untracked heap_profiler directory
+- `CURRENT_COMMIT`: `4b6aa1793a64144ffddd4db29ea704f665be5793`
+- `LAST_VERIFIED_UTC`: `2026-08-02T12:51:32Z`
+- `PDH3_R12_R6_R5_RESULT`: `BLOCKED; POD_r2iqulx4yfyoz8_DELETED; EXACT_INVENTORY_EMPTY; MEASURED_24H_FALSE; PF2R_SCALE_10000_GREEN_THEN_NAMEERROR_FILE_SHA256_UNDEFINED_DURING_TEARDOWN; NETWORK_OBSERVER_FAIL_CLOSED_CHILD_EXIT_1; HOST_TERMINAL_RECEIPT_RETRIEVAL_FAILED`
+- `PDH3_R12_R6_R5_PACKET_SHA256`: `6dabda20b7317e93961977423b58130a4356304da1ff40b75d02fdd703701218`
+- `PDH3_R12_R6_R5_FINAL_EVIDENCE_SHA256`: `1c5dfdadb2ca52196d352a585f2b24aceec614402af714a6e9ba8ab490d3ad00`
+- `PDH3_R12_R6_R5_HOST_TERMINAL_SHA256`: `6dbe551863d8cb77effe66022026eab73eace49c7b84548e1a0cee51fb2f392c`
 - `PDH_3_LOCAL_CANARY_STATUS`: `GREEN; ATTEMPT4; 178264_OPERATIONS; FOUR_STAGES_10_50_100_250; EXACT_DATABASE_CLIENT_ACCOUNTING; ZERO_QUERY_ERRORS; SIGKILL_RESTART_GREEN; 43_OF_43_VERIFIER_EXECUTIONS; CLEANUP_ZERO; TEARDOWN_GREEN`
 - `PDH_3_LOCAL_CANARY_CONTRACT_SHA256`: `f48f65aa447e10c84164e053f4cbd4d101bad2175a7f54b51878f4a6f5de1026`
 - `PDH_3_LOCAL_CANARY_RESULT_SHA256`: `ec230f0a3284c85d99cf9e6ca0a33c9fd928dd3b7c61b1916c49d71ebbf46a67`
