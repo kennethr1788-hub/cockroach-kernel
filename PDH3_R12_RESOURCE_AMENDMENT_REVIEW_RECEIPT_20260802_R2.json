@@ -1,0 +1,26 @@
+{
+  "amendment_path": "PDH3_R12_PREFLIGHT_RESOURCE_BOUNDARY_AMENDMENT_20260802_R2.md",
+  "amendment_sha256": "4bf4e47b79a66c672208cbd90f18ad31ff4f23400e833c728a189507dbb0e0b9",
+  "attempt_1": {
+    "classification": "INVALID_SERVED_MODEL_BODY_CONTRADICTION",
+    "path": "PDH3_R12_RESOURCE_AMENDMENT_GLM_ATTEMPT1_INVALID_20260802.md",
+    "sha256": "6c91696b8184e4c7aa340c04e4d0635292626af9c5380cf1a2edbe8e6af64b0f",
+    "verdict_authority_retained": false
+  },
+  "attempt_2": {
+    "path": "PDH3_R12_RESOURCE_AMENDMENT_GLM_RAW_R2_20260802.md",
+    "served_model": "glm-5.2",
+    "sha256": "12260854afd8b26bff5f5e8b37c5725550f1be166ea396c947a5c379ce979b93",
+    "verdict": "GREEN",
+    "verdict_authority_retained": true
+  },
+  "effective_plan": {
+    "amendment_sha256": "4bf4e47b79a66c672208cbd90f18ad31ff4f23400e833c728a189507dbb0e0b9",
+    "parent_plan_sha256": "a1214b4779fe1495de219ed0033421ac810390641cd97742deb61cd3957df3d9"
+  },
+  "parent_commit": "f1b3a4bf40353745e67acf93444fa77c53fa5fed",
+  "receipt_status": "PDH3_R12_RESOURCE_AMENDMENT_GREEN",
+  "runpod_or_24h_authority": false,
+  "utc_created": "2026-08-02T04:49:47Z",
+  "version": "pdh3-r12-resource-amendment-review-v2"
+}
