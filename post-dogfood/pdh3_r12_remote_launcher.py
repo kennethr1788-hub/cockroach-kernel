@@ -100,11 +100,14 @@ def runtime_environment(args: argparse.Namespace) -> dict[str, str]:
     Keep both system sbin locations explicit for the bounded remote harness
     while discarding every inherited environment variable.  The streaming
     observer and its hash-pinned tracer are passed by explicit absolute paths.
+    The packaged Ubuntu tracer is dynamically linked, so its separately
+    hash-bound extraction root is the only dynamic-library search surface.
     """
     return {
         "HOME": str(args.empty_home.resolve()),
         "LANG": "C.UTF-8",
         "LC_ALL": "C.UTF-8",
+        "LD_LIBRARY_PATH": args.tracer_library_path,
         "PATH": "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
         "PDH3_PACKET_SHA256": args.packet_sha256,
         "PYTHONDONTWRITEBYTECODE": "1",
@@ -118,6 +121,19 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
         raise LaunchError("PACKET_SHA256_INVALID")
     if not args.campaign_id.startswith("ck-pdh3-r12-preflight-"):
         raise LaunchError("CAMPAIGN_ID_INVALID")
+    tracer_root = args.tracer_root.resolve()
+    tracer = args.tracer.resolve()
+    if tracer_root == Path("/") or tracer_root not in tracer.parents:
+        raise LaunchError("TRACER_ROOT_CONTAINMENT_INVALID")
+    library_directories = (
+        tracer_root / "usr/lib/x86_64-linux-gnu",
+        tracer_root / "lib/x86_64-linux-gnu",
+    )
+    if any(not path.is_dir() or path.is_symlink() for path in library_directories):
+        raise LaunchError("TRACER_LIBRARY_ROOT_INVALID")
+    expected_library_path = ":".join(str(path) for path in library_directories)
+    if args.tracer_library_path != expected_library_path:
+        raise LaunchError("TRACER_LIBRARY_PATH_INVALID")
     for path in (args.observer, args.runner, args.binary, args.packet, args.tracer):
         if not path.resolve().is_file():
             raise LaunchError("LAUNCH_INPUT_MISSING:" + path.name)
@@ -185,6 +201,8 @@ def parser() -> argparse.ArgumentParser:
     value.add_argument("--packet-sha256", required=True)
     value.add_argument("--tracer", type=Path, required=True)
     value.add_argument("--tracer-sha256", required=True)
+    value.add_argument("--tracer-root", type=Path, required=True)
+    value.add_argument("--tracer-library-path", required=True)
     value.add_argument("--campaign-id", required=True)
     value.add_argument("--workdir", type=Path, required=True)
     value.add_argument("--empty-home", type=Path, required=True)

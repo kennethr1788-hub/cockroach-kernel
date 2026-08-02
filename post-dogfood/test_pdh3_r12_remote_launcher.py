@@ -27,6 +27,12 @@ class LauncherTests(unittest.TestCase):
             packet_sha256="a" * 64,
             tracer=root / "tracer/usr/bin/strace",
             tracer_sha256="b" * 64,
+            tracer_root=root / "tracer",
+            tracer_library_path=(
+                str(root / "tracer/usr/lib/x86_64-linux-gnu")
+                + ":"
+                + str(root / "tracer/lib/x86_64-linux-gnu")
+            ),
             campaign_id="ck-pdh3-r12-preflight-r1",
             workdir=root,
             empty_home=root / "empty-home",
@@ -62,7 +68,7 @@ class LauncherTests(unittest.TestCase):
         environment = launcher.runtime_environment(self.arguments())
         self.assertEqual(
             set(environment),
-            {"HOME", "LANG", "LC_ALL", "PATH", "PDH3_PACKET_SHA256",
+            {"HOME", "LANG", "LC_ALL", "LD_LIBRARY_PATH", "PATH", "PDH3_PACKET_SHA256",
              "PYTHONDONTWRITEBYTECODE", "PYTHONHASHSEED", "TZ"},
         )
         self.assertEqual(
@@ -70,6 +76,10 @@ class LauncherTests(unittest.TestCase):
             "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
         )
         self.assertEqual(environment["PDH3_PACKET_SHA256"], "a" * 64)
+        self.assertEqual(
+            environment["LD_LIBRARY_PATH"],
+            self.arguments().tracer_library_path,
+        )
 
 
 if __name__ == "__main__":

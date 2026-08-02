@@ -113,6 +113,13 @@ HOST_ONLY_FILES = (
     "post-dogfood/test_pdh3_r12_preflight.py",
     "post-dogfood/pdh3_r12_preflight_supervisor.py",
     "post-dogfood/test_pdh3_r12_preflight_supervisor.py",
+    "post-dogfood/pdh3_r12_r6_config.py",
+    "post-dogfood/test_pdh3_r12_r6_config.py",
+    "post-dogfood/pdh3_r12_r6_launch_pf4.py",
+    "post-dogfood/test_pdh3_r12_r6_launch_pf4.py",
+    "post-dogfood/pdh3_r12_r6_run_pf4.py",
+    "post-dogfood/pdh3_r12_r6_run_pf2r_pf7.py",
+    "post-dogfood/pdh3_r12_r6_orchestrator.py",
 )
 
 # Hash-only historical custody.  Contents are never copied to the transfer
