@@ -13,6 +13,8 @@ import sys
 import time
 from typing import Any, Iterable
 
+import pdh3_r12_cpu_affinity as cpu_affinity
+
 
 class LaunchError(RuntimeError):
     """Stable remote-launch failure."""
@@ -91,6 +93,8 @@ def launch_argv(args: argparse.Namespace) -> list[str]:
         str(args.setup_timeout_seconds),
         "--host-ack-timeout-seconds",
         str(args.host_ack_timeout_seconds),
+        "--effective-vcpu-limit",
+        str(args.effective_vcpu_limit),
     ]
 
 
@@ -110,6 +114,9 @@ def runtime_environment(args: argparse.Namespace) -> dict[str, str]:
         "LD_LIBRARY_PATH": args.tracer_library_path,
         "PATH": "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
         "PDH3_PACKET_SHA256": args.packet_sha256,
+        "PDH3_EFFECTIVE_VCPU_LIMIT": str(args.effective_vcpu_limit),
+        "PDH3_PROVIDER_VCPUS": str(args.provider_vcpus),
+        "PDH3_PROVIDER_MEMORY_GIB": str(args.provider_memory_gib),
         "PYTHONDONTWRITEBYTECODE": "1",
         "PYTHONHASHSEED": "0",
         "TZ": "UTC",
@@ -141,6 +148,17 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
         raise LaunchError("TRACER_SHA256_MISMATCH")
     if args.receipt.exists() or args.log.exists():
         raise LaunchError("LAUNCH_OUTPUT_EXISTS")
+    try:
+        affinity_plan = cpu_affinity.effective_vcpu_plan(
+            args.provider_vcpus, args.provider_memory_gib
+        )
+        if args.effective_vcpu_limit != affinity_plan["effective_vcpu_limit"]:
+            raise LaunchError("EFFECTIVE_VCPU_PLAN_MISMATCH")
+        affinity_apply = cpu_affinity.apply_effective_vcpu_limit(
+            args.effective_vcpu_limit
+        )
+    except cpu_affinity.AffinityError as exc:
+        raise LaunchError("CPU_AFFINITY_BLOCKED:" + str(exc)) from exc
     argv = launch_argv(args)
     read_fd, write_fd = os.pipe()
     first = os.fork()
@@ -176,13 +194,22 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
         os.kill(pid, 0)
     except OSError as exc:
         raise LaunchError("DETACHED_PROCESS_NOT_ALIVE") from exc
+    try:
+        detached_affinity = cpu_affinity.verify_current_affinity(
+            args.effective_vcpu_limit, pid=pid
+        )
+    except cpu_affinity.AffinityError as exc:
+        raise LaunchError("DETACHED_PROCESS_AFFINITY_MISMATCH:" + str(exc)) from exc
     body = {
-        "version": "ck-pdh3-r12-remote-launch-v1",
+        "version": "ck-pdh3-r12-remote-launch-v2",
         "campaign_id": args.campaign_id,
         "packet_sha256": args.packet_sha256,
         "pid": pid,
         "ppid_expected": 1,
         "argv_sha256": digest(argv),
+        "cpu_affinity_plan": affinity_plan,
+        "cpu_affinity_apply": affinity_apply,
+        "detached_process_affinity": detached_affinity,
         "log": args.log.name,
         "measured_24h_branch_present": False,
         "running": True,
@@ -214,6 +241,9 @@ def parser() -> argparse.ArgumentParser:
     value.add_argument("--pf2-runtime-parent", type=Path, required=True)
     value.add_argument("--setup-timeout-seconds", type=int, default=10_800)
     value.add_argument("--host-ack-timeout-seconds", type=int, default=900)
+    value.add_argument("--provider-vcpus", type=int, required=True)
+    value.add_argument("--provider-memory-gib", type=int, required=True)
+    value.add_argument("--effective-vcpu-limit", type=int, required=True)
     value.add_argument("--receipt", type=Path, required=True)
     value.add_argument("--log", type=Path, required=True)
     return value

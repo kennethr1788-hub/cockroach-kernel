@@ -103,8 +103,10 @@ class CapabilityTests(unittest.TestCase):
         self.assertEqual(values["effective_vcpus"], 16)
         self.assertEqual(values["effective_memory_bytes"], 125 * 1024**3)
 
-    def test_provider_shape_below_four_gib_per_vcpu_is_insufficient(self) -> None:
-        self.assertLess(125 * 1024**3, 32 * 4 * 1024**3)
+    def test_effective_cpu_cap_preserves_four_gib_per_vcpu(self) -> None:
+        plan = capability.cpu_affinity.effective_vcpu_plan(32, 125)
+        self.assertEqual(plan["effective_vcpu_limit"], 31)
+        self.assertTrue(plan["ratio_preserved"])
 
     def test_resource_accounting_prefers_complete_cgroup_v2(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

@@ -12,6 +12,7 @@ import sys
 import time
 from typing import Any
 
+import pdh3_r12_cpu_affinity as cpu_affinity
 import pdh3_r12_r6_config as r6_config
 
 
@@ -86,9 +87,22 @@ def main() -> int:
     runtime = Path(config["runtime"])
     running = json.loads((runtime / "running-worker-receipt.json").read_bytes())
     if (running.get("status") != "PF4_WORKER_READY_PREUPLOAD"
+            or running.get("version") != "ck-pdh3-r12-r6-running-worker-v2"
             or running.get("packet_sha256") != config["packet_sha256"]
             or running.get("main_bundle_uploaded") is not False):
         raise PF4Error("RUNNING_RECEIPT_INVALID")
+    try:
+        expected_affinity = cpu_affinity.effective_vcpu_plan(
+            int(running["vcpu_count"]), int(running["memory_gib"])
+        )
+    except (KeyError, TypeError, ValueError, cpu_affinity.AffinityError) as exc:
+        raise PF4Error("RUNNING_AFFINITY_PLAN_INVALID") from exc
+    if (
+        running.get("cpu_affinity_plan") != expected_affinity
+        or running.get("effective_vcpu_limit")
+        != expected_affinity["effective_vcpu_limit"]
+    ):
+        raise PF4Error("RUNNING_AFFINITY_PLAN_MISMATCH")
     pod_id = str(running.get("pod_id", ""))
     pod_name = str(running.get("pod_name", ""))
     cli = Path(config["runpodctl"])
@@ -99,6 +113,7 @@ def main() -> int:
     remote = f"/workspace/{config['campaign_id']}/pf4"
     observer = root / "post-dogfood/pdh3_r12_network_observer.py"
     trace_support = root / "post-dogfood/run_pdh3_traced.py"
+    affinity_support = root / "post-dogfood/pdh3_r12_cpu_affinity.py"
     capability = root / "post-dogfood/pdh3_r12_remote_capability.py"
     strace_deb = root / "p2-cleanroom/vendor/ubuntu-noble-strace/strace_6.8-0ubuntu2_amd64.deb"
     unwind_deb = root / "p2-cleanroom/vendor/ubuntu-noble-strace/libunwind8_1.6.2-3build1_amd64.deb"
@@ -109,7 +124,10 @@ def main() -> int:
         make = run(root, [*ssh, "mkdir", "-p", "--", remote], 60)
         if make.returncode != 0:
             raise PF4Error("REMOTE_ROOT_CREATE_FAILED")
-        payload = (observer, trace_support, capability, strace_deb, unwind_deb)
+        payload = (
+            observer, trace_support, affinity_support, capability, strace_deb,
+            unwind_deb,
+        )
         for local in payload:
             transfer = run(root, [*scp, str(local), f"{pod_name}:{remote}/{local.name}"], 600)
             if transfer.returncode != 0:
@@ -142,6 +160,7 @@ def main() -> int:
             "--observer", remote + "/" + observer.name,
             "--allocated-vcpus", str(running["vcpu_count"]),
             "--allocated-memory-gib", str(running["memory_gib"]),
+            "--effective-vcpu-limit", str(running["effective_vcpu_limit"]),
             "--packet-sha256", config["packet_sha256"],
             "--tracer", tracer, "--tracer-sha256", config["tracer_binary_sha256"],
         ]

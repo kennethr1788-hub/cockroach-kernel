@@ -44,6 +44,9 @@ class LauncherTests(unittest.TestCase):
             pf2_runtime_parent=root / "pf2-runtime",
             setup_timeout_seconds=10_800,
             host_ack_timeout_seconds=900,
+            provider_vcpus=32,
+            provider_memory_gib=125,
+            effective_vcpu_limit=31,
             receipt=root / "launch.json",
             log=root / "launch.log",
         )
@@ -63,19 +66,25 @@ class LauncherTests(unittest.TestCase):
         argv = launcher.launch_argv(self.arguments())
         self.assertEqual(argv[argv.index("--setup-timeout-seconds") + 1], "10800")
         self.assertEqual(argv[argv.index("--host-ack-timeout-seconds") + 1], "900")
+        self.assertEqual(argv[argv.index("--effective-vcpu-limit") + 1], "31")
 
     def test_runtime_environment_is_allowlisted_and_keeps_ubuntu_sbin(self) -> None:
         environment = launcher.runtime_environment(self.arguments())
         self.assertEqual(
             set(environment),
             {"HOME", "LANG", "LC_ALL", "LD_LIBRARY_PATH", "PATH", "PDH3_PACKET_SHA256",
-             "PYTHONDONTWRITEBYTECODE", "PYTHONHASHSEED", "TZ"},
+             "PDH3_EFFECTIVE_VCPU_LIMIT", "PDH3_PROVIDER_VCPUS",
+             "PDH3_PROVIDER_MEMORY_GIB", "PYTHONDONTWRITEBYTECODE",
+             "PYTHONHASHSEED", "TZ"},
         )
         self.assertEqual(
             environment["PATH"],
             "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
         )
         self.assertEqual(environment["PDH3_PACKET_SHA256"], "a" * 64)
+        self.assertEqual(environment["PDH3_EFFECTIVE_VCPU_LIMIT"], "31")
+        self.assertEqual(environment["PDH3_PROVIDER_VCPUS"], "32")
+        self.assertEqual(environment["PDH3_PROVIDER_MEMORY_GIB"], "125")
         self.assertEqual(
             environment["LD_LIBRARY_PATH"],
             self.arguments().tracer_library_path,

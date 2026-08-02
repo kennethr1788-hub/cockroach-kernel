@@ -46,6 +46,7 @@ class BundleTests(unittest.TestCase):
             "post-dogfood/run_pdh3_traced.py",
             "post-dogfood/run_pdh3_local_canary.py",
             "post-dogfood/pdh3_synthetic_dataset.py",
+            "post-dogfood/pdh3_r12_cpu_affinity.py",
             "hardening-gate7/make_vectors.py",
             "hardening-gate7/run_campaign.py",
             "hardening-gate7/run_trial.py",

@@ -22,6 +22,8 @@ import sys
 import time
 from typing import Any, Iterable
 
+import pdh3_r12_cpu_affinity as cpu_affinity
+
 
 MIN_VCPUS = 16
 MIN_RAM_BYTES = 64 * 1024**3
@@ -405,6 +407,7 @@ def execute(
     *,
     allocated_vcpus: int,
     allocated_memory_gib: int,
+    effective_vcpu_limit: int,
     packet_sha256: str,
     tracer: Path,
     tracer_sha256: str,
@@ -413,6 +416,17 @@ def execute(
         raise CapabilityError("LINUX_AMD64_REQUIRED")
     if output.exists() or workdir.exists():
         raise CapabilityError("OUTPUT_OR_WORKDIR_EXISTS")
+    try:
+        affinity_plan = cpu_affinity.effective_vcpu_plan(
+            allocated_vcpus, allocated_memory_gib
+        )
+        if effective_vcpu_limit != affinity_plan["effective_vcpu_limit"]:
+            raise CapabilityError("EFFECTIVE_VCPU_PLAN_MISMATCH")
+        affinity_apply = cpu_affinity.apply_effective_vcpu_limit(
+            effective_vcpu_limit
+        )
+    except cpu_affinity.AffinityError as exc:
+        raise CapabilityError("CPU_AFFINITY_BLOCKED:" + str(exc)) from exc
     workdir.mkdir(parents=True)
     usage_before = shutil.disk_usage(workdir)
     resources = effective_resources(allocated_vcpus, allocated_memory_gib)
@@ -478,6 +492,8 @@ def execute(
     checks = {
         "cpu": cpu_count >= MIN_VCPUS,
         "ram": ram_bytes >= MIN_RAM_BYTES and ram_bytes >= cpu_count * 4 * 1024**3,
+        "cpu_affinity": affinity_apply["exact"]
+        and affinity_apply["after"]["count"] == effective_vcpu_limit,
         "disk_total": usage_before.total >= MIN_DISK_TOTAL_BYTES,
         "disk_available": usage_before.free >= MIN_DISK_AVAILABLE_BYTES,
         "disk_used_fraction": used_fraction <= MAX_DISK_USED_FRACTION,
@@ -493,11 +509,13 @@ def execute(
         "residue": not any(path.exists() for path in paths.values()),
     }
     body = {
-        "version": "ck-pdh3-r12-pf4-capability-v2",
+        "version": "ck-pdh3-r12-pf4-capability-v3",
         "thresholds": thresholds(),
         "observed": {
             "cpu_count": cpu_count,
             "ram_bytes": ram_bytes,
+            "cpu_affinity_plan": affinity_plan,
+            "cpu_affinity_apply": affinity_apply,
             "resource_accounting": resources,
             "resource_accounting_backend": accounting,
             "disk_before": usage_before._asdict(),
@@ -542,6 +560,7 @@ def parser() -> argparse.ArgumentParser:
     value.add_argument("--observer", type=Path, required=True)
     value.add_argument("--allocated-vcpus", type=int, required=True)
     value.add_argument("--allocated-memory-gib", type=int, required=True)
+    value.add_argument("--effective-vcpu-limit", type=int, required=True)
     value.add_argument("--packet-sha256", required=True)
     value.add_argument("--tracer", type=Path, required=True)
     value.add_argument("--tracer-sha256", required=True)
@@ -557,6 +576,7 @@ def main(argv: Iterable[str] | None = None) -> int:
             args.observer,
             allocated_vcpus=args.allocated_vcpus,
             allocated_memory_gib=args.allocated_memory_gib,
+            effective_vcpu_limit=args.effective_vcpu_limit,
             packet_sha256=args.packet_sha256,
             tracer=args.tracer,
             tracer_sha256=args.tracer_sha256,

@@ -33,6 +33,7 @@ if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
 
 import pdh3_r12_checkpoint as checkpoint
+import pdh3_r12_cpu_affinity as cpu_affinity
 import pdh3_r12_plan_ab as plan_ab
 import pdh3_r12_remote_capability as remote_capability
 import pdh3_scale_contract as contract
@@ -682,6 +683,37 @@ def growth_projection(samples: list[dict[str, int]], elapsed: float) -> dict[str
     return {"first": first, "last": last, "elapsed_seconds": elapsed, "projected_24h": projections}
 
 
+def verify_node_affinities(
+    nodes: list[scale.Node], expected: int
+) -> dict[str, Any]:
+    """Prove every current CockroachDB process has the exact effective CPU set."""
+    rows: list[dict[str, Any]] = []
+    try:
+        for node in nodes:
+            process = node.process
+            if process is None or process.poll() is not None:
+                raise R12RemoteError(f"COCKROACH_NODE_NOT_ALIVE:{node.index + 1}")
+            rows.append(
+                {
+                    "node": node.index + 1,
+                    "affinity": cpu_affinity.verify_current_affinity(
+                        expected, pid=process.pid
+                    ),
+                }
+            )
+    except (OSError, cpu_affinity.AffinityError) as exc:
+        raise R12RemoteError("COCKROACH_NODE_AFFINITY_MISMATCH:" + str(exc)) from exc
+    body = {
+        "version": "ck-pdh3-r12-cockroach-affinity-v1",
+        "expected_effective_vcpus": expected,
+        "nodes": rows,
+        "exact": len(rows) == len(nodes) and bool(rows),
+    }
+    if not body["exact"]:
+        raise R12RemoteError("COCKROACH_NODE_AFFINITY_INCOMPLETE")
+    return {**body, "receipt_sha256": digest(body)}
+
+
 def run_growth(
     binary: Path,
     nodes: list[scale.Node],
@@ -761,6 +793,7 @@ def run_growth(
     )
     if not fault["green"] or scale.campaign_counts(binary, nodes[0].sql_port, env, args.campaign_id) != expected:
         raise R12RemoteError("SAME_HOST_FAULT_RECONCILIATION_FAILED")
+    post_fault_affinity = verify_node_affinities(nodes, args.effective_vcpu_limit)
 
     pre_interrupt = write_record(
         output / "pre-interruption.json",
@@ -769,6 +802,7 @@ def run_growth(
             "projection": projection,
             "sampler": sampler_receipt,
             "fault": fault,
+            "post_fault_affinity": post_fault_affinity,
             "green": True,
         },
         "receipt_sha256",
@@ -806,6 +840,7 @@ def run_growth(
         "database_projection_limit": DATABASE_PROJECTION_LIMIT,
         "sampler": sampler_receipt,
         "same_host_fault": fault,
+        "post_fault_affinity": post_fault_affinity,
         "offpod_manifest_sha256": manifest["manifest_sha256"],
         "offpod_ack_sha256": digest(ack),
         "killed_process_returncode": target.returncode,
@@ -821,6 +856,23 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
         raise R12RemoteError("PACKET_SHA256_INVALID")
     if os.environ.get("PDH3_PACKET_SHA256") != args.packet_sha256:
         raise R12RemoteError("PACKET_ENV_BINDING_INVALID")
+    try:
+        provider_vcpus = int(os.environ["PDH3_PROVIDER_VCPUS"])
+        provider_memory_gib = int(os.environ["PDH3_PROVIDER_MEMORY_GIB"])
+        environment_limit = int(os.environ["PDH3_EFFECTIVE_VCPU_LIMIT"])
+        affinity_plan = cpu_affinity.effective_vcpu_plan(
+            provider_vcpus, provider_memory_gib
+        )
+        if (
+            environment_limit != args.effective_vcpu_limit
+            or affinity_plan["effective_vcpu_limit"] != args.effective_vcpu_limit
+        ):
+            raise R12RemoteError("EFFECTIVE_VCPU_BINDING_MISMATCH")
+        parent_affinity = cpu_affinity.verify_current_affinity(
+            args.effective_vcpu_limit
+        )
+    except (KeyError, TypeError, ValueError, cpu_affinity.AffinityError) as exc:
+        raise R12RemoteError("CPU_AFFINITY_ENVIRONMENT_BLOCKED:" + str(exc)) from exc
     binary = args.binary.resolve()
     packet = args.packet.resolve()
     if not binary.is_file() or not os.access(binary, os.X_OK):
@@ -833,6 +885,18 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
     args.export_root.mkdir(parents=True)
     args.remote_ack_root.mkdir(parents=True)
     publisher = Publisher(args.output, args.export_root, args.packet_sha256)
+
+    parent_affinity_record = write_record(
+        args.output / "cpu-affinity-parent.json",
+        {
+            "version": "ck-pdh3-r12-parent-affinity-v1",
+            "plan": affinity_plan,
+            "parent": parent_affinity,
+            "exact": True,
+        },
+        "receipt_sha256",
+    )
+    publisher.publish(Path("cpu-affinity-parent.json"))
 
     pf2 = plan_ab.execute(
         args.output / "pf2r",
@@ -863,6 +927,14 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
             contract.NODE_CACHE,
             contract.NODE_SQL_MEMORY,
         )
+        cluster_start_affinity = verify_node_affinities(
+            nodes, args.effective_vcpu_limit
+        )
+        atomic_write(
+            args.output / "cpu-affinity-cluster-start.json",
+            canonical(cluster_start_affinity),
+        )
+        publisher.publish(Path("cpu-affinity-cluster-start.json"))
         scale.apply_migrations(binary, nodes[0].sql_port, env)
         expected, pf5 = verify_full_setup(binary, nodes, env, journal, args, args.output / "pf5")
         publisher.publish(Path("pf5"), Path("journal.ndjson"))
@@ -890,7 +962,7 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
         nodes = []
         success = True
         body = {
-            "version": "ck-pdh3-r12-remote-preflight-result-v1",
+            "version": "ck-pdh3-r12-remote-preflight-result-v2",
             "status": "GREEN_PENDING_PF8",
             "campaign_id": args.campaign_id,
             "packet_sha256": args.packet_sha256,
@@ -900,6 +972,10 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
             "pf5_receipt_sha256": pf5["receipt_sha256"],
             "pf6_receipt_sha256": pf6["receipt_sha256"],
             "pf7_receipt_sha256": pf7["receipt_sha256"],
+            "cpu_affinity_plan_sha256": affinity_plan["plan_sha256"],
+            "parent_affinity_receipt_sha256": parent_affinity_record["receipt_sha256"],
+            "cluster_start_affinity_receipt_sha256": cluster_start_affinity["receipt_sha256"],
+            "post_fault_affinity_receipt_sha256": pf7["post_fault_affinity"]["receipt_sha256"],
             "teardown_receipt_sha256": teardown_receipt["receipt_sha256"],
             "measured_24h_started": False,
             "green_pending_pf8": True,
@@ -951,6 +1027,7 @@ def parser() -> argparse.ArgumentParser:
     value.add_argument("--pf2-runtime-parent", type=Path, default=Path("/tmp"))
     value.add_argument("--setup-timeout-seconds", type=int, default=contract.SETUP_TIMEOUT_SECONDS)
     value.add_argument("--host-ack-timeout-seconds", type=int, default=600)
+    value.add_argument("--effective-vcpu-limit", type=int, required=True)
     return value
 
 

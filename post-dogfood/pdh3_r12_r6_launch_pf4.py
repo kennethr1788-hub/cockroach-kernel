@@ -13,6 +13,7 @@ import sys
 import time
 from typing import Any
 
+import pdh3_r12_cpu_affinity as cpu_affinity
 import pdh3_r12_lifecycle_launch as lifecycle
 import pdh3_r12_r6_config as r6_config
 
@@ -99,11 +100,13 @@ def delete_and_prove(
     raise R6LaunchError("TEARDOWN_UNPROVEN")
 
 
-def exact_shape(body: dict[str, Any], *, name: str, image: str, ceiling: float) -> bool:
+def shape_plan(
+    body: dict[str, Any], *, name: str, image: str, ceiling: float
+) -> dict[str, Any] | None:
     machine = body.get("machine") if isinstance(body.get("machine"), dict) else {}
     vcpus = int(body.get("vcpuCount", 0))
     memory = int(body.get("memoryInGb", 0))
-    return bool(
+    base_green = bool(
         body.get("id")
         and body.get("name") == name
         and body.get("gpuCount") == 1
@@ -113,11 +116,20 @@ def exact_shape(body: dict[str, Any], *, name: str, image: str, ceiling: float) 
         and float(body.get("costPerHr", 999.0)) <= ceiling
         and vcpus >= 16
         and memory >= 94
-        and memory >= 4 * vcpus
         and machine.get("secureCloud") is True
         and (machine.get("gpuId") == "NVIDIA L40S"
              or "L40S" in str(machine.get("gpuDisplayName", "")))
     )
+    if not base_green:
+        return None
+    try:
+        return cpu_affinity.effective_vcpu_plan(vcpus, memory)
+    except cpu_affinity.AffinityError:
+        return None
+
+
+def exact_shape(body: dict[str, Any], *, name: str, image: str, ceiling: float) -> bool:
+    return shape_plan(body, name=name, image=image, ceiling=ceiling) is not None
 
 
 def ssh_ready(
@@ -292,11 +304,14 @@ def main() -> int:
                 deadline=min(time.monotonic() + 900, time.monotonic() + max(1, launch_deadline - time.time())),
             )
             detailed = json.loads((attempt_root / "pod-get.json").read_bytes())
-            if not exact_shape(detailed, name=pod_name, image=config["image"],
-                               ceiling=config["rate_ceiling_usd_per_hour"]):
+            affinity_plan = shape_plan(
+                detailed, name=pod_name, image=config["image"],
+                ceiling=config["rate_ceiling_usd_per_hour"],
+            )
+            if affinity_plan is None:
                 raise R6LaunchError("RETURNED_WORKER_MISMATCH")
             record = {
-                "version": "ck-pdh3-r12-r6-running-worker-v1",
+                "version": "ck-pdh3-r12-r6-running-worker-v2",
                 "attempt": attempt, "campaign_id": campaign,
                 "pod_id": pod_id, "pod_name": pod_name,
                 "packet_sha256": config["packet_sha256"],
@@ -304,6 +319,8 @@ def main() -> int:
                 "guard_pid": guard_pid, "guard_bound_event_hash": bound["event_hash"],
                 "ssh_config": str(ssh_config), "cost_per_hr": detailed["costPerHr"],
                 "vcpu_count": detailed["vcpuCount"], "memory_gib": detailed["memoryInGb"],
+                "effective_vcpu_limit": affinity_plan["effective_vcpu_limit"],
+                "cpu_affinity_plan": affinity_plan,
                 "stop_utc": config["stop_utc"], "terminate_utc": config["terminate_utc"],
                 "main_bundle_uploaded": False, "status": "PF4_WORKER_READY_PREUPLOAD",
                 "utc": iso(now_utc()),

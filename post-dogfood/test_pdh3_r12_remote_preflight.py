@@ -4,6 +4,8 @@ import importlib.util
 from pathlib import Path
 import sys
 import unittest
+from types import SimpleNamespace
+from unittest import mock
 
 
 BASE = Path(__file__).resolve().parents[1]
@@ -67,6 +69,38 @@ class R12RemotePreflightTests(unittest.TestCase):
         )
         self.assertGreater(value["projected_24h"]["database"], 200)
         self.assertGreater(value["projected_24h"]["network"], 3)
+
+    def test_node_affinity_proof_covers_every_live_node(self) -> None:
+        nodes = [
+            SimpleNamespace(
+                index=index,
+                process=SimpleNamespace(pid=100 + index, poll=lambda: None),
+            )
+            for index in range(3)
+        ]
+        with mock.patch.object(
+            runner.cpu_affinity,
+            "verify_current_affinity",
+            side_effect=lambda expected, pid: {
+                "expected": expected,
+                "pid": pid,
+                "exact": True,
+                "receipt_sha256": "a" * 64,
+            },
+        ):
+            receipt = runner.verify_node_affinities(nodes, 31)
+        self.assertTrue(receipt["exact"])
+        self.assertEqual([row["affinity"]["pid"] for row in receipt["nodes"]], [100, 101, 102])
+
+    def test_node_affinity_proof_rejects_dead_node(self) -> None:
+        nodes = [
+            SimpleNamespace(
+                index=0,
+                process=SimpleNamespace(pid=100, poll=lambda: 1),
+            )
+        ]
+        with self.assertRaisesRegex(runner.R12RemoteError, "COCKROACH_NODE_NOT_ALIVE"):
+            runner.verify_node_affinities(nodes, 31)
 
 
 if __name__ == "__main__":

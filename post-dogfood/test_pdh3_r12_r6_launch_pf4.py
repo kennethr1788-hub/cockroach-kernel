@@ -34,9 +34,26 @@ class R6LaunchTests(unittest.TestCase):
             ceiling=0.99,
         ))
 
-    def test_r5_shape_is_rejected_without_relabeling_cpu(self) -> None:
+    def test_32_vcpu_125_gib_shape_gets_prospective_31_cpu_cap(self) -> None:
+        worker = self.worker(vcpus=32, memory=125)
+        self.assertTrue(module.exact_shape(
+            worker,
+            name="ck-pdh3-r12-preflight-r6-test-01",
+            image="runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404",
+            ceiling=0.99,
+        ))
+        plan = module.shape_plan(
+            worker,
+            name="ck-pdh3-r12-preflight-r6-test-01",
+            image="runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404",
+            ceiling=0.99,
+        )
+        self.assertIsNotNone(plan)
+        self.assertEqual(plan["effective_vcpu_limit"], 31)
+
+    def test_shape_below_frozen_memory_minimum_is_rejected(self) -> None:
         self.assertFalse(module.exact_shape(
-            self.worker(vcpus=32, memory=125),
+            self.worker(vcpus=32, memory=93),
             name="ck-pdh3-r12-preflight-r6-test-01",
             image="runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404",
             ceiling=0.99,

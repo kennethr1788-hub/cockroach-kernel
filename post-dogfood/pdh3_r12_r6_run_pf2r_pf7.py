@@ -11,6 +11,7 @@ import subprocess
 import sys
 import time
 
+import pdh3_r12_cpu_affinity as cpu_affinity
 import pdh3_r12_r6_config as r6_config
 
 
@@ -191,6 +192,18 @@ def main() -> int:
     final_green = False
     error: BaseException | None = None
     try:
+        try:
+            affinity_plan = cpu_affinity.effective_vcpu_plan(
+                int(RUNNING["vcpu_count"]), int(RUNNING["memory_gib"])
+            )
+        except (KeyError, TypeError, ValueError, cpu_affinity.AffinityError) as exc:
+            raise RuntimeError("RUNNING_AFFINITY_PLAN_INVALID") from exc
+        if (
+            RUNNING.get("effective_vcpu_limit")
+            != affinity_plan["effective_vcpu_limit"]
+            or RUNNING.get("cpu_affinity_plan") != affinity_plan
+        ):
+            raise RuntimeError("RUNNING_AFFINITY_PLAN_MISMATCH")
         # The remote launcher creates output/export/ack roots atomically and
         # rejects pre-existing roots. Only its parent may exist beforehand.
         create = run([*ssh_base, "mkdir", "-p", "--", REMOTE], 60)
@@ -284,6 +297,9 @@ def main() -> int:
             "--runtime-parent", REMOTE + "/runtime-parent",
             "--pf2-runtime-parent", REMOTE + "/pf2-parent",
             "--setup-timeout-seconds", "10800", "--host-ack-timeout-seconds", "900",
+            "--provider-vcpus", str(RUNNING["vcpu_count"]),
+            "--provider-memory-gib", str(RUNNING["memory_gib"]),
+            "--effective-vcpu-limit", str(RUNNING["effective_vcpu_limit"]),
             "--receipt", REMOTE + "/remote-launch-receipt.json",
             "--log", REMOTE + "/remote-launch.log",
         ], 300)
