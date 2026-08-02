@@ -1,0 +1,11 @@
+SERVED_MODEL: glm-5.2
+TARGET_PACKET_SHA256: 723d95c459c2ef85ba29486a39c052dd36d69a1ba14976cdc6dabe71ba4367d3
+VERDICT: GREEN
+BLOCKERS:
+- none
+NON_BLOCKING_RISKS:
+- Secure Cloud L40S stock is currently reported as 'Low', which may trigger a fail-closed termination if inventory drifts before the launch window closes.
+EVIDENCE_REQUIRED:
+- Detached lifecycle guard heartbeat logs and exact Pod ID bind confirmation.
+- Successful sched_getaffinity readback matching the deterministic plan.
+- Controller proof of exact Pod-ID absence and TEARDOWN_GREEN event post-execution.
