@@ -90,6 +90,25 @@ def launch_argv(args: argparse.Namespace) -> list[str]:
     ]
 
 
+def runtime_environment(args: argparse.Namespace) -> dict[str, str]:
+    """Return the complete allowlisted environment for the remote process.
+
+    Ubuntu installs the ``ip`` binary used by the namespace observer under
+    ``/usr/sbin``. Keep both system sbin locations explicit while still
+    discarding every inherited environment variable.
+    """
+    return {
+        "HOME": str(args.empty_home.resolve()),
+        "LANG": "C.UTF-8",
+        "LC_ALL": "C.UTF-8",
+        "PATH": "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+        "PDH3_PACKET_SHA256": args.packet_sha256,
+        "PYTHONDONTWRITEBYTECODE": "1",
+        "PYTHONHASHSEED": "0",
+        "TZ": "UTC",
+    }
+
+
 def execute(args: argparse.Namespace) -> dict[str, Any]:
     if re.fullmatch(r"[0-9a-f]{64}", args.packet_sha256) is None:
         raise LaunchError("PACKET_SHA256_INVALID")
@@ -119,16 +138,7 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
             if log_fd > 2:
                 os.close(log_fd)
             os.chdir(args.workdir.resolve())
-            environment = {
-                "HOME": str(args.empty_home.resolve()),
-                "LANG": "C.UTF-8",
-                "LC_ALL": "C.UTF-8",
-                "PATH": "/usr/local/bin:/usr/bin:/bin",
-                "PDH3_PACKET_SHA256": args.packet_sha256,
-                "PYTHONDONTWRITEBYTECODE": "1",
-                "PYTHONHASHSEED": "0",
-                "TZ": "UTC",
-            }
+            environment = runtime_environment(args)
             os.execve(argv[0], argv, environment)
         except BaseException:
             os._exit(127)

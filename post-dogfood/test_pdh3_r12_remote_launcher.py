@@ -54,6 +54,19 @@ class LauncherTests(unittest.TestCase):
         self.assertEqual(argv[argv.index("--setup-timeout-seconds") + 1], "10800")
         self.assertEqual(argv[argv.index("--host-ack-timeout-seconds") + 1], "900")
 
+    def test_runtime_environment_is_allowlisted_and_keeps_ubuntu_sbin(self) -> None:
+        environment = launcher.runtime_environment(self.arguments())
+        self.assertEqual(
+            set(environment),
+            {"HOME", "LANG", "LC_ALL", "PATH", "PDH3_PACKET_SHA256",
+             "PYTHONDONTWRITEBYTECODE", "PYTHONHASHSEED", "TZ"},
+        )
+        self.assertEqual(
+            environment["PATH"],
+            "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+        )
+        self.assertEqual(environment["PDH3_PACKET_SHA256"], "a" * 64)
+
 
 if __name__ == "__main__":
     unittest.main()
