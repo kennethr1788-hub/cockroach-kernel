@@ -36,11 +36,23 @@ def _require_hex(value: Any, label: str) -> str:
 def _require_path(value: Any, label: str, *, file: bool = True) -> Path:
     if not isinstance(value, str) or not value.startswith("/") or "\x00" in value:
         raise R6ConfigError(label + "_PATH_INVALID")
-    path = Path(value).resolve()
-    if file and (not path.is_file() or path.is_symlink()):
+    supplied = Path(value)
+    if supplied.is_symlink():
+        raise R6ConfigError(label + ("_FILE_INVALID" if file else "_DIRECTORY_INVALID"))
+    path = supplied.resolve()
+    if file and not path.is_file():
         raise R6ConfigError(label + "_FILE_INVALID")
-    if not file and (not path.is_dir() or path.is_symlink()):
+    if not file and not path.is_dir():
         raise R6ConfigError(label + "_DIRECTORY_INVALID")
+    return path
+
+
+def require_runtime_file(runtime: Path, value: Any, label: str) -> Path:
+    """Resolve one receipt-bound file and require containment in the runtime."""
+    runtime = runtime.resolve()
+    path = _require_path(value, label)
+    if runtime not in path.parents:
+        raise R6ConfigError(label + "_OUTSIDE_RUNTIME")
     return path
 
 

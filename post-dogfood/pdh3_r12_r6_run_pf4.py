@@ -107,7 +107,9 @@ def main() -> int:
     pod_name = str(running.get("pod_name", ""))
     cli = Path(config["runpodctl"])
     guard = load_module(root / "s2-soak/lifecycle_guard.py", "pdh3_r12_r6_pf4_guard")
-    ssh_config = Path(running["ssh_config"])
+    ssh_config = r6_config.require_runtime_file(
+        runtime, running.get("ssh_config"), "SSH_CONFIG"
+    )
     ssh = ["/usr/bin/ssh", "-F", str(ssh_config), pod_name]
     scp = ["/usr/bin/scp", "-F", str(ssh_config)]
     remote = f"/workspace/{config['campaign_id']}/pf4"

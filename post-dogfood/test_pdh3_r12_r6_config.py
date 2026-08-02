@@ -96,6 +96,35 @@ class R6ConfigTests(unittest.TestCase):
             with self.assertRaisesRegex(module.R6ConfigError, "MIN_VCPU_COUNT_INVALID"):
                 module.load(weak)
 
+    def test_runtime_file_accepts_nested_receipt_path(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            runtime = Path(temporary) / "runtime"
+            target = runtime / "attempt-01" / "ssh-config"
+            target.parent.mkdir(parents=True)
+            target.write_text("Host worker\n", encoding="utf-8")
+            self.assertEqual(
+                module.require_runtime_file(runtime, str(target), "SSH_CONFIG"),
+                target.resolve(),
+            )
+
+    def test_runtime_file_rejects_outside_path_and_symlink(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            runtime = root / "runtime"
+            runtime.mkdir()
+            outside = root / "outside"
+            outside.write_text("outside\n", encoding="utf-8")
+            with self.assertRaisesRegex(
+                module.R6ConfigError, "SSH_CONFIG_OUTSIDE_RUNTIME"
+            ):
+                module.require_runtime_file(runtime, str(outside), "SSH_CONFIG")
+            link = runtime / "ssh-config"
+            link.symlink_to(outside)
+            with self.assertRaisesRegex(
+                module.R6ConfigError, "SSH_CONFIG_FILE_INVALID"
+            ):
+                module.require_runtime_file(runtime, str(link), "SSH_CONFIG")
+
 
 if __name__ == "__main__":
     unittest.main()

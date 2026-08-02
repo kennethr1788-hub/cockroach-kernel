@@ -185,7 +185,9 @@ def main() -> int:
     if pf4.get("status") != "PF4_GREEN" or pf4.get("packet_sha256") != PACKET_SHA256:
         raise RuntimeError("PF4_NOT_GREEN")
     pod_id = str(pf4.get("pod_id", ""))
-    config_path = RUNTIME / "ssh-config"
+    config_path = r6_config.require_runtime_file(
+        RUNTIME, RUNNING.get("ssh_config"), "SSH_CONFIG"
+    )
     ssh_base = ["/usr/bin/ssh", "-F", str(config_path), POD_NAME]
     scp_base = ["/usr/bin/scp", "-F", str(config_path)]
     workload_started = False
