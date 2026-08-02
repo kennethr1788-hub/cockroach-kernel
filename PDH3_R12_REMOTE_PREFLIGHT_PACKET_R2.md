@@ -1,8 +1,8 @@
-# PDH-3 R12 Paid Remote Preflight Packet R1
+# PDH-3 R12 Paid Remote Preflight Packet R2
 
 Status: `FROZEN_FOR_SAME_HASH_GLM_REVIEW__NO_WORKER_CREATED`
 
-UTC frozen: `2026-08-02T06:00:00Z`
+UTC frozen: `2026-08-02T06:17:00Z`
 
 Builder: `Codex / Icarus`
 
@@ -36,22 +36,22 @@ capability mismatch, or teardown uncertainty sets:
 - threshold-timing amendment R1: bound by its file SHA-256 recorded in the
   request and judge receipt;
 - implementation commit:
-  `e327e34c678174134dc88c79609470f566544ea6`
+  `17b6a21c1174d2fbdbf9ff257456c50873186557`
 - frozen product candidate:
   `1c483b1930e629c9ecb6d73418b9554897dc08ad`
-- bundle bytes: `143,981,423`;
+- bundle bytes: `143,981,780`;
 - deterministic bundle SHA-256:
-  `7def8766a66264ca86cfc9a1c351dce7e4ee97d29a1e27a4ad43501e187ca8fb`
+  `94476b35fe1e443d81741ed97c48d5211dd48b6c4b6b052e54751653a6b5e38f`
 - bundle verification SHA-256:
-  `78a65a5d2636822df38dbe81268f556de690495d7ed197d2da73eb2a2168803b`
+  `92cffd11c7d84fb9cf43350790dbdb985962e7eea4320c074f1b446bc70d79b6`
 - source-set SHA-256:
-  `eb5fceb713de3c4643b377ca77a3cbe57c3dee0b9af954460cf8fe93d1b4dc5f`
+  `9f3e3b9f338768ab53580fc0f4ed626e326d3976f41647b7948ba1ac1c43dac5`
 - manifest SHA-256:
-  `18dc4b8c1092c4cebc221abcd25dafb8072038ab29d0db89dabe65c4f34f9880`
+  `3758032e6593d2a032dc145f2fdca38e53f000f8eec51f8f992bfe28692889cb`
 - bundle receipt SHA-256:
-  `a684125b90973df0043fe04711eea6d03e3e912efa5d16aa72020214bde51f4b`
+  `25ecd8a6dd47a19e81e9520099591b9ba435598dfa00be9b5b2c82eca193c2d8`
 - extracted smoke SHA-256:
-  `892e453699ac6b59c04697ebeac9892cf8d417bc45e1ec6f2bb0a2665012affc`
+  `c8a826451e2d47d0d139df60a97617a7833de99177e6ee19f9819568df4ab302`
 - attempt-history manifest SHA-256:
   `72877c307496cd57d910385c8aa898c779d449170f7134478eb5d2a2702cbe1e`
 - CockroachDB v26.2.3 Linux binary SHA-256:
@@ -71,7 +71,7 @@ operator-owned, excluded from the source manifest, and must remain untouched.
 - PF-2 local execution: `PF2_LOCAL_STORAGE_RESERVE_BLOCKED`, preserved;
 - PF-2R: mandatory first remote database stage after PF-4;
 - PF-3: `PF3_LOCAL_RESOURCE_BOUNDARY_GREEN`; no weaker local result is claimed;
-- 31 R12 unit tests passed at commit `e327e34`;
+- 32 R12 unit tests passed at commit `17b6a21`;
 - extracted bundle compilation covered 33 Python files and 12 test programs;
 - no RunPod worker was active at packet freeze.
 
@@ -99,7 +99,7 @@ requirements. The GPU is unused and creates no product claim.
 
 ## 5. Frozen provider envelope
 
-- campaign ID and Pod name: `ck-pdh3-r12-preflight-r1-01`;
+- campaign ID and Pod name: `ck-pdh3-r12-preflight-r2-01`;
 - cloud: `SECURE`;
 - compute type: `GPU` only because the qualifying worker is sold as a GPU
   worker;
@@ -111,10 +111,10 @@ requirements. The GPU is unused and creates no product claim.
 - exposed port: `22/tcp` only;
 - one worker at a time;
 - creation attempts: exactly `1`;
-- launch window: `2026-08-02T06:30:00Z` through
-  `2026-08-02T07:30:00Z`;
-- provider-native stop-after: `2026-08-02T16:15:00Z`;
-- provider-native terminate-after: `2026-08-02T16:30:00Z`;
+- launch window: `2026-08-02T06:50:00Z` through
+  `2026-08-02T07:50:00Z`;
+- provider-native stop-after: `2026-08-02T16:35:00Z`;
+- provider-native terminate-after: `2026-08-02T16:50:00Z`;
 - maximum paid lifetime: `10 hours` from the earliest permitted creation;
 - compute-rate ceiling: `$0.50/hour`;
 - container-storage allowance: conservatively `$0.40` over the bounded life;
@@ -130,7 +130,7 @@ zero-volume, and rate before any upload.
 The exact creation argv is:
 
 ```text
-/tmp/runpodctl-v2.7.2-darwin-arm64 pod create --cloud-type SECURE --compute-type GPU --gpu-id NVIDIA GeForce RTX 3090 --gpu-count 1 --image runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404 --name ck-pdh3-r12-preflight-r1-01 --container-disk-in-gb 250 --volume-in-gb 0 --ports 22/tcp --stop-after 2026-08-02T16:15:00Z --terminate-after 2026-08-02T16:30:00Z --output json
+/tmp/runpodctl-v2.7.2-darwin-arm64 pod create --cloud-type SECURE --compute-type GPU --gpu-id NVIDIA GeForce RTX 3090 --gpu-count 1 --image runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404 --name ck-pdh3-r12-preflight-r2-01 --container-disk-in-gb 250 --volume-in-gb 0 --ports 22/tcp --stop-after 2026-08-02T16:35:00Z --terminate-after 2026-08-02T16:50:00Z --output json
 ```
 
 Shell interpolation is forbidden. Arguments are passed as an array.
@@ -161,8 +161,10 @@ Only after PF-4 GREEN:
 1. upload the one frozen archive, recheck its SHA-256 remotely, and extract into
    a new generated root;
 2. re-run the bundle member/source verification and all extracted smoke tests;
-3. execute only `pdh3_r12_remote_launcher.py`; its command graph contains no
-   `--production` flag and no 86,400-second measured branch;
+3. execute only `pdh3_r12_remote_launcher.py`; its allowlisted `PATH` includes
+   Ubuntu's `/usr/sbin` and `/sbin` for the pinned namespace tools, while its
+   command graph contains no `--production` flag and no 86,400-second measured
+   branch;
 4. the remote network observer begins before the workload process tree;
 5. execute PF-2R, PF-5, PF-6, and PF-7 sequentially exactly as defined in the
    plan and amendments;
