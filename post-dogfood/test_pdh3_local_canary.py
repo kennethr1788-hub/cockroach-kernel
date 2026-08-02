@@ -301,7 +301,10 @@ class LocalCanaryDeadlineTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="pdh3-teardown-output.") as temporary:
             output = Path(temporary)
             root = Path(
-                tempfile.mkdtemp(prefix="ck-pdh3-local-r1.", dir="/private/tmp")
+                tempfile.mkdtemp(
+                    prefix="ck-pdh3-local-r1.",
+                    dir=str(canary.LOCAL_ROOT_PARENT),
+                )
             )
             try:
                 with (

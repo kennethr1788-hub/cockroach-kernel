@@ -28,6 +28,9 @@ from typing import Any
 
 BASE = Path(__file__).resolve().parents[1]
 CANDIDATE = "1c483b1930e629c9ecb6d73418b9554897dc08ad"
+LOCAL_ROOT_PARENT = Path(
+    "/tmp" if sys.platform.startswith("linux") else "/private/tmp"
+)
 PLAN_SHA256 = "bbda0c8d5d6273de93977000c9fbb6a4be61602686bc53617d43758fede48c24"
 PACKET_NAME = "PDH_3_LOCAL_CANARY_PACKET_R2.md"
 CAMPAIGN_ID = "ck-g7r9-pdh3-local-r1"
@@ -1004,7 +1007,7 @@ def finalize_local_teardown(
     generated_root_removed = False
     verified_root = root.resolve()
     if (
-        verified_root.parent != Path("/private/tmp")
+        verified_root.parent != LOCAL_ROOT_PARENT
         or not verified_root.name.startswith("ck-pdh3-local-r1.")
     ):
         errors.append("GENERATED_ROOT_IDENTITY_INVALID")
@@ -1171,7 +1174,9 @@ def execute(output: Path, packet: Path) -> dict[str, Any]:
     expected_packet_hash = os.environ.get("PDH3_PACKET_SHA256")
     if expected_packet_hash is None or packet_hash != expected_packet_hash:
         raise CanaryError("PACKET_HASH_BINDING_INVALID")
-    root = Path(tempfile.mkdtemp(prefix="ck-pdh3-local-r1.", dir="/private/tmp"))
+    root = Path(
+        tempfile.mkdtemp(prefix="ck-pdh3-local-r1.", dir=str(LOCAL_ROOT_PARENT))
+    )
     fake_home = root / "empty-home"
     temp = root / "temp"
     store = root / "store"
