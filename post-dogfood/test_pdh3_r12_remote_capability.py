@@ -87,6 +87,9 @@ class CapabilityTests(unittest.TestCase):
         self.assertEqual(values["effective_vcpus"], 16)
         self.assertEqual(values["effective_memory_bytes"], 125 * 1024**3)
 
+    def test_provider_shape_below_four_gib_per_vcpu_is_insufficient(self) -> None:
+        self.assertLess(125 * 1024**3, 32 * 4 * 1024**3)
+
 
 if __name__ == "__main__":
     unittest.main()

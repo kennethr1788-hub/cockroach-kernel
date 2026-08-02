@@ -97,9 +97,9 @@ def launch_argv(args: argparse.Namespace) -> list[str]:
 def runtime_environment(args: argparse.Namespace) -> dict[str, str]:
     """Return the complete allowlisted environment for the remote process.
 
-    Ubuntu installs the ``ip`` binary used by the namespace observer under
-    ``/usr/sbin``. Keep both system sbin locations explicit while still
-    discarding every inherited environment variable.
+    Keep both system sbin locations explicit for the bounded remote harness
+    while discarding every inherited environment variable.  The streaming
+    observer and its hash-pinned tracer are passed by explicit absolute paths.
     """
     return {
         "HOME": str(args.empty_home.resolve()),

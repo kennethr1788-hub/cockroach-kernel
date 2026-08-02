@@ -372,7 +372,8 @@ def execute(
         "cgroup": all(cgroup_files.values()),
         "process_tree": process_tree_available,
         "monotonic": monotonic_advanced,
-        "network_namespace": observer_result["green"] and observer_receipt.is_file(),
+        "streaming_network_observer": observer_result["green"]
+        and observer_receipt.is_file(),
         "residue": not any(path.exists() for path in paths.values()),
     }
     body = {
@@ -392,7 +393,7 @@ def execute(
             "cgroup_files": cgroup_files,
             "process_tree_available": process_tree_available,
             "monotonic_advanced": monotonic_advanced,
-            "network_namespace": observer_result,
+            "streaming_network_observer": observer_result,
             "network_probe_sha256": digest(observer_output.read_bytes())
             if observer_output.is_file()
             else None,
