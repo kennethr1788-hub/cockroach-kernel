@@ -98,7 +98,7 @@ inventory, or a mismatched worker causes fail-closed teardown.
 
 ## 4. Fresh campaign, deadlines, and cost
 
-- campaign ID: `ck-pdh3-r12-r6-pf4-usmo-r1`;
+- campaign ID: `ck-pdh3-r12-preflight-r6-pf4-usmo-r1`;
 - maximum attempts: 3;
 - launch window opens: `2026-08-02T10:48:00Z`;
 - launch window closes: `2026-08-02T11:33:00Z`;
