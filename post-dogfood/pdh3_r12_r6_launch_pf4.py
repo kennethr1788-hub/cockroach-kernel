@@ -207,6 +207,9 @@ def main() -> int:
     campaign = config["campaign_id"]
     guard = load_module(root / "s2-soak/lifecycle_guard.py", "pdh3_r12_r6_guard")
     verify_static_gate(config)
+    # Prove the detached guard can receive its host-only credential before any
+    # paid provider mutation.  Never read, print, persist, or hash the value.
+    lifecycle.guard_environment(runtime / "credential-canary-home")
     inventory = parsed(run(root, [str(cli), "pod", "list", "--output", "json"], 30), "INVENTORY")
     if inventory != []:
         raise R6LaunchError("ACTIVE_INVENTORY_NOT_EMPTY")

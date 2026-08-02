@@ -1,0 +1,13 @@
+glm-zai: served by glm-5.2
+```text
+SERVED_MODEL: glm-5.2
+TARGET_PACKET_SHA256: a4c6519d324b1c68c6d4be36f95f2068dc62686b9c4f501942ac1824d3c21069
+VERDICT: GREEN
+CRITICAL_FINDINGS:
+- NONE
+HIGH_FINDINGS:
+- NONE
+REQUIRED_CORRECTIONS:
+- NONE
+RATIONALE: The R6 paid preflight packet is structurally coherent, mathematically bounded, and safely segmented from the 24-hour measured campaign. All source, bundle, control plane, and remote launcher artifacts are cryptographically bound. Deterministic cost upper bounds ($9.991042) sit well below the $12.00 authorized ceiling. Provider shape requirements (16 vCPU, 94 GiB RAM, 1x L40S), strict teardown deadlines, fail-closed invariant checks (PF-4/PF-7), and explicit lack of 24-hour authorization guarantee that issuing the first worker creation request strictly adheres to the frozen envelope and security boundaries.
+```
