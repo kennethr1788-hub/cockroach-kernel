@@ -54,3 +54,23 @@ This second cleanup pass is limited to reproducible dependency installations, su
 
 Abort without deleting if a target path differs from this exact list, resolves outside the repository, is a mount, is active in a task/campaign process, or if the retained worker archive or expanded AWS runtime fails verification.
 
+## Post-deletion result
+
+- `STATUS`: `CLEANUP_GREEN`
+- `UTC_COMPLETED`: `2026-08-02T13:12:12Z`
+- `DELETED_TARGETS`: `16`
+- `DELETED_MANIFEST_BYTES`: `4560579518`
+- `RESIDUAL_TARGETS`: `[]`
+- `TARGET_LIST_SHA256_RECHECK`: `bf683fe44bf29de3a0333bbbabebfbdb990f331f07acf316f437c0f04d2a878b`
+- `EV1_RUNTIME_BEFORE`: `6.4 GiB`
+- `EV1_RUNTIME_AFTER`: `2.4 GiB`
+- `S3_RUNTIME_BEFORE`: `1.0 GiB`
+- `S3_RUNTIME_AFTER`: `396 MiB`
+- `FILESYSTEM_FREE_AFTER`: `20 GiB`
+- `RETAINED_WORKER_R3_SHA256_RECHECK`: `c0f0514c09d63da833361ec34ef2cbc2f0e96c210fca043cbc7d3c33a8e703d4`
+- `AWS_EXPANDED_RUNTIME_RECHECK`: `aws-cli/2.36.8 Python/3.14.6 Darwin/25.5.0 exe/arm64`
+- `HARDENING_RUNTIME`: `PRESERVED_UNCHANGED_EVIDENTIARY_ROLE_AMBIGUOUS`
+- `P2_CLEANROOM`: `PRESERVED_UNCHANGED_LOCKED_COCKROACH_RUNTIME`
+- `OPERATOR_OWNED_HEAP_PROFILER`: `UNTOUCHED`
+
+The manifest removed about 4.56 GB of file content. APFS reported only about one additional GiB of immediately available filesystem capacity during this observation; `du` directly confirms the expected project-tree reduction, while APFS snapshots, purgeable blocks, and shared-container accounting can delay or mask the corresponding `df` change.

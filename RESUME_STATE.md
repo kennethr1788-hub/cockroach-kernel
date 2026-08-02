@@ -2,12 +2,12 @@
 
 - `CURRENT_PHASE`: `PDH3_R12_R6_FULL_CARDINALITY_PREFLIGHT_REPAIR`
 - `LAST_GREEN_GATE`: `PDH_3_LOCAL_CANARY_GREEN`
-- `NEXT_ALLOWED_ACTION`: Complete the frozen project-runtime cleanup R2 without deleting evidence; then freeze a prospective R6 replacement packet, obtain exact same-hash GLM 5.2 GREEN, and stop before any new paid worker pending replacement lifecycle authorization that supersedes the post-upload no-replacement marker
+- `NEXT_ALLOWED_ACTION`: Freeze a prospective R6 replacement packet from the repaired candidate, obtain exact same-hash GLM 5.2 GREEN, and stop before any new paid worker pending replacement lifecycle authorization that supersedes the post-upload no-replacement marker
 - `FORBIDDEN_ACTIONS`: Relabel R6 R5 as GREEN; omit the R5 failure; reuse revealed remote output as hidden evidence; create a replacement worker from the R5 packet; begin the measured 24-hour campaign; claim external-user or production-scale validation; modify Gate 3–8 or EV3 evidence; begin Gate 9, Gate 10, release, publication, video, or submission; mutate HOME/live memory; read, stage, modify, or commit the operator-owned untracked heap_profiler directory
-- `CURRENT_COMMIT`: `248c3dfe7ef5d973a1db0e8a5d0f135a5e6be160`
-- `LAST_VERIFIED_UTC`: `2026-08-02T13:08:30Z`
+- `CURRENT_COMMIT`: `9470eade2eb3618cc259351bff2f8349c4a0a339`
+- `LAST_VERIFIED_UTC`: `2026-08-02T13:12:12Z`
 - `PROJECT_RUNTIME_CLEANUP_R1`: `GREEN; 18894648579_MANIFEST_BYTES_DELETED; FREE_SPACE_1.3_GIB_TO_19_GIB; PDH3_RUNTIME_18_GIB_TO_590_MIB; ALL_EVIDENCE_CLASSES_AND_TWO_AUTHORITATIVE_BUNDLES_PRESERVED`
-- `PROJECT_RUNTIME_CLEANUP_R2`: `FROZEN_BEFORE_DELETION; 16_EXACT_TARGETS; 4560579518_BYTES; TARGET_LIST_SHA256_bf683fe44bf29de3a0333bbbabebfbdb990f331f07acf316f437c0f04d2a878b`
+- `PROJECT_RUNTIME_CLEANUP_R2`: `GREEN; 16_EXACT_TARGETS_DELETED; 4560579518_MANIFEST_BYTES; ZERO_RESIDUAL_TARGETS; EV1_6.4_GIB_TO_2.4_GIB; S3_1.0_GIB_TO_396_MIB; FREE_SPACE_20_GIB; TARGET_LIST_SHA256_bf683fe44bf29de3a0333bbbabebfbdb990f331f07acf316f437c0f04d2a878b`
 - `PDH3_R12_R6_R5_RESULT`: `BLOCKED; POD_r2iqulx4yfyoz8_DELETED; EXACT_INVENTORY_EMPTY; MEASURED_24H_FALSE; PF2R_SCALE_10000_GREEN_THEN_NAMEERROR_FILE_SHA256_UNDEFINED_DURING_TEARDOWN; NETWORK_OBSERVER_FAIL_CLOSED_CHILD_EXIT_1; HOST_TERMINAL_RECEIPT_RETRIEVAL_FAILED`
 - `PDH3_R12_R6_R5_PACKET_SHA256`: `6dabda20b7317e93961977423b58130a4356304da1ff40b75d02fdd703701218`
 - `PDH3_R12_R6_R5_FINAL_EVIDENCE_SHA256`: `1c5dfdadb2ca52196d352a585f2b24aceec614402af714a6e9ba8ab490d3ad00`
