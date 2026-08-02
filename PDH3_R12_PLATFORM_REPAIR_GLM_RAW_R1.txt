@@ -1,0 +1,14 @@
+glm-zai: served by glm-5.2
+```text
+SERVED_MODEL: glm-5.2
+TARGET_AMENDMENT_SHA256: 6a873f05fcc285fd7229fed8211deca87ac2e39c1a85deced49427fda9251e47
+TARGET_IMPLEMENTATION_COMMIT: 97fca76bdb246c02ee4e14d1a4f846d4114071e5
+VERDICT: GREEN
+CRITICAL_FINDINGS:
+- NONE
+HIGH_FINDINGS:
+- NONE
+REQUIRED_CORRECTIONS:
+- NONE
+RATIONALE: The amendment preserves prior R5 failure evidence as immutable and correctly bounds resource accounting to provider allocations and cgroup limits, disregarding host values. It properly restricts the RunPod credential to the host environment and enforces strict lifecycle validation. The network observer replacement is explicitly defined as a fail-closed observational tool, avoiding overclaims of preventive egress isolation. Finally, the rigid sequence of remote-preflight gate completion before final-campaign authorization is fully preserved.
+```
