@@ -132,10 +132,7 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
     tracer = args.tracer.resolve()
     if tracer_root == Path("/") or tracer_root not in tracer.parents:
         raise LaunchError("TRACER_ROOT_CONTAINMENT_INVALID")
-    library_directories = (
-        tracer_root / "usr/lib/x86_64-linux-gnu",
-        tracer_root / "lib/x86_64-linux-gnu",
-    )
+    library_directories = (tracer_root / "usr/lib/x86_64-linux-gnu",)
     if any(not path.is_dir() or path.is_symlink() for path in library_directories):
         raise LaunchError("TRACER_LIBRARY_ROOT_INVALID")
     expected_library_path = ":".join(str(path) for path in library_directories)

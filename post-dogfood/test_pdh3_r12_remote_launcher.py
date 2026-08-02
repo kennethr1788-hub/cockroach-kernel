@@ -28,11 +28,7 @@ class LauncherTests(unittest.TestCase):
             tracer=root / "tracer/usr/bin/strace",
             tracer_sha256="b" * 64,
             tracer_root=root / "tracer",
-            tracer_library_path=(
-                str(root / "tracer/usr/lib/x86_64-linux-gnu")
-                + ":"
-                + str(root / "tracer/lib/x86_64-linux-gnu")
-            ),
+            tracer_library_path=str(root / "tracer/usr/lib/x86_64-linux-gnu"),
             campaign_id="ck-pdh3-r12-preflight-r1",
             workdir=root,
             empty_home=root / "empty-home",
@@ -88,6 +84,10 @@ class LauncherTests(unittest.TestCase):
         self.assertEqual(
             environment["LD_LIBRARY_PATH"],
             self.arguments().tracer_library_path,
+        )
+        self.assertEqual(
+            environment["LD_LIBRARY_PATH"],
+            "/remote/ck-r12/tracer/usr/lib/x86_64-linux-gnu",
         )
 
 

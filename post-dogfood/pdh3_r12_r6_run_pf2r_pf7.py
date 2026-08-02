@@ -277,10 +277,7 @@ def main() -> int:
             raise RuntimeError("REMOTE_EXTRACTED_SMOKE_FAILED")
         tracer_root = REMOTE + "/tracer"
         tracer = tracer_root + "/usr/bin/strace"
-        tracer_library_path = (
-            tracer_root + "/usr/lib/x86_64-linux-gnu:"
-            + tracer_root + "/lib/x86_64-linux-gnu"
-        )
+        tracer_library_path = tracer_root + "/usr/lib/x86_64-linux-gnu"
         strace_deb = (
             REMOTE_APP
             + "/p2-cleanroom/vendor/ubuntu-noble-strace/strace_6.8-0ubuntu2_amd64.deb"
