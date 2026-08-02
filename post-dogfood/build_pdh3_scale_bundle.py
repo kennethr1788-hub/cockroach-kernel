@@ -832,11 +832,39 @@ def run_extracted_bundle_smoke(
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--receipt", type=Path, required=True)
+    parser.add_argument("--output", type=Path)
+    parser.add_argument("--receipt", type=Path)
     parser.add_argument("--smoke-root", type=Path)
     parser.add_argument("--smoke-receipt", type=Path)
+    parser.add_argument("--verify-archive", type=Path)
+    parser.add_argument("--verify-receipt", type=Path)
+    parser.add_argument("--verify-root", type=Path)
+    parser.add_argument("--verify-smoke-receipt", type=Path)
     arguments = parser.parse_args()
+    verify_values = (
+        arguments.verify_archive,
+        arguments.verify_receipt,
+        arguments.verify_root,
+        arguments.verify_smoke_receipt,
+    )
+    if any(value is not None for value in verify_values):
+        if not all(value is not None for value in verify_values):
+            parser.error("all four --verify-* arguments are required")
+        if any(value is not None for value in
+               (arguments.output, arguments.receipt, arguments.smoke_root,
+                arguments.smoke_receipt)):
+            parser.error("build and verify modes are mutually exclusive")
+        receipt = json.loads(arguments.verify_receipt.resolve().read_bytes())
+        smoke = run_extracted_bundle_smoke(
+            arguments.verify_archive.resolve(),
+            receipt,
+            arguments.verify_root.resolve(),
+            arguments.verify_smoke_receipt.resolve(),
+        )
+        print(canonical({"extracted_bundle_smoke": smoke}).decode())
+        return 0
+    if arguments.output is None or arguments.receipt is None:
+        parser.error("--output and --receipt are required in build mode")
     if (arguments.smoke_root is None) != (arguments.smoke_receipt is None):
         parser.error("--smoke-root and --smoke-receipt must be supplied together")
     receipt = build(arguments.output.resolve(), arguments.receipt.resolve())
