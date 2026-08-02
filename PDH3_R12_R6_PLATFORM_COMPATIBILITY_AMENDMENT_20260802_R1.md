@@ -94,6 +94,8 @@ must be empty.
 | `post-dogfood/pdh3_r12_network_observer.py` | `8e6f72c4fa44d56f982697ee3091938f27924a5120846cba96cc6ed1f794f102` |
 | `post-dogfood/run_pdh3_traced.py` | `87ce2498b1a03d1a0c80e96ef9e966e3a8958788c934e0ce4a63201aec3691e4` |
 | `post-dogfood/test_pdh3_r12_remote_capability.py` | `f2d2d8e0b5713efef82c30c8ff3a0724efdfe31c55017b3dd0183fa274315175` |
+| `post-dogfood/pdh3_r12_r6_config.py` | `fc6d37821157165b87f4fe48344bfa06fff7ffc3f5f4ec14f906ee0a18400068` |
+| `post-dogfood/test_pdh3_r12_r6_config.py` | `6b9b36f9ff571cfb44716ec3f36bcb5dfd3f464615974916c9fb38c1d0992535` |
 
 ## 4. Local evidence
 
@@ -138,6 +140,9 @@ and absolute provider stop/terminate deadlines.
 The operator's authorization covers one replacement paid preflight attempt.
 No retry after PF-4 or main-bundle upload is permitted. A transient creation or
 readiness failure consumes this replacement unless separately reauthorized.
+The host configuration schema is `ck-pdh3-r12-r6-config-v2` and mechanically
+requires `max_attempts: 1`; a three-attempt value is rejected before provider
+mutation.
 
 The main bundle may upload only after all PF-4 checks are GREEN, including:
 

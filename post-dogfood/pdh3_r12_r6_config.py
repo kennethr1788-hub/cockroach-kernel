@@ -85,7 +85,7 @@ def load(path: Path | None = None) -> dict[str, Any]:
     }
     if set(config) != required:
         raise R6ConfigError("CONFIG_FIELDS_INVALID")
-    if config["version"] != "ck-pdh3-r12-r6-config-v1":
+    if config["version"] != "ck-pdh3-r12-r6-config-v2":
         raise R6ConfigError("CONFIG_VERSION_INVALID")
     root = _require_path(config["root"], "ROOT", file=False)
     runtime = Path(config["runtime"]).resolve()
@@ -127,7 +127,7 @@ def load(path: Path | None = None) -> dict[str, Any]:
         raise R6ConfigError("LAUNCH_WINDOW_TOO_LONG")
     if (terminate - launch_start).total_seconds() > 36_000:
         raise R6ConfigError("PAID_LIFETIME_TOO_LONG")
-    if config["max_attempts"] != 3:
+    if config["max_attempts"] != 1:
         raise R6ConfigError("MAX_ATTEMPTS_INVALID")
     if config["rate_ceiling_usd_per_hour"] != 0.99:
         raise R6ConfigError("RATE_CEILING_INVALID")

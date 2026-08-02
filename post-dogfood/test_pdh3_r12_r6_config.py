@@ -28,7 +28,7 @@ class R6ConfigTests(unittest.TestCase):
                 files[name] = path
             now = datetime.now(timezone.utc).replace(microsecond=0)
             body = {
-                "version": "ck-pdh3-r12-r6-config-v1",
+                "version": "ck-pdh3-r12-r6-config-v2",
                 "root": str(root), "runtime": str(root / "runtime"),
                 "runpodctl": str(files["runpodctl"]),
                 "runpodctl_sha256": module.sha256(files["runpodctl"]),
@@ -46,7 +46,7 @@ class R6ConfigTests(unittest.TestCase):
                 "launch_end_utc": (now + timedelta(minutes=45)).isoformat().replace("+00:00", "Z"),
                 "stop_utc": (now + timedelta(hours=9)).isoformat().replace("+00:00", "Z"),
                 "terminate_utc": (now + timedelta(hours=10, seconds=1)).isoformat().replace("+00:00", "Z"),
-                "max_attempts": 3, "rate_ceiling_usd_per_hour": 0.99,
+                "max_attempts": 1, "rate_ceiling_usd_per_hour": 0.99,
                 "aggregate_cost_ceiling_usd": 12.0,
                 "archive": str(files["archive"]),
                 "archive_sha256": module.sha256(files["archive"]),
@@ -58,6 +58,13 @@ class R6ConfigTests(unittest.TestCase):
             config.write_text(json.dumps(body))
             with self.assertRaisesRegex(module.R6ConfigError, "PAID_LIFETIME_TOO_LONG"):
                 module.load(config)
+
+            body["terminate_utc"] = (now + timedelta(hours=9, minutes=30)).isoformat().replace("+00:00", "Z")
+            body["max_attempts"] = 3
+            retry_config = root / "retry-config.json"
+            retry_config.write_text(json.dumps(body))
+            with self.assertRaisesRegex(module.R6ConfigError, "MAX_ATTEMPTS_INVALID"):
+                module.load(retry_config)
 
 
 if __name__ == "__main__":
