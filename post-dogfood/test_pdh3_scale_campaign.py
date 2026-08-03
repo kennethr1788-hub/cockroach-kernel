@@ -25,6 +25,21 @@ SPEC.loader.exec_module(campaign)
 
 
 class ScaleCampaignUnitTests(unittest.TestCase):
+    def test_generated_root_allows_nested_campaign_root_under_tmp(self) -> None:
+        with tempfile.TemporaryDirectory(dir="/tmp") as temporary:
+            campaign_id = "ck-pdh3-test"
+            nested = Path(temporary) / f"{campaign_id}.attempt" / "run"
+            nested.mkdir(parents=True)
+            self.assertEqual(campaign.validate_generated_root(nested, campaign_id), nested.resolve())
+
+    def test_generated_root_rejects_non_tmp_even_with_campaign_name(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            campaign_id = "ck-pdh3-test"
+            root = Path(temporary) / f"{campaign_id}.attempt"
+            root.mkdir()
+            with self.assertRaisesRegex(campaign.CampaignError, "GENERATED_ROOT_PARENT_INVALID"):
+                campaign.validate_generated_root(root, campaign_id)
+
     def test_canary_helpers_bind_declared_reduced_cardinality(self) -> None:
         canary = type("Canary", (), {})()
         args = argparse.Namespace(

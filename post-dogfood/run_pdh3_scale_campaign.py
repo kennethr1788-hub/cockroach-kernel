@@ -2981,11 +2981,7 @@ def close_local_campaign(
     if not nodes and isinstance(partial_start, dict):
         open_ports.extend(partial_start.get("open_ports_after_failure", []))
     teardown["ports_closed"] = not open_ports
-    verified = root.resolve()
-    if verified.parent not in (Path("/tmp"), Path("/private/tmp")):
-        raise CampaignError("GENERATED_ROOT_PARENT_INVALID")
-    if not verified.name.startswith(campaign_id + "."):
-        raise CampaignError("GENERATED_ROOT_IDENTITY_INVALID")
+    verified = validate_generated_root(root, campaign_id)
     if verified.exists():
         shutil.rmtree(verified)
     teardown["generated_root_removed"] = not verified.exists()
@@ -3003,6 +2999,22 @@ def close_local_campaign(
     if not body["green"]:
         raise CampaignError("LOCAL_TEARDOWN_NOT_GREEN:" + digest(body))
     return {**body, "receipt_sha256": digest(body)}
+
+
+def validate_generated_root(root: Path, campaign_id: str) -> Path:
+    """Resolve and validate a disposable root without accepting host paths."""
+    verified = root.resolve(strict=False)
+    allowed_tmp = any(
+        verified != base and base in verified.parents
+        for base in (Path("/tmp"), Path("/private/tmp"))
+    )
+    campaign_component = any(
+        part == campaign_id or part.startswith(campaign_id + ".")
+        for part in verified.parts
+    )
+    if not allowed_tmp or not campaign_component:
+        raise CampaignError("GENERATED_ROOT_PARENT_INVALID")
+    return verified
 
 
 def commit_success_evidence(

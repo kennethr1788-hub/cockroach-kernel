@@ -70,6 +70,33 @@ class R12RemotePreflightTests(unittest.TestCase):
         self.assertGreater(value["projected_24h"]["database"], 200)
         self.assertGreater(value["projected_24h"]["network"], 3)
 
+    def test_resource_accounting_retries_transient_file_race(self) -> None:
+        backend = {
+            "available": True,
+            "backend": "PROCFS_PROCESS_TREE_PROVIDER_BOUND",
+            "files": {"cpu": "/proc/fake/cpu.stat"},
+        }
+        with mock.patch.object(
+            runner.remote_capability,
+            "resource_accounting_backend",
+            return_value=backend,
+        ), mock.patch.object(
+            runner,
+            "read_small",
+            side_effect=[OSError("vanished"), b"usage 1\n"],
+        ) as read:
+            value = runner.resource_accounting_snapshot()
+        self.assertEqual(value["values"]["cpu"]["read_attempts"], 2)
+        self.assertEqual(read.call_count, 2)
+
+    def test_resource_accounting_persistent_failure_is_fatal(self) -> None:
+        backend = {"available": True, "backend": "PROC", "files": {"cpu": "/proc/fake/cpu"}}
+        with mock.patch.object(
+            runner.remote_capability, "resource_accounting_backend", return_value=backend
+        ), mock.patch.object(runner, "read_small", side_effect=OSError("gone")):
+            with self.assertRaisesRegex(runner.R12RemoteError, "RESOURCE_ACCOUNTING_READ_FAILED"):
+                runner.resource_accounting_snapshot()
+
     def test_node_affinity_proof_covers_every_live_node(self) -> None:
         nodes = [
             SimpleNamespace(

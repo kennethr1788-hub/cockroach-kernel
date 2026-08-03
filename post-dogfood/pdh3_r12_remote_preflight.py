@@ -171,15 +171,25 @@ def resource_accounting_snapshot() -> dict[str, Any]:
     values: dict[str, Any] = {}
     for name, raw_path in sorted(backend["files"].items()):
         path = Path(raw_path)
-        values[name] = (
-            {
-                "bytes": path.stat().st_size,
-                "sha256": digest(read_small(path)),
-                "text": read_small(path).decode("utf-8", "replace")[:16_384],
-            }
-            if path.is_file()
-            else None
-        )
+        last_error: str | None = None
+        for attempt in range(2):
+            try:
+                raw = read_small(path)
+                values[name] = {
+                    "bytes": len(raw),
+                    "sha256": digest(raw),
+                    "text": raw.decode("utf-8", "replace")[:16_384],
+                    "read_attempts": attempt + 1,
+                }
+                break
+            except (OSError, UnicodeError, R12RemoteError) as exc:
+                last_error = f"{type(exc).__name__}:{exc}"
+                if attempt == 0:
+                    time.sleep(0.01)
+        else:
+            # A persistent accounting failure remains visible and is fatal to
+            # the sampler; a one-sample proc/cgroup race is retried above.
+            raise R12RemoteError(f"RESOURCE_ACCOUNTING_READ_FAILED:{name}:{last_error}")
     return {"backend": backend, "values": values}
 
 
@@ -833,7 +843,9 @@ def run_growth(
         },
         "receipt_sha256",
     )
-    manifest = publisher.publish(Path("pf7/pre-interruption.json"), Path("pf7/growth-observer.ndjson"))
+    manifest = publisher.publish(
+        Path("pf7/pre-interruption.json"), Path("pf7/growth-observer.ndjson.gz")
+    )
     ack_path = args.remote_ack_root / f"host-ack-{manifest['sequence']:04d}.json"
     ack_deadline = time.monotonic() + args.host_ack_timeout_seconds
     while time.monotonic() < ack_deadline and not ack_path.is_file():
