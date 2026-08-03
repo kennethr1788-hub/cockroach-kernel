@@ -995,6 +995,7 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
             args.campaign_id,
             teardown,
             require_database_drop=True,
+            allowed_parents=(args.runtime_root.parent, args.pf2_runtime_parent),
         )
         atomic_write(args.output / "local-teardown.json", canonical(teardown_receipt))
         nodes = []
@@ -1041,6 +1042,7 @@ def execute(args: argparse.Namespace) -> dict[str, Any]:
                     args.campaign_id,
                     teardown,
                     require_database_drop=False,
+                    allowed_parents=(args.runtime_root.parent, args.pf2_runtime_parent),
                 )
                 atomic_write(args.output / "local-teardown.json", canonical(receipt))
             except BaseException as exc:

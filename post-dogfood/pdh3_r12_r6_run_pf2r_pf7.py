@@ -112,53 +112,84 @@ def scp_exact(config, remote_name: str, local: Path) -> Path:
     return SUPERVISOR.atomic_scp(config, remote_name, local)
 
 
+def ack_event(event: str, sequence: int, **details: object) -> None:
+    """Persist host ACK progress so a transfer failure cannot become opaque."""
+    path = RUNTIME / "ack-events.ndjson"
+    body = {
+        "version": "ck-pdh3-r12-host-ack-event-v1",
+        "utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "event": event,
+        "sequence": sequence,
+        **details,
+    }
+    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    with path.open("ab") as handle:
+        handle.write(canonical(body) + b"\n")
+        handle.flush()
+        os.fsync(handle.fileno())
+
+
 def pull_and_ack(config, ssh_base: list[str], scp_base: list[str], target_sequence: int) -> int:
     previous_sequence, previous_hash = SUPERVISOR.previous_state(LOCAL_CHECKPOINTS)
     for sequence in range(previous_sequence + 1, target_sequence + 1):
-        manifest_name = f"checkpoint-{sequence:04d}.json"
-        archive_name = f"checkpoint-{sequence:04d}.tgz"
-        manifest_path = scp_exact(config, manifest_name, LOCAL_CHECKPOINTS / manifest_name)
-        archive_path = scp_exact(config, archive_name, LOCAL_CHECKPOINTS / archive_name)
-        verified = CHECKPOINT.verify_download(
-            manifest_path=manifest_path,
-            archive_path=archive_path,
-            expected_packet_sha256=PACKET_SHA256,
-            expected_sequence=sequence,
-            expected_previous_manifest_sha256=previous_hash,
-        )
-        ack = CHECKPOINT.acknowledge(
-            output=LOCAL_CHECKPOINTS / f"checkpoint-{sequence:04d}.ack.json",
-            manifest=verified,
-            local_archive=archive_path,
-            acknowledged_utc=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        )
-        state = {
-            "version": "ck-pdh3-r12-pull-state-v1",
-            "last_sequence": sequence,
-            "last_manifest_sha256": verified["manifest_sha256"],
-            "last_ack_sha256": ack["ack_sha256"],
-        }
-        CHECKPOINT.write_hashed(LOCAL_CHECKPOINTS / "pull-state.json", state, "state_sha256")
-        host_ack_body = {
-            "version": "ck-pdh3-r12-host-ack-v1",
-            "sequence": sequence,
-            "packet_sha256": PACKET_SHA256,
-            "manifest_sha256": verified["manifest_sha256"],
-            "local_ack_sha256": ack["ack_sha256"],
-            "verified": True,
-        }
-        host_ack = CHECKPOINT.write_hashed(
-            LOCAL_CHECKPOINTS / f"host-ack-{sequence:04d}.json",
-            host_ack_body, "host_ack_sha256",
-        )
-        local_ack = LOCAL_CHECKPOINTS / f"host-ack-{sequence:04d}.json"
-        temporary = f"{REMOTE_ACK}/host-ack-{sequence:04d}.json.part"
-        final = f"{REMOTE_ACK}/host-ack-{sequence:04d}.json"
-        uploaded = run([*scp_base, str(local_ack), f"{POD_NAME}:{temporary}"], 300)
-        promoted = run([*ssh_base, "mv", "--", temporary, final], 60) if uploaded.returncode == 0 else uploaded
-        if uploaded.returncode != 0 or promoted.returncode != 0 or host_ack.get("verified") is not True:
-            raise RuntimeError("REMOTE_ACK_FAILED")
-        previous_hash = verified["manifest_sha256"]
+        last_error: BaseException | None = None
+        for attempt in range(1, 4):
+            try:
+                ack_event("ACK_ATTEMPT", sequence, attempt=attempt)
+                manifest_name = f"checkpoint-{sequence:04d}.json"
+                archive_name = f"checkpoint-{sequence:04d}.tgz"
+                manifest_path = scp_exact(config, manifest_name, LOCAL_CHECKPOINTS / manifest_name)
+                archive_path = scp_exact(config, archive_name, LOCAL_CHECKPOINTS / archive_name)
+                verified = CHECKPOINT.verify_download(
+                    manifest_path=manifest_path,
+                    archive_path=archive_path,
+                    expected_packet_sha256=PACKET_SHA256,
+                    expected_sequence=sequence,
+                    expected_previous_manifest_sha256=previous_hash,
+                )
+                ack = CHECKPOINT.acknowledge(
+                    output=LOCAL_CHECKPOINTS / f"checkpoint-{sequence:04d}.ack.json",
+                    manifest=verified,
+                    local_archive=archive_path,
+                    acknowledged_utc=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                )
+                state = {
+                    "version": "ck-pdh3-r12-pull-state-v1",
+                    "last_sequence": sequence,
+                    "last_manifest_sha256": verified["manifest_sha256"],
+                    "last_ack_sha256": ack["ack_sha256"],
+                }
+                CHECKPOINT.write_hashed(LOCAL_CHECKPOINTS / "pull-state.json", state, "state_sha256")
+                host_ack_body = {
+                    "version": "ck-pdh3-r12-host-ack-v1",
+                    "sequence": sequence,
+                    "packet_sha256": PACKET_SHA256,
+                    "manifest_sha256": verified["manifest_sha256"],
+                    "local_ack_sha256": ack["ack_sha256"],
+                    "verified": True,
+                }
+                host_ack = CHECKPOINT.write_hashed(
+                    LOCAL_CHECKPOINTS / f"host-ack-{sequence:04d}.json",
+                    host_ack_body, "host_ack_sha256",
+                )
+                local_ack = LOCAL_CHECKPOINTS / f"host-ack-{sequence:04d}.json"
+                temporary = f"{REMOTE_ACK}/host-ack-{sequence:04d}.json.part"
+                final = f"{REMOTE_ACK}/host-ack-{sequence:04d}.json"
+                uploaded = run([*scp_base, str(local_ack), f"{POD_NAME}:{temporary}"], 300)
+                promoted = run([*ssh_base, "mv", "--", temporary, final], 60) if uploaded.returncode == 0 else uploaded
+                if uploaded.returncode != 0 or promoted.returncode != 0 or host_ack.get("verified") is not True:
+                    raise RuntimeError("REMOTE_ACK_FAILED")
+                previous_hash = verified["manifest_sha256"]
+                ack_event("ACK_GREEN", sequence, attempt=attempt, manifest_sha256=previous_hash)
+                last_error = None
+                break
+            except BaseException as exc:
+                last_error = exc
+                ack_event("ACK_RETRY", sequence, attempt=attempt, error=type(exc).__name__ + ":" + str(exc))
+                if attempt < 3:
+                    time.sleep(5 * attempt)
+        if last_error is not None:
+            raise RuntimeError(f"REMOTE_ACK_FAILED_SEQUENCE:{sequence}") from last_error
     return target_sequence
 
 
