@@ -25,6 +25,11 @@ from typing import Any, Iterable
 BASE = Path(__file__).resolve().parents[1]
 PLAN_SHA256 = "a1214b4779fe1495de219ed0033421ac810390641cd97742deb61cd3957df3d9"
 SCALES = (10_000, 50_000, 100_000)
+SEED_BATCH_TASKS = 5_000
+PROJECTION_BATCH_TASKS = 5_000
+SCALE_DEADLINE_SECONDS = 3_600
+SEED_TAIL_RESERVE_SECONDS = 900
+PROJECTION_TAIL_RESERVE_SECONDS = 600
 RECEIPT_INDEX_DDL = (
     "CREATE INDEX receipts_task_id_idx ON ck.receipts(task_id) "
     "STORING(status,event_hash)"
@@ -44,6 +49,21 @@ def load_canary() -> Any:
     spec = importlib.util.spec_from_file_location("pdh3_r12_pf2_canary", path)
     if spec is None or spec.loader is None:
         raise PlanABError("CANARY_IMPORT_FAILED")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def load_scale_campaign() -> Any:
+    """Load the proven batched seeder without duplicating its custody rules."""
+    path = BASE / "post-dogfood/run_pdh3_scale_campaign.py"
+    module_root = str(path.parent)
+    if module_root not in sys.path:
+        sys.path.insert(0, module_root)
+    spec = importlib.util.spec_from_file_location("pdh3_r12_pf2_scale", path)
+    if spec is None or spec.loader is None:
+        raise PlanABError("SCALE_CAMPAIGN_IMPORT_FAILED")
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
@@ -187,50 +207,236 @@ def run_sql(
     return completed.stdout, time.monotonic() - started
 
 
-def seed_sql(campaign: str, tasks: int) -> str:
-    prefix = "'" + campaign + "-task-'"
-    campaign_literal = "'" + campaign + "'"
-    task = f"{prefix} || lpad(i::STRING,6,'0')"
-    event = f"{task} || '-event-00'"
+def projection_seed_statement(campaign: str, start: int, stop: int) -> str:
+    campaign_literal = "'" + campaign.replace("'", "''") + "'"
+    task = f"{campaign_literal} || '-task-' || lpad(i::STRING,6,'0')"
+    return (
+        "INSERT INTO ck.projection_events"
+        "(projection_id,source_table,source_key,receipt_hash,sequence,projected_json,projection_hash) "
+        f"SELECT {campaign_literal} || '-projection-' || i::STRING,'tasks',{task},"
+        f"decode(sha256(({campaign_literal} || '-receipt-' || i::STRING || '-0')::BYTES),'hex'),"
+        "0,jsonb_build_object('synthetic',true),"
+        f"decode(sha256(({campaign_literal} || '-projection-' || i::STRING)::BYTES),'hex') "
+        f"FROM generate_series({start},{stop - 1}) g(i) "
+        "ON CONFLICT (projection_id) DO NOTHING"
+    )
+
+
+def secondary_receipt_seed_statement(campaign: str, start: int, stop: int) -> str:
+    campaign_literal = "'" + campaign.replace("'", "''") + "'"
+    task = f"{campaign_literal} || '-task-' || lpad(i::STRING,6,'0')"
     event_hash = (
-        f"decode(sha256(({campaign_literal} || '-event-' || i::STRING)::BYTES),'hex')"
+        f"decode(sha256(({campaign_literal} || '-event-' || i::STRING || '-0')::BYTES),'hex')"
     )
-    task_hash = (
-        f"decode(sha256(({campaign_literal} || '-task-' || i::STRING)::BYTES),'hex')"
+    return (
+        "INSERT INTO ck.receipts"
+        "(receipt_hash,task_id,event_hash,status,receipt_json) "
+        f"SELECT decode(sha256(({campaign_literal} || '-receipt-' || i::STRING || '-1')::BYTES),'hex'),"
+        f"{task},{event_hash},'SEALED',jsonb_build_object('synthetic',true,'receipt',1) "
+        f"FROM generate_series({start},{stop - 1}) g(i) "
+        "ON CONFLICT (receipt_hash) DO NOTHING"
     )
-    state_hash = (
-        f"decode(sha256(({campaign_literal} || '-state-' || i::STRING)::BYTES),'hex')"
+
+
+def secondary_receipt_reconciliation_statement(
+    campaign: str, start: int, stop: int
+) -> str:
+    campaign_literal = "'" + campaign.replace("'", "''") + "'"
+    task = f"{campaign_literal} || '-task-' || lpad(i::STRING,6,'0')"
+    expected = (
+        "SELECT "
+        f"decode(sha256(({campaign_literal} || '-receipt-' || i::STRING || '-1')::BYTES),'hex') AS receipt_hash,"
+        f"{task} AS task_id,"
+        f"decode(sha256(({campaign_literal} || '-event-' || i::STRING || '-0')::BYTES),'hex') AS event_hash,"
+        "'SEALED' AS status,jsonb_build_object('synthetic',true,'receipt',1) AS receipt_json "
+        f"FROM generate_series({start},{stop - 1}) g(i)"
     )
-    zero = "0" * 64
-    vector = "'[' || mod(i,101)::STRING || ',0,0' || '" + ",0" * 61 + "]'"
-    return ";".join(
-        (
-            "INSERT INTO ck.tasks(task_id,campaign_id,task_json,task_hash,state_hash) "
-            f"SELECT {task},{campaign_literal},jsonb_build_object('synthetic',true),"
-            f"{task_hash},{state_hash} FROM generate_series(0,{tasks - 1}) g(i)",
-            "INSERT INTO ck.trajectory_events"
-            "(event_id,task_id,sequence,parent_event_hash,state_hash,event_json,event_hash) "
-            f"SELECT {event},{task},0,decode('{zero}','hex'),{state_hash},"
-            f"jsonb_build_object('synthetic',true),{event_hash} "
-            f"FROM generate_series(0,{tasks - 1}) g(i)",
-            "INSERT INTO ck.receipts(receipt_hash,task_id,event_hash,status,receipt_json) "
-            f"SELECT decode(sha256(({campaign_literal} || '-receipt-' || i::STRING || '-' || s::STRING)::BYTES),'hex'),"
-            f"{task},{event_hash},'SEALED',jsonb_build_object('synthetic',true) "
-            f"FROM generate_series(0,{tasks - 1}) g(i),generate_series(0,1) x(s)",
-            "INSERT INTO ck.context_vectors"
-            "(vector_id,task_id,event_hash,namespace,vector,vector_digest) "
-            f"SELECT {task} || '-vector-00',{task},{event_hash},{campaign_literal},"
-            f"({vector})::VECTOR(64),decode(sha256(({vector})::BYTES),'hex') "
-            f"FROM generate_series(0,{tasks - 1}) g(i)",
-            "INSERT INTO ck.projection_events"
-            "(projection_id,source_table,source_key,receipt_hash,sequence,projected_json,projection_hash) "
-            f"SELECT {campaign_literal} || '-projection-' || i::STRING,'tasks',{task},"
-            f"decode(sha256(({campaign_literal} || '-receipt-' || i::STRING || '-0')::BYTES),'hex'),"
-            f"0,jsonb_build_object('synthetic',true),"
-            f"decode(sha256(({campaign_literal} || '-projection-' || i::STRING)::BYTES),'hex') "
-            f"FROM generate_series(0,{tasks - 1}) g(i)",
-        )
+    mismatch = (
+        "a.task_id IS DISTINCT FROM e.task_id OR "
+        "a.event_hash IS DISTINCT FROM e.event_hash OR "
+        "a.status IS DISTINCT FROM e.status OR "
+        "a.receipt_json IS DISTINCT FROM e.receipt_json"
     )
+    return (
+        f"WITH expected AS ({expected}) SELECT count(a.receipt_hash),"
+        f"count(*) FILTER (WHERE a.receipt_hash IS NOT NULL AND ({mismatch})) "
+        "FROM expected e LEFT JOIN ck.receipts a ON a.receipt_hash=e.receipt_hash"
+    )
+
+
+def seed_secondary_receipts(
+    scale: Any,
+    binary: Path,
+    port: int,
+    env: dict[str, str],
+    journal: Any,
+    *,
+    campaign: str,
+    tasks: int,
+    deadline: float,
+) -> dict[str, Any]:
+    return seed_plan_specific_batches(
+        scale,
+        binary,
+        port,
+        env,
+        journal,
+        campaign=campaign,
+        tasks=tasks,
+        deadline=deadline,
+        stage="secondary_receipt",
+        statement_factory=secondary_receipt_seed_statement,
+        reconciliation_factory=secondary_receipt_reconciliation_statement,
+    )
+
+
+def projection_reconciliation_statement(
+    campaign: str, start: int, stop: int
+) -> str:
+    campaign_literal = "'" + campaign.replace("'", "''") + "'"
+    task = f"{campaign_literal} || '-task-' || lpad(i::STRING,6,'0')"
+    expected = (
+        "SELECT "
+        f"{campaign_literal} || '-projection-' || i::STRING AS projection_id,"
+        "'tasks' AS source_table,"
+        f"{task} AS source_key,"
+        f"decode(sha256(({campaign_literal} || '-receipt-' || i::STRING || '-0')::BYTES),'hex') AS receipt_hash,"
+        "0::INT8 AS sequence,jsonb_build_object('synthetic',true) AS projected_json,"
+        f"decode(sha256(({campaign_literal} || '-projection-' || i::STRING)::BYTES),'hex') AS projection_hash "
+        f"FROM generate_series({start},{stop - 1}) g(i)"
+    )
+    mismatch = (
+        "a.source_table IS DISTINCT FROM e.source_table OR "
+        "a.source_key IS DISTINCT FROM e.source_key OR "
+        "a.receipt_hash IS DISTINCT FROM e.receipt_hash OR "
+        "a.sequence IS DISTINCT FROM e.sequence OR "
+        "a.projected_json IS DISTINCT FROM e.projected_json OR "
+        "a.projection_hash IS DISTINCT FROM e.projection_hash"
+    )
+    return (
+        f"WITH expected AS ({expected}) SELECT count(a.projection_id),"
+        f"count(*) FILTER (WHERE a.projection_id IS NOT NULL AND ({mismatch})) "
+        "FROM expected e LEFT JOIN ck.projection_events a "
+        "ON a.projection_id=e.projection_id"
+    )
+
+
+def seed_projections(
+    scale: Any,
+    binary: Path,
+    port: int,
+    env: dict[str, str],
+    journal: Any,
+    *,
+    campaign: str,
+    tasks: int,
+    deadline: float,
+) -> dict[str, Any]:
+    return seed_plan_specific_batches(
+        scale,
+        binary,
+        port,
+        env,
+        journal,
+        campaign=campaign,
+        tasks=tasks,
+        deadline=deadline,
+        stage="projection",
+        statement_factory=projection_seed_statement,
+        reconciliation_factory=projection_reconciliation_statement,
+    )
+
+
+def seed_plan_specific_batches(
+    scale: Any,
+    binary: Path,
+    port: int,
+    env: dict[str, str],
+    journal: Any,
+    *,
+    campaign: str,
+    tasks: int,
+    deadline: float,
+    stage: str,
+    statement_factory: Any,
+    reconciliation_factory: Any,
+) -> dict[str, Any]:
+    statement_hashes: list[str] = []
+    reconciliations: list[dict[str, Any]] = []
+    retries = 0
+    for start in range(0, tasks, PROJECTION_BATCH_TASKS):
+        stop = min(tasks, start + PROJECTION_BATCH_TASKS)
+        statement = statement_factory(campaign, start, stop)
+        statement_hash = digest(statement.encode("utf-8"))
+        completed = False
+        for attempt in range(scale.MAX_SEED_ATTEMPTS):
+            try:
+                scale.sql(
+                    binary,
+                    port,
+                    statement,
+                    env=env,
+                    timeout=scale.setup_timeout(
+                        deadline,
+                        scale.SETUP_SQL_TIMEOUT_SECONDS,
+                        reserve_seconds=PROJECTION_TAIL_RESERVE_SECONDS,
+                    ),
+                    stage=f"pf2_{stage}_seed",
+                    start=start,
+                    stop=stop,
+                )
+                completed = True
+            except scale.SqlOperationError as exc:
+                if not exc.retryable:
+                    raise
+            raw = scale.sql(
+                binary,
+                port,
+                reconciliation_factory(campaign, start, stop),
+                env=env,
+                timeout=scale.setup_timeout(
+                    deadline,
+                    scale.SETUP_SQL_TIMEOUT_SECONDS,
+                    reserve_seconds=PROJECTION_TAIL_RESERVE_SECONDS,
+                ),
+                stage=f"pf2_{stage}_reconcile",
+                start=start,
+                stop=stop,
+            )
+            actual, mismatched = scale.parse_count_tuple(raw, 2)
+            state = "EXACT" if actual == stop - start and mismatched == 0 else "MISMATCH"
+            reconciliation = {
+                "start": start,
+                "stop": stop,
+                "expected_rows": stop - start,
+                "actual_rows": actual,
+                "content_mismatches": mismatched,
+                "state": state,
+                "statement_sha256": statement_hash,
+            }
+            if state == "EXACT":
+                completed = True
+                reconciliations.append(reconciliation)
+                break
+            if actual not in (0, stop - start) or mismatched:
+                raise PlanABError(f"PF2_{stage.upper()}_RECONCILIATION_MISMATCH")
+            if attempt + 1 < scale.MAX_SEED_ATTEMPTS:
+                retries += 1
+                time.sleep(0.25 * (attempt + 1))
+        if not completed:
+            raise PlanABError(f"PF2_{stage.upper()}_BATCH_INCOMPLETE")
+        statement_hashes.append(statement_hash)
+        journal.emit(f"PF2_{stage.upper()}_BATCH", reconciliations[-1])
+    return {
+        "batch_tasks": PROJECTION_BATCH_TASKS,
+        "stage": stage,
+        "batches": len(reconciliations),
+        "rows": tasks,
+        "retries": retries,
+        "statement_set_sha256": digest(statement_hashes),
+        "reconciliations_sha256": digest(reconciliations),
+        "green": all(row["state"] == "EXACT" for row in reconciliations),
+    }
 
 
 def capture_queries(
@@ -291,6 +497,7 @@ def table_evidence(
     *,
     output: Path | None = None,
     label: str | None = None,
+    deadline: float | None = None,
 ) -> dict[str, Any]:
     statements = {
         "receipts_indexes": "SHOW INDEXES FROM ck.receipts",
@@ -300,7 +507,15 @@ def table_evidence(
     }
     result: dict[str, Any] = {}
     for name, statement in statements.items():
-        raw, elapsed = run_sql(canary, binary, port, env, statement)
+        timeout = 300
+        if deadline is not None:
+            available = deadline - time.monotonic() - 1
+            if available < 1:
+                raise PlanABError("TABLE_EVIDENCE_DEADLINE_EXHAUSTED")
+            timeout = min(timeout, max(1, int(available)))
+        raw, elapsed = run_sql(
+            canary, binary, port, env, statement, timeout=timeout
+        )
         entry: dict[str, Any] = {
             "sha256": digest(raw),
             "bytes": len(raw),
@@ -324,6 +539,7 @@ def scale_trial(
     binary: Path | None = None,
     runtime_parent: Path | None = None,
 ) -> dict[str, Any]:
+    scale = load_scale_campaign()
     binary = (binary or canary.find_cockroach()).resolve()
     if not binary.is_file() or binary.is_symlink() or not os.access(binary, os.X_OK):
         raise PlanABError("COCKROACH_BINARY_INVALID")
@@ -346,6 +562,14 @@ def scale_trial(
     trial_output.mkdir(parents=True)
     teardown: dict[str, Any] = {"process_stopped": False, "root_removed": False}
     try:
+        scale_deadline = time.monotonic() + SCALE_DEADLINE_SECONDS
+
+        def remaining_timeout(cap: int = 300) -> int:
+            available = scale_deadline - time.monotonic() - 1
+            if available < 1:
+                raise PlanABError("PF2_SCALE_DEADLINE_EXHAUSTED")
+            return min(cap, max(1, int(available)))
+
         process, log = canary.start_database(
             binary, root, port, http_port, env, append_log=False
         )
@@ -357,7 +581,77 @@ def scale_trial(
             BASE / "p9-cloud/migrations/001_cloud.sql",
             env=env,
         )
-        run_sql(canary, binary, port, env, seed_sql(f"pf2-{tasks}", tasks), timeout=1800)
+        campaign = f"pf2-{tasks}"
+        journal = scale.ChainLog(trial_output / "seed-journal.ndjson", campaign)
+        preseed_vector_index = scale.prove_preseed_vector_index(
+            binary,
+            port,
+            env,
+            scale_deadline,
+            reserve_seconds=SEED_TAIL_RESERVE_SECONDS,
+        )
+        if not preseed_vector_index["green"]:
+            raise PlanABError("PF2_PRESEED_VECTOR_INDEX_INVALID")
+        try:
+            seed = scale.seed_dataset(
+                binary,
+                port,
+                env,
+                journal,
+                campaign_id=campaign,
+                tasks=tasks,
+                events_per_task=1,
+                receipts_per_task=1,
+                vectors=tasks,
+                batch_tasks=SEED_BATCH_TASKS,
+                setup_deadline=scale_deadline,
+                tail_reserve_seconds=SEED_TAIL_RESERVE_SECONDS,
+            )
+            reconciliations = scale.campaign_reconciliations(
+                binary,
+                port,
+                env,
+                campaign_id=campaign,
+                tasks=tasks,
+                events_per_task=1,
+                receipts_per_task=1,
+                vectors=tasks,
+                setup_deadline=scale_deadline,
+                reserve_seconds=PROJECTION_TAIL_RESERVE_SECONDS,
+            )
+            if any(row["state"] != "EXACT" for row in reconciliations.values()):
+                raise PlanABError("PF2_CORE_SEED_RECONCILIATION_MISMATCH")
+            seeded_vector_index_metadata = scale.vector_index_metadata(
+                binary,
+                port,
+                env,
+                scale_deadline,
+                reserve_seconds=PROJECTION_TAIL_RESERVE_SECONDS,
+            )
+            if not seeded_vector_index_metadata["green"]:
+                raise PlanABError("PF2_SEEDED_VECTOR_INDEX_INVALID")
+            secondary_receipts = seed_secondary_receipts(
+                scale,
+                binary,
+                port,
+                env,
+                journal,
+                campaign=campaign,
+                tasks=tasks,
+                deadline=scale_deadline,
+            )
+            projections = seed_projections(
+                scale,
+                binary,
+                port,
+                env,
+                journal,
+                campaign=campaign,
+                tasks=tasks,
+                deadline=scale_deadline,
+            )
+        except scale.CampaignError as exc:
+            raise PlanABError(f"PF2_BOUNDED_SEED_FAILED:{exc}") from exc
         counts_raw, _ = run_sql(
             canary,
             binary,
@@ -368,26 +662,54 @@ def scale_trial(
             "(SELECT count(*) FROM ck.receipts),"
             "(SELECT count(*) FROM ck.context_vectors),"
             "(SELECT count(*) FROM ck.projection_events)",
+            timeout=remaining_timeout(),
         )
         expected_counts = (tasks, tasks, tasks * 2, tasks, tasks)
         actual_counts = canary.parse_count_tuple(counts_raw, 5)
         if actual_counts != expected_counts:
             raise PlanABError("PF2_COUNT_MISMATCH")
-        queries = query_definitions(f"pf2-{tasks}")
+        queries = query_definitions(campaign)
         before_metadata = table_evidence(
-            canary, binary, port, env, output=trial_output, label="before"
+            canary,
+            binary,
+            port,
+            env,
+            output=trial_output,
+            label="before",
+            deadline=scale_deadline,
         )
         before = capture_queries(
-            canary, binary, port, env, queries, trial_output, "before"
+            canary,
+            binary,
+            port,
+            env,
+            queries,
+            trial_output,
+            "before",
+            deadline=scale_deadline,
         )
         receipt_scan = any(before[f"receipt-{i:02d}"]["full_scan"] for i in range(5))
         projection_scan = before["stale-projection-read"]["full_scan"]
         if not receipt_scan:
             raise PlanABError("PF2_EXPECTED_RECEIPT_FULL_SCAN_NOT_OBSERVED")
-        run_sql(canary, binary, port, env, RECEIPT_INDEX_DDL, timeout=1800)
+        run_sql(
+            canary,
+            binary,
+            port,
+            env,
+            RECEIPT_INDEX_DDL,
+            timeout=remaining_timeout(600),
+        )
         selected_indexes = ["receipts_task_id_idx"]
         if projection_scan:
-            run_sql(canary, binary, port, env, PROJECTION_INDEX_DDL, timeout=1800)
+            run_sql(
+                canary,
+                binary,
+                port,
+                env,
+                PROJECTION_INDEX_DDL,
+                timeout=remaining_timeout(600),
+            )
             selected_indexes.append("projection_events_source_key_idx")
         run_sql(
             canary,
@@ -396,13 +718,26 @@ def scale_trial(
             env,
             "CREATE STATISTICS pf2_receipts_stats ON task_id FROM ck.receipts;"
             "CREATE STATISTICS pf2_projection_stats ON source_key FROM ck.projection_events",
-            timeout=1800,
+            timeout=remaining_timeout(600),
         )
         after_metadata = table_evidence(
-            canary, binary, port, env, output=trial_output, label="after"
+            canary,
+            binary,
+            port,
+            env,
+            output=trial_output,
+            label="after",
+            deadline=scale_deadline,
         )
         after = capture_queries(
-            canary, binary, port, env, queries, trial_output, "after"
+            canary,
+            binary,
+            port,
+            env,
+            queries,
+            trial_output,
+            "after",
+            deadline=scale_deadline,
         )
         mismatched_results = sorted(
             name for name in queries if before[name]["result_sha256"] != after[name]["result_sha256"]
@@ -426,6 +761,23 @@ def scale_trial(
             "receipt_full_scan_before": receipt_scan,
             "projection_full_scan_before": projection_scan,
             "selected_indexes": selected_indexes,
+            "seed_batch_tasks": SEED_BATCH_TASKS,
+            "scale_deadline_seconds": SCALE_DEADLINE_SECONDS,
+            "seed": seed,
+            "core_reconciliations": reconciliations,
+            "preseed_vector_index": preseed_vector_index,
+            "seeded_vector_index": {
+                "mode": "INCREMENTALLY_MAINTAINED_DURING_SEED",
+                "metadata": seeded_vector_index_metadata,
+                "exact_reconciliation": reconciliations["vectors"],
+                "ann_quality_deferred_to_full_cardinality_pf5": True,
+                "green": (
+                    seeded_vector_index_metadata["green"]
+                    and reconciliations["vectors"]["state"] == "EXACT"
+                ),
+            },
+            "secondary_receipts": secondary_receipts,
+            "projections": projections,
             "mismatched_results": mismatched_results,
             "prohibited_scans_after": prohibited_scans,
             "product_migration_modified": False,

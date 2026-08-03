@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import inspect
 from pathlib import Path
 import tempfile
 import unittest
@@ -33,6 +34,50 @@ class PlanABTests(unittest.TestCase):
             "CREATE INDEX receipts_task_id_idx ON ck.receipts(task_id) STORING(status,event_hash)",
         )
         self.assertNotIn("IF NOT EXISTS", plan_ab.RECEIPT_INDEX_DDL)
+
+    def test_projection_batches_are_idempotent_and_content_reconciled(self) -> None:
+        statement = plan_ab.projection_seed_statement("pf2-10000", 0, 5000)
+        reconciliation = plan_ab.projection_reconciliation_statement(
+            "pf2-10000", 0, 5000
+        )
+        self.assertIn("ON CONFLICT (projection_id) DO NOTHING", statement)
+        self.assertIn("generate_series(0,4999)", statement)
+        self.assertIn(
+            "actual not in (0, stop - start)",
+            inspect.getsource(plan_ab.seed_plan_specific_batches),
+        )
+        self.assertIn("projected_json IS DISTINCT FROM", reconciliation)
+        self.assertIn("projection_hash IS DISTINCT FROM", reconciliation)
+
+    def test_secondary_receipt_preserves_one_event_two_receipt_shape(self) -> None:
+        statement = plan_ab.secondary_receipt_seed_statement("pf2-10000", 0, 5000)
+        reconciliation = plan_ab.secondary_receipt_reconciliation_statement(
+            "pf2-10000", 0, 5000
+        )
+        self.assertIn("'-receipt-' || i::STRING || '-1'", statement)
+        self.assertIn("'-event-' || i::STRING || '-0'", statement)
+        self.assertIn("ON CONFLICT (receipt_hash) DO NOTHING", statement)
+        self.assertIn("receipt_json IS DISTINCT FROM", reconciliation)
+
+    def test_pf2_seed_operations_are_individually_bounded(self) -> None:
+        self.assertEqual(plan_ab.SEED_BATCH_TASKS, 5000)
+        self.assertEqual(plan_ab.PROJECTION_BATCH_TASKS, 5000)
+        self.assertLess(plan_ab.SEED_TAIL_RESERVE_SECONDS, plan_ab.SCALE_DEADLINE_SECONDS)
+        self.assertLess(
+            plan_ab.PROJECTION_TAIL_RESERVE_SECONDS,
+            plan_ab.SEED_TAIL_RESERVE_SECONDS,
+        )
+
+    def test_ann_quality_remains_deferred_to_full_cardinality_gate(self) -> None:
+        source = inspect.getsource(plan_ab.scale_trial)
+        self.assertNotIn("prove_seeded_vector_index", source)
+        self.assertIn("vector_index_metadata", source)
+        self.assertIn("ann_quality_deferred_to_full_cardinality_pf5", source)
+
+    def test_post_seed_operations_share_the_scale_deadline(self) -> None:
+        source = inspect.getsource(plan_ab.scale_trial)
+        self.assertIn("timeout=remaining_timeout(600)", source)
+        self.assertGreaterEqual(source.count("deadline=scale_deadline"), 4)
 
     def test_teardown_preserves_and_hashes_database_log(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

@@ -97,8 +97,11 @@ def structured_pod_not_found(raw: str) -> bool:
     arbitrary message that happens to contain ``404`` is not deletion proof.
     The accepted schemas are deliberately narrow: a flat JSON error object, or
     a JSON object whose ``error`` member is an error object.  The selected
-    object must carry a numeric HTTP-style 404 code and a human-readable
-    message that identifies a Pod as not found/nonexistent.
+    object must carry at least one numeric HTTP-style 404 status and a
+    human-readable message that identifies a Pod as not found/nonexistent.
+    Provider-specific symbolic codes (for example the runpodctl v2.8
+    ``"code":"not_found"`` member) are permitted only as auxiliary fields;
+    they cannot substitute for the numeric status.
     """
     try:
         value = json.loads(raw)
@@ -151,10 +154,14 @@ def structured_pod_not_found(raw: str) -> bool:
             for key in ("status", "statusCode", "code")
             if key in candidate
         ]
-        if not code_values or any(
-            isinstance(code, bool) or not isinstance(code, int) or code != 404
+        numeric_codes = [
+            code
             for code in code_values
-        ):
+            if isinstance(code, int) and not isinstance(code, bool)
+        ]
+        # Fail closed on a conflicting numeric status, but do not mistake an
+        # auxiliary symbolic provider code for a conflicting HTTP status.
+        if not numeric_codes or any(code != 404 for code in numeric_codes):
             continue
         messages = [
             candidate[key]

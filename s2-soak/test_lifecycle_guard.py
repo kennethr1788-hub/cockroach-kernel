@@ -87,6 +87,33 @@ class LifecycleGuardTests(unittest.TestCase):
         self.assertFalse(observed)
         self.assertIsNone(value)
 
+    def test_runpodctl_v280_symbolic_code_with_numeric_status_is_accepted(self) -> None:
+        result = subprocess.CompletedProcess(
+            [],
+            1,
+            '{"error":"failed to get pod: pod not found","code":"not_found","status":404}',
+            None,
+        )
+        with mock.patch.object(guard, "run", return_value=result):
+            observed, value, _ = guard.pod_get(
+                Path("/tmp/cli"), "pod", timeout_seconds=1
+            )
+        self.assertFalse(observed)
+        self.assertIsNone(value)
+
+    def test_symbolic_code_cannot_replace_or_override_numeric_404(self) -> None:
+        outputs = (
+            '{"error":"Pod not found","code":"not_found"}',
+            '{"error":"Pod not found","code":"not_found","status":500}',
+            '{"error":"Pod not found","code":500,"status":404}',
+        )
+        for stdout in outputs:
+            with self.subTest(stdout=stdout):
+                failed = subprocess.CompletedProcess([], 1, stdout, None)
+                with mock.patch.object(guard, "run", return_value=failed):
+                    with self.assertRaises(guard.TransientProviderError):
+                        guard.pod_get(Path("/tmp/cli"), "pod", timeout_seconds=1)
+
     def test_runpodctl_v272_wrapped_pod_404_is_accepted(self) -> None:
         output = (
             '{"error":"api error: {\\"error\\":\\"pod not found\\",'
