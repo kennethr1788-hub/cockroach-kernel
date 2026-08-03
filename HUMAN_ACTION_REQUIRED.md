@@ -265,3 +265,26 @@ No human action is currently useful. First build and run the missing two-trial
 live P9 coordinator evidence. Only after non-empty receipt linkage exists will
 a fresh one-time read-only OAuth confirmation be required for the final linked
 query. Do not start S3 until `CK_P9_INTEGRATION_GREEN` is real.
+
+## Current R6 RunPod authentication blocker
+
+- `STATUS`: `CK_R6_BLOCKED`
+- `BLOCKER`: `RUNPOD_AUTHENTICATION_401`
+- `PACKET_SHA256`: `9276539aa58f408f958f9044b92a7368b65e6cbd5f293051238eb0df0987804c`
+- `GLM_PREFLIGHT`: `GLM_5_2_GREEN`
+- `WORKER_CREATED`: `FALSE`
+- `CHARGE`: `NONE`
+
+The pre-upload `runpodctl pod list --output json` probe returned HTTP 401 using
+the only locally authorized key source (`~/.runpod/config.toml`). Refresh or
+re-authenticate the existing RunPod authorization through the approved human
+account path; do not send the credential to a model or commit it. Resume only
+after that read-only inventory command succeeds:
+
+```text
+PDH3_R12_R6_CONFIG=/Users/kennethruedas/sandbox/cockroach-kernel-build-20260725/.pdh3-runtime/r12-preflight/r6-repair-sampler-20260803-r3-config.json
+python3 post-dogfood/pdh3_r12_r6_launch_pf4.py
+```
+
+The frozen packet and repair candidate remain unchanged; the 24-hour campaign
+is not authorized by this blocker recovery.
