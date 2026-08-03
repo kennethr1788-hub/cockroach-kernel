@@ -16,4 +16,3 @@
 No unqualified Grok route was used. No project path, source file, credential, provider state, private data, or deployment authority was sent. No Grok output was accepted as research or evidence.
 
 The prior operator-supplied Grok sixteen-agent report remains disclosed context. It identified target-scale plan confirmation, batched/idempotent writes, continuous observability, bounded timeouts, and a canary ladder as necessary. The current replacement decision was independently derived from the retrieved failed-attempt artifacts and current official CockroachDB documentation because the fresh qualified Grok route was unavailable.
-

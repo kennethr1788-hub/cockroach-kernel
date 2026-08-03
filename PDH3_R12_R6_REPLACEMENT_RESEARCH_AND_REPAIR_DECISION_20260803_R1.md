@@ -60,4 +60,3 @@ The complete bundled regression plus lifecycle suite passed 160 tests across 14 
 ## Go/no-go boundary
 
 This artifact authorizes packet construction only. A replacement paid preflight remains `NO_GO` until the deterministic transfer bundle and extracted-bundle smoke are GREEN, current RunPod price/inventory fit the operator envelope, absolute deadlines are frozen, all source and evidence hashes are bound into one packet, and independent GLM 5.2 returns GREEN over that exact packet hash.
-
