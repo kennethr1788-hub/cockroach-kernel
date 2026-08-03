@@ -1,0 +1,21 @@
+glm-zai: served by glm-5.2
+```text
+SERVED_MODEL: glm-5.2
+TARGET_PACKET_SHA256: 17585b9b4dad64d0f3311c2d42e746bc70ec91b535a74ac93902580901da0d79
+VERDICT: GREEN
+BOUNDARY_CHECK: PASS
+EVIDENCE_CHECK: PASS
+COST_CHECK: PASS
+LIFECYCLE_CHECK: PASS
+FINDINGS:
+- Boundary is correctly scoped: packet is FROZEN_FOR_SAME_HASH_GLM_5_2_REVIEW__NO_WORKER_CREATED, MEASURED_24H_AUTHORIZED is false, and the packet explicitly does not authorize or start the 24-hour campaign; replacement authority is correctly bounded to terminate upon main-bundle upload to one verified worker.
+- Prior R5 failure is preserved and bound by three SHA-256 hashes (packet, final evidence, blocked-and-repair receipt) with an explicit prohibition on relabeling, omitting, or reusing it as success; R5 remains BLOCKED.
+- Repair is narrowly scoped to the exact R5 teardown defect: adds a streaming file_sha256(path) helper, isolates database-log preservation, and adds regression coverage; no workload, cardinality, query matrix, index decision, threshold, evidence rule, network rule, cost rule, or teardown requirement changed.
+- Local headroom receipt is consistent: 136/136 PDH-3 regression tests passed, 10k and 50k Plan A/B GREEN with exact counts and expected indexes and GREEN teardown, two independent extracted smokes at 141/141 PASS each.
+- The local 100,000-task macOS arm64 timeout is honestly disclosed as BLOCKED, not repackaged as evidence, with process stopped, root removed, log preserved, teardown GREEN; the packet explicitly states it supplies no RunPod timing proof. The remote PF-2R will re-run 100k on the target L40S worker.
+- Cost math is internally consistent: 250 GB * $0.10/720 = $0.0347222/hour, combined rate $1.0247222/hour, 9.75-hour maximum = $9.9910416667, below the $12.00 R6 ceiling and below the 10-hour lifetime ceiling; account balance ($85.16) is sufficient.
+- Lifecycle deadlines are explicit and ordered (launch window 45 min, host closeout, provider stop, provider terminate) with at most three sequential creation attempts, one worker at a time, exact-ID-absence proof before retry, and PF-8 teardown proving deletion and no residual SSH/supervisor/database/paid process.
+- All bound source, archive, manifest, receipt, tool, and provider-snapshot SHA-256 values are present; synthetic-only and credential-free are true; host control plane transferred is false; the heap_profiler/ directory is explicitly forbidden.
+- Kill lines are comprehensive and include source/archive/packet/tool/worker/image/price/deadline/evidence hash mismatch, secret exposure, undeclared egress, prohibited scans, latency/growth breaches, checkpoint gaps, observer gaps, unbounded child operations, process leaks, cost uncertainty, and inability to prove deletion.
+- Multi-stage gating is correct: remote success is only GREEN_PENDING_PF8, host closeout is only GREEN_PENDING_FINAL_GLM, and final R6 GREEN requires a new exact result packet plus independent GLM 5.2 GREEN; the single-worker, three-CockroachDB physical failure domain is honestly disclosed, with the network observer providing fail-closed detection rather than firewall isolation.
+```
