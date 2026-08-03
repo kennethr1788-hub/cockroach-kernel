@@ -364,8 +364,18 @@ def main() -> int:
                           str(RUNTIME / "remote-result.json")], 300)
         network_get = run([*scp_base, f"{POD_NAME}:{REMOTE}/network/network-receipt.json",
                            str(RUNTIME / "network-receipt.json")], 300)
-        if result_get.returncode != 0 or network_get.returncode != 0:
+        if network_get.returncode != 0:
             raise RuntimeError("TERMINAL_RECEIPT_RETRIEVAL_FAILED")
+        if result_get.returncode != 0:
+            # A fail-closed remote runner writes failure.json instead of a
+            # success result. Preserve that exact semantic reason locally so
+            # PF8 does not collapse a measured blocker into a transport error.
+            failure_get = run([*scp_base, f"{POD_NAME}:{REMOTE}/output/failure.json",
+                               str(RUNTIME / "remote-failure.json")], 300)
+            if failure_get.returncode != 0:
+                raise RuntimeError("TERMINAL_RECEIPT_RETRIEVAL_FAILED")
+            failure = json.loads((RUNTIME / "remote-failure.json").read_bytes())
+            raise RuntimeError("REMOTE_PREFLIGHT_BLOCKED:" + str(failure.get("reason", "UNKNOWN")))
         result = json.loads((RUNTIME / "remote-result.json").read_bytes())
         network = json.loads((RUNTIME / "network-receipt.json").read_bytes())
         if (result.get("status") != "GREEN_PENDING_PF8" or result.get("green_pending_pf8") is not True

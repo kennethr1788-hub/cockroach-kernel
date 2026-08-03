@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import concurrent.futures
+import gzip
 import hashlib
 import http.client
 import json
@@ -24,6 +25,7 @@ import sys
 import tempfile
 import threading
 import time
+import zlib
 from typing import Any, Iterable
 
 
@@ -229,6 +231,8 @@ class Sampler:
         self.error: str | None = None
         self.samples = 0
         self.previous = ZERO_HASH
+        self._raw_handle = None
+        self._gzip_handle = None
 
     def _run(self) -> None:
         try:
@@ -243,20 +247,38 @@ class Sampler:
                     "resource_accounting": resource_accounting_snapshot(),
                 }
                 record = {**body, "sample_sha256": digest(body)}
-                with self.path.open("ab") as handle:
-                    handle.write(canonical(record) + b"\n")
-                    handle.flush()
-                    os.fsync(handle.fileno())
+                if self._gzip_handle is None or self._raw_handle is None:
+                    raise R12RemoteError("SAMPLER_STREAM_NOT_OPEN")
+                self._gzip_handle.write(canonical(record) + b"\n")
+                # Keep every one-second record durable while compressing the
+                # canonical stream.  Z_SYNC_FLUSH preserves incremental
+                # recovery without reopening a gzip member per sample.
+                self._gzip_handle.flush(zlib.Z_SYNC_FLUSH)
+                self._raw_handle.flush()
+                os.fsync(self._raw_handle.fileno())
                 self.previous = record["sample_sha256"]
                 self.samples += 1
         except BaseException as exc:  # evidence collector failure is fatal
             self.error = f"{type(exc).__name__}:{exc}"
             self.stop_event.set()
+        finally:
+            if self._gzip_handle is not None:
+                self._gzip_handle.close()
+                self._gzip_handle = None
+            if self._raw_handle is not None:
+                self._raw_handle.flush()
+                os.fsync(self._raw_handle.fileno())
+                self._raw_handle.close()
+                self._raw_handle = None
 
     def start(self) -> None:
         if self.thread is not None:
             raise R12RemoteError("SAMPLER_ALREADY_STARTED")
         self.path.parent.mkdir(parents=True, exist_ok=True)
+        self._raw_handle = self.path.open("wb")
+        self._gzip_handle = gzip.GzipFile(
+            fileobj=self._raw_handle, mode="wb", compresslevel=6
+        )
         self.thread = threading.Thread(target=self._run, name="pdh3-r12-sampler", daemon=False)
         self.thread.start()
 
@@ -276,6 +298,8 @@ class Sampler:
             "last_sample_sha256": self.previous,
             "file_sha256": file_sha256(self.path),
             "bytes": self.path.stat().st_size,
+            "codec": "gzip",
+            "format": "canonical-json-lines",
             "green": True,
         }
 
@@ -734,7 +758,9 @@ def run_growth(
     )
     scale.configure_canary_module(canary, fake)
     query_file = make_query_files(canary, output / "queries", args.campaign_id)["read_mix"]["path"]
-    sampler = Sampler(output / "growth-observer.ndjson", nodes, args.runtime_root, args.output)
+    sampler = Sampler(
+        output / "growth-observer.ndjson.gz", nodes, args.runtime_root, args.output
+    )
     sampler.start()
     samples: list[dict[str, int]] = [
         {
