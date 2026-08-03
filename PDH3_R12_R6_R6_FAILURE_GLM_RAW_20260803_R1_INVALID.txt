@@ -1,0 +1,15 @@
+glm-zai: served by glm-5.2
+```text
+SERVED_MODEL: glm-5.2
+TARGET_PACKET_SHA256: 17585b9b4dad64d0f3311c2d42e746bc70ec91b535a74ac93902580901da0d79
+VERDICT: BLOCKED_CLASSIFICATION_CORRECT
+PRIMARY_BLOCKER_LOAD_BEARING: YES
+SECONDARY_LIFECYCLE_DEFECT_VALID: YES
+EVIDENCE_RETRIEVAL_PROVED: YES
+PROVIDER_TEARDOWN_PROVED: YES
+OLD_PACKET_RETRY_AUTHORIZED: NO
+FINDINGS:
+- Verified facts fully corroborate the builder's classification. The primary blocker (50k SQL_TIMEOUT) is load-bearing for the preflight failure, and the secondary lifecycle defect is confirmed by Fact 9. Evidence retrieval and provider teardown are fully proved by matching hashes, pod deletion verification, and clean inventory. The old packet's replacement authority is explicitly terminated.
+```
+
+INVALIDATION: The response copied the prospective execution-packet SHA-256 instead of the exact failure-review packet SHA-256 `d186345e47e3a984790da9e96c73e8f9c8f8c4e268287efe506d3b667854cb05`. It is preserved but cannot count.

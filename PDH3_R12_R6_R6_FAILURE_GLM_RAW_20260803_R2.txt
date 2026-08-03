@@ -1,0 +1,13 @@
+glm-zai: served by glm-5.2
+```text
+SERVED_MODEL: glm-5.2
+TARGET_PACKET_SHA256: d186345e47e3a984790da9e96c73e8f9c8f8c4e268287efe506d3b667854cb05
+VERDICT: BLOCKED_CLASSIFICATION_CORRECT
+PRIMARY_BLOCKER_LOAD_BEARING: YES
+SECONDARY_LIFECYCLE_DEFECT_VALID: YES
+EVIDENCE_RETRIEVAL_PROVED: YES
+PROVIDER_TEARDOWN_PROVED: YES
+OLD_PACKET_RETRY_AUTHORIZED: NO
+FINDINGS:
+- The 50k scale rung failed with a stable SQL timeout during seed/population, making the primary blocker load-bearing; teardown, evidence preservation, provider absence, and old-packet replacement termination are all substantiated.
+```
