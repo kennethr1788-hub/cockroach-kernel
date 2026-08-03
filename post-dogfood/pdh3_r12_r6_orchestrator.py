@@ -43,7 +43,7 @@ def atomic_write(path: Path, raw: bytes) -> None:
 
 def main() -> int:
     last = 0.0
-    while datetime.now(timezone.utc) < LAUNCH_START:
+    while CONFIG["launch_mode"] != "IMMEDIATE_AFTER_GLM_GREEN" and datetime.now(timezone.utc) < LAUNCH_START:
         now = time.monotonic()
         if now - last >= 30:
             remaining = max(0, int((LAUNCH_START - datetime.now(timezone.utc)).total_seconds()))

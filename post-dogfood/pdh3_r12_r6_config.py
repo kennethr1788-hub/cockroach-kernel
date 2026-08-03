@@ -151,7 +151,7 @@ def load(path: Path | None = None) -> dict[str, Any]:
         "version", "root", "runtime", "runpodctl", "runpodctl_sha256",
         "packet", "packet_sha256", "platform_amendment",
         "platform_amendment_sha256", "authorization_envelope",
-        "authorization_envelope_sha256", "judge_raw", "judge_raw_sha256", "campaign_id",
+        "authorization_envelope_sha256", "judge_raw", "judge_raw_sha256", "campaign_id", "launch_mode",
         "image", "launch_start_utc", "launch_end_utc", "stop_utc",
         "terminate_utc", "max_attempts", "rate_ceiling_usd_per_hour",
         "aggregate_cost_ceiling_usd", "archive", "archive_sha256",
@@ -199,6 +199,8 @@ def load(path: Path | None = None) -> dict[str, Any]:
     _require_hex(config["tracer_binary_sha256"], "TRACER_BINARY_SHA256")
     if not isinstance(config["campaign_id"], str) or CAMPAIGN.fullmatch(config["campaign_id"]) is None:
         raise R6ConfigError("CAMPAIGN_ID_INVALID")
+    if config["launch_mode"] not in {"FIXED_WINDOW", "IMMEDIATE_AFTER_GLM_GREEN"}:
+        raise R6ConfigError("LAUNCH_MODE_INVALID")
     if config["image"] != "runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404":
         raise R6ConfigError("IMAGE_INVALID")
     launch_start = _utc(config["launch_start_utc"], "LAUNCH_START")

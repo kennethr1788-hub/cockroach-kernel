@@ -42,6 +42,7 @@ class R6ConfigTests(unittest.TestCase):
                 "judge_raw": str(files["judge"]),
                 "judge_raw_sha256": module.sha256(files["judge"]),
                 "campaign_id": "ck-pdh3-r12-preflight-r6-test",
+                "launch_mode": "FIXED_WINDOW",
                 "image": "runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404",
                 "launch_start_utc": now.isoformat().replace("+00:00", "Z"),
                 "launch_end_utc": (now + timedelta(minutes=45)).isoformat().replace("+00:00", "Z"),

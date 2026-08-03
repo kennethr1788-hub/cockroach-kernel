@@ -314,7 +314,7 @@ def verify_static_gate(config: dict[str, Any]) -> None:
         raise R6LaunchError("JUDGE_GATE_NOT_GREEN")
     start = datetime.fromisoformat(config["launch_start_utc"].replace("Z", "+00:00"))
     end = datetime.fromisoformat(config["launch_end_utc"].replace("Z", "+00:00"))
-    if not start <= now_utc() <= end:
+    if config.get("launch_mode") != "IMMEDIATE_AFTER_GLM_GREEN" and not start <= now_utc() <= end:
         raise R6LaunchError("LAUNCH_WINDOW_NOT_OPEN")
 
 
