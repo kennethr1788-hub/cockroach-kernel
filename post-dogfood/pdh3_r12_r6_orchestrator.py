@@ -17,9 +17,11 @@ ROOT = Path(CONFIG["root"])
 RUNTIME = Path(CONFIG["runtime"])
 LAUNCH_START = datetime.fromisoformat(CONFIG["launch_start_utc"].replace("Z", "+00:00"))
 STAGES = (
-    ("PF4_CREATE", ROOT / "post-dogfood/pdh3_r12_r6_launch_pf4.py"),
-    ("PF4_CAPABILITY", ROOT / "post-dogfood/pdh3_r12_r6_run_pf4.py"),
-    ("PF2R_PF7_AND_PF8", ROOT / "post-dogfood/pdh3_r12_r6_run_pf2r_pf7.py"),
+    ("PF4_CREATE", [ROOT / "post-dogfood/pdh3_r12_r6_launch_pf4.py"]),
+    ("PF4_CAPABILITY", [ROOT / "post-dogfood/pdh3_r12_r6_run_pf4.py"]),
+    ("PF2R_PF7_AND_PF8", [
+        ROOT / "post-dogfood/pdh3_r12_r6_host_supervisor.py", "run"
+    ]),
 )
 
 
@@ -50,11 +52,11 @@ def main() -> int:
             print(canonical({"stage": "WAITING_FOR_FROZEN_WINDOW", "seconds_remaining": remaining}).decode(), flush=True)
             last = now
         time.sleep(5)
-    for stage, script in STAGES:
+    for stage, command in STAGES:
         print(canonical({"stage": stage, "status": "STARTING",
                          "utc": datetime.now(timezone.utc).isoformat(timespec="seconds")}).decode(), flush=True)
         completed = subprocess.run(
-            [sys.executable, str(script)], cwd=ROOT, stdin=subprocess.DEVNULL,
+            [sys.executable, *[str(part) for part in command]], cwd=ROOT, stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=None,
             check=False, shell=False,
         )
