@@ -1,0 +1,17 @@
+glm-zai: served by glm-5.2
+```text
+SERVED_MODEL: glm-5.2
+TARGET_PACKET_SHA256: 80f84f305dbddb58036033a1b2f3523dffae232fe79f8e38c5e0d92690aef5e7
+VERDICT: GREEN
+BOUNDARY_CHECK: PASS
+EVIDENCE_CHECK: PASS
+COST_CHECK: PASS
+LIFECYCLE_CHECK: PASS
+FINDINGS:
+- Boundary: Authority envelope hash is fixed and bound; packet scope explicitly excludes the 24-hour measured campaign; replacement authority terminates permanently at main-bundle upload start; worker count capped at one and concurrent attempts at three within the 45-minute window. PASS.
+- Evidence integrity: Failed attempt remains BLOCKED under the prior packet SHA-256 and may not be relabeled; fresh-source canonical sequence at 10k/50k/100k produced exact-count GREEN with zero result mismatches, zero prohibited scans, process-stopped GREEN, and generated-root-removed GREEN; candidate commit, PF-2 aggregate, aggregate receipt, all bound source files, archive, bundle receipt, embedded receipt, manifest, remote source-set, host-only binding, attempt-history manifest, extracted-smoke file/receipt, provider snapshot, research/repair decision, and Grok-blocked receipt hashes are all recorded. 160 tests / 14 programs passed; secret scans passed; no paid worker created during repair validation. PASS.
+- Repair adequacy: PF-2 reuses the proven per-table 5,000-task seed path; per-operation 60-second statement cap with 3,600-second monotonic rung deadline and reserved post-seed/post-reconciliation headroom; idempotency is content-checked rather than relying on ON CONFLICT DO NOTHING; vector index remains online through seed with metadata and exact-vector verification; lifecycle guard now requires numeric 404, rejects conflicting numeric statuses, treats symbolic not_found only as auxiliary, and still requires Pod-specific absence message. These changes directly address the prior 1,800-second single-statement timeout blocker without altering product migration, cardinality, concurrency, thresholds, fault schedule, evidence rules, worker shape, cost ceiling, or public claims. PASS.
+- Bounded cost: Maximum paid lifetime 9.75h < 10h authorized ceiling; combined active rate $1.0247222222/hour = $0.99/hour L40S + $0.0347222222/hour disk; max charge $9.9910416667 < $12.00 aggregate ceiling; account balance $84.5331811339 is well above worst case; unrelated spend $0.002/hour noted; pre-creation block conditions for unknown pricing, ceiling breach, insufficient balance, or unexpected Pod inventory are explicit. PASS.
+- Teardown and data safety: Host closeout 16:55Z, provider stop 17:10Z, provider terminate 17:25Z are sequenced with 15-minute margins; PF-8 requires stop workload, flush/fsync, evidence retrieval, local hash verification, raw failure preservation, stop/delete worker, exact-ID absence proof, and empty active inventory proof; kill lines cover secret exposure, undeclared egress, target-scale exactness failure, prohibited scans, latency/growth breach, missing checkpoint, observer gap, unbounded child operation, process leak, evidence-retrieval failure, lifecycle-guard failure, cost uncertainty, and deletion-proof failure; main-bundle upload permanently ends replacement authority and forces same-worker teardown on any later failure. PASS.
+- Scope limit respected: No implementation changes proposed beyond recorded findings; no authority to start the 24-hour campaign; final R6 GREEN explicitly requires a new exact result packet plus an independent GLM 5.2 GREEN.
+```
