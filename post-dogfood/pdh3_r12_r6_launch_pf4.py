@@ -322,7 +322,16 @@ def main() -> int:
     config = r6_config.load()
     root = Path(config["root"])
     runtime = Path(config["runtime"])
-    runtime.mkdir(parents=True, exist_ok=False, mode=0o700)
+    # The orchestrator creates the campaign runtime before invoking this
+    # stage so it can persist the stage stdout/stderr and terminal receipts.
+    # Requiring a non-existent directory here made a pre-provider launch
+    # fail deterministically before any RunPod API call.  Reuse only that
+    # exact, private runtime directory; never create or accept a symlink.
+    if runtime.exists():
+        if not runtime.is_dir() or runtime.is_symlink():
+            raise R6LaunchError("RUNTIME_ROOT_INVALID")
+    else:
+        runtime.mkdir(parents=True, exist_ok=False, mode=0o700)
     cli = Path(config["runpodctl"])
     campaign = config["campaign_id"]
     guard = load_module(root / "s2-soak/lifecycle_guard.py", "pdh3_r12_r6_guard")
