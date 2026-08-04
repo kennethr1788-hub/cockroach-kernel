@@ -56,10 +56,29 @@ the candidate record. Missing representations are recorded as
 `NO_PROVEN_REPRESENTATION`; their bytes are never invented.
 
 Successful recovery writes canonical decision, receipt, unrecovered-ledger,
-mutation-manifest, and summary records. A warrant is consumed in persistent,
+mutation-manifest, recovery checkpoint, and summary records. A warrant is consumed in persistent,
 locked custody before promotion and cannot be replayed in a fresh process.
 Refusal, invalid input before consumption, and clean/no-loss controls do not
 mutate the successor workspace.
+
+Before allowing any mutation, you can inspect the same request and surviving
+representations with the read-only preview command:
+
+```bash
+cockroach-kernel preview \
+  --request /private/tmp/example/request.json \
+  --sandbox-root /private/tmp/example \
+  --workspace /private/tmp/example/workspace \
+  --representation-root /private/tmp/example/representations \
+  --custody-root /private/tmp/example/custody \
+  --output-root /private/tmp/example/output
+```
+
+`preview` reports the projected verdict, verified surviving paths, unavailable
+paths and their reasons, and a hash-bound evidence basis. It consumes no
+warrant, writes no output, and does not mutate the successor workspace. The
+final `recover` command remains the only path that can consume custody and
+attempt promotion.
 
 ## Other public commands
 
@@ -71,6 +90,11 @@ cockroach-kernel inspect <canonical-receipt.json>
 `demo` is a clearly labeled deterministic keyless replay retained for
 compatibility. `inspect` validates its canonical receipts. Neither substitutes
 for the external-input `recover` command.
+
+Every recovery outcome also carries an append-only checkpoint record linking
+the request, decision, receipt, preservation proof, verdict, and recovered
+paths. A CockroachDB adapter may persist that record transactionally; the local
+deterministic verifier remains the sole pass/fail authority.
 
 ## Conflicting surviving evidence
 
