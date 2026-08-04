@@ -111,7 +111,8 @@ def _fact(name: str, value: Any, support: str, provenance: Iterable[str]) -> dic
 
 
 def build_brief(recovery_result: dict[str, Any], trajectories: Iterable[dict[str, Any]], *,
-                generated_at: str | None = None) -> dict[str, Any]:
+                generated_at: str | None = None,
+                recovery_decision: dict[str, Any] | None = None) -> dict[str, Any]:
     """Build one deterministic advisory brief from explicit hash-bound inputs."""
     if not isinstance(recovery_result, dict):
         raise BriefError("RESULT_MALFORMED")
@@ -121,6 +122,13 @@ def build_brief(recovery_result: dict[str, Any], trajectories: Iterable[dict[str
     if not refs:
         raise BriefError("TRAJECTORIES_MISSING")
     state = _primary_state(recovery_result)
+    decision_id = None
+    if recovery_decision is not None:
+        # Local import avoids a module cycle: recovery_decision reuses this
+        # module's canonical serializer and digest implementation.
+        from .recovery_decision import validate_decision
+        validate_decision(recovery_decision)
+        decision_id = recovery_decision["decision_id"]
     input_body = {
         "result_hash": result_hash,
         "receipt_hash": receipt_hash,
@@ -128,6 +136,8 @@ def build_brief(recovery_result: dict[str, Any], trajectories: Iterable[dict[str
         "state": state,
         "version": BRIEF_VERSION,
     }
+    if decision_id is not None:
+        input_body["decision_id"] = decision_id
     facts = [
         _fact("recovery_state", state, "VERIFIED", [result_hash, receipt_hash]),
         _fact("trajectory_count", len(refs), "VERIFIED", [r["content_hash"] for r in refs]),
@@ -155,6 +165,8 @@ def build_brief(recovery_result: dict[str, Any], trajectories: Iterable[dict[str
                        "verifier_sole_authority": True,
                        "surviving_representations_only": True},
     }
+    if recovery_decision is not None:
+        body["recovery_decision"] = recovery_decision
     if generated_at is not None:
         if not isinstance(generated_at, str) or not generated_at:
             raise BriefError("GENERATED_AT_INVALID")
@@ -168,7 +180,7 @@ def validate_brief(brief: dict[str, Any]) -> dict[str, Any]:
         raise BriefError("BRIEF_VERSION_UNSUPPORTED")
     allowed_fields = {"version", "brief_id", "authority", "bounds", "inputs_ref",
                       "recovery_state", "facts", "continuation", "non_claims",
-                      "generated_at"}
+                      "generated_at", "recovery_decision"}
     if set(brief) - allowed_fields:
         raise BriefError("BRIEF_FIELDS_INVALID")
     if brief.get("authority") != AUTHORITY:
@@ -189,6 +201,10 @@ def validate_brief(brief: dict[str, Any]) -> dict[str, Any]:
         if not isinstance(ref["trajectory_id"], str) or not ref["trajectory_id"]:
             raise BriefError("TRAJECTORY_ID_MISSING")
         _hash(ref["content_hash"], "TRAJECTORY")
+    recovery_decision = brief.get("recovery_decision")
+    if recovery_decision is not None:
+        from .recovery_decision import validate_decision
+        validate_decision(recovery_decision)
     state_block = brief.get("recovery_state")
     if (not isinstance(state_block, dict) or set(state_block) != {"primary", "qualifiers"}
             or state_block.get("primary") not in PRIMARY_STATES
@@ -232,11 +248,14 @@ def validate_brief(brief: dict[str, Any]) -> dict[str, Any]:
     body = dict(brief)
     body.pop("generated_at", None)
     body.pop("brief_id", None)
-    expected = digest({"result_hash": brief["inputs_ref"]["recovery_result_hash"],
+    expected_body = {"result_hash": brief["inputs_ref"]["recovery_result_hash"],
                        "receipt_hash": brief["inputs_ref"]["receipt_hash"],
                        "trajectories": brief["inputs_ref"]["trajectories"],
                        "state": brief["recovery_state"]["primary"],
-                       "version": BRIEF_VERSION})
+                       "version": BRIEF_VERSION}
+    if recovery_decision is not None:
+        expected_body["decision_id"] = recovery_decision["decision_id"]
+    expected = digest(expected_body)
     if brief_id != expected:
         raise BriefError("BRIEF_ID_MISMATCH")
     canonical_json(brief)

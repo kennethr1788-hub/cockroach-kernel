@@ -1,5 +1,6 @@
 import unittest
 
+from cockroach_kernel.continuation_brief import build_brief, digest
 from cockroach_kernel.recovery_decision import DecisionError, evaluate_recovery, validate_decision
 
 
@@ -60,6 +61,15 @@ class RecoveryDecisionTests(unittest.TestCase):
         decision["reason_codes"] = ["FACT_CONFLICT"]
         with self.assertRaises(DecisionError):
             validate_decision(decision)
+
+    def test_decision_is_bound_into_new_continuation_brief(self):
+        result = {"receipt_hash": "b" * 64, "local_verdict": "PROMOTE",
+                  "fresh_context": True, "value": "declared"}
+        result["result_hash"] = digest(result)
+        decision = evaluate_recovery([rep("a", "a")])
+        brief = build_brief(result, [{"trajectory_id": "t1", "content_hash": "c" * 64}],
+                            recovery_decision=decision)
+        self.assertEqual(brief["recovery_decision"]["decision_id"], decision["decision_id"])
 
 
 if __name__ == "__main__":
