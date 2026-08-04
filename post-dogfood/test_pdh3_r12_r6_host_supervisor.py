@@ -56,6 +56,28 @@ class HostSupervisorTests(unittest.TestCase):
             self.assertIn("/usr/bin/screen", calls[0])
             self.assertIn("/usr/bin/caffeinate", calls[0])
 
+    def test_start_waits_for_delayed_screen_registration(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            runtime = root / "runtime"
+            runtime.mkdir()
+            config = self.config(root)
+            calls: list[list[str]] = []
+            alive = iter((False, False, True))
+
+            def fake_run(argv, **kwargs):
+                calls.append(argv)
+                return mock.Mock(returncode=0, stdout=b"", stderr=b"")
+
+            with mock.patch.object(module, "screen_alive",
+                                   side_effect=lambda _name: next(alive)), \
+                 mock.patch.object(module.time, "sleep") as sleep, \
+                 mock.patch.object(module.subprocess, "run", side_effect=fake_run):
+                self.assertEqual(module.start(config), 0)
+            self.assertEqual(len(calls), 1)
+            self.assertEqual(sleep.call_count, 2)
+            self.assertTrue((runtime / "HOST_SUPERVISOR_LAUNCH.json").is_file())
+
     def test_status_reads_terminal_without_relaunch(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

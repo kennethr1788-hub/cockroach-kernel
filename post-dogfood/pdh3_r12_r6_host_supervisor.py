@@ -24,6 +24,8 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 PYTHON = sys.executable
 STAGE = ROOT / "post-dogfood/pdh3_r12_r6_run_pf2r_pf7.py"
+STARTUP_WAIT_SECONDS = 10.0
+STARTUP_POLL_SECONDS = 0.1
 
 
 def canonical(value: object) -> bytes:
@@ -59,6 +61,23 @@ def screen_alive(name: str) -> bool:
         stderr=subprocess.STDOUT, text=True, check=False,
     )
     return listing.returncode == 0 and name in listing.stdout
+
+
+def wait_for_screen(name: str, timeout: float = STARTUP_WAIT_SECONDS) -> bool:
+    """Wait for screen to register a just-created detached session.
+
+    ``screen -dmS`` can return before its session appears in ``screen -ls``.
+    Treating that small registration window as a launch failure orphaned a
+    valid stage while the foreground caller reported BLOCKED.
+    """
+    deadline = time.monotonic() + timeout
+    while True:
+        if screen_alive(name):
+            return True
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return False
+        time.sleep(min(STARTUP_POLL_SECONDS, remaining))
 
 
 def command(config: dict[str, object], name: str) -> list[str]:
@@ -104,7 +123,7 @@ def start(config: dict[str, object]) -> int:
     completed = subprocess.run(argv, cwd=ROOT, stdin=subprocess.DEVNULL,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                check=False)
-    if completed.returncode != 0 or not screen_alive(name):
+    if completed.returncode != 0 or not wait_for_screen(name):
         raise RuntimeError("HOST_SUPERVISOR_DETACH_FAILED")
     body = {
         "version": "ck-pdh3-r12-host-supervisor-launch-v1",
