@@ -1,0 +1,36 @@
+{
+  "version": "p9-live-deployment-readback-v1",
+  "status": "CK_LIVE_CANARY_GREEN",
+  "source": "CK_LIVE_CANARY_FINAL_PACKET_20260804",
+  "region": "us-west-2",
+  "function": {
+    "name": "ck-p9-evaluator",
+    "runtime": "python3.12",
+    "handler": "live_lambda_handler.lambda_handler",
+    "memory_mib": 256,
+    "timeout_seconds": 30,
+    "reserved_concurrency": null,
+    "environment_keys": ["CK_DEMO_SECRET_ID"],
+    "code_sha256": "6144a29ab07ffde2111c614b9f878ba90686614f5d5e426d1541026fdbad6da9"
+  },
+  "iam": {
+    "role_name": "ck-p9-lambda-exec",
+    "permission_action": "secretsmanager:GetSecretValue",
+    "resource_scope": "exact ck-p9-runtime-secret-v1 ARN",
+    "wildcard_resource": false
+  },
+  "evidence": {
+    "promote_request_id": "04008eea-fff2-443d-9bec-4da35e2b031a",
+    "refuse_request_id": "32395042-4273-4a13-87e1-b85acd31cc4f",
+    "promote_verdict": "PROMOTE",
+    "refuse_verdict": "REFUSE",
+    "refuse_reason": "HASH_MISMATCH",
+    "negative_method": "METHOD_NOT_ALLOWED",
+    "negative_route": "ROUTE_NOT_FOUND"
+  },
+  "limitations": [
+    "Account reserved concurrency was not set because the account quota requires an unreserved floor of 10.",
+    "This readback does not claim Bedrock, SageMaker, ECS, EKS, S3, or Bedrock Agents integration.",
+    "Cloud output remains advisory; the local deterministic verifier is authoritative."
+  ]
+}
