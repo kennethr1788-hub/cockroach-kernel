@@ -49,7 +49,11 @@ class HttpApiTests(unittest.TestCase):
         self.assertEqual(body["reason"], "VERIFIED")
         self.assertEqual(body["authority"], "P4_DETERMINISTIC_VERIFIER")
         self.assertEqual(body["cloud_status"], "ADVISORY")
-        self.assertEqual(len(body["cockroachdb_operations"]), 2)
+        self.assertEqual(len(body["cockroachdb_operations"]), 3)
+        self.assertEqual(
+            body["cockroachdb_operations"][-1],
+            "APPEND_ONLY_CHECKPOINT_WRITE_READBACK",
+        )
 
     def test_refuse_takes_no_action(self):
         response = http_api.handler(event("/demo/refuse"), None, FakeReader("refuse"))

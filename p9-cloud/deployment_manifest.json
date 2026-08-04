@@ -5,6 +5,7 @@
   "function": {
     "name": "ck-p9-evaluator",
     "role_name": "ck-p9-lambda-exec",
+    "handler": "live_lambda_handler.lambda_handler",
     "memory_mib": 128,
     "timeout_seconds": 10,
     "reserved_concurrency": 2,

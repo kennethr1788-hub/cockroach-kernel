@@ -10,11 +10,13 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import ssl
 import time
 from typing import Any, Protocol
 
 from cockroach_kernel.cli import canonical_json, digest
+from cockroach_kernel.checkpoint_ledger import build_checkpoint, persist_checkpoint
 
 
 MAX_HTTP_EVENT_BYTES = 32_768
@@ -54,8 +56,14 @@ def _runtime_modules() -> tuple[Any, Any]:
     from cockroach_kernel.cli import _runtime
 
     run_offline = _runtime()
-    import lambda_handler
-    import live_completion
+    try:
+        # Installed Lambda packages expose the cloud modules through the
+        # stable p9_runtime package namespace.  The source checkout fallback
+        # keeps local tests and the offline harness hermetic.
+        from p9_runtime import lambda_handler, live_completion
+    except ModuleNotFoundError:
+        import lambda_handler
+        import live_completion
 
     return lambda_handler, live_completion
 
@@ -143,12 +151,7 @@ def _validate_memory(record: Any, trial: dict[str, Any]) -> dict[str, Any]:
 def evaluate(branch: str, reader: MemoryReader) -> dict[str, Any]:
     lambda_handler, live_completion = _runtime_modules()
     trial = _expected(branch)
-    try:
-        memory = _validate_memory(reader.fetch(branch, trial["vector"]), trial)
-    finally:
-        close = getattr(reader, "close", None)
-        if callable(close):
-            close()
+    memory = _validate_memory(reader.fetch(branch, trial["vector"]), trial)
     advisory = lambda_handler.evaluate(trial["request"])
     if advisory["status"] != "ADVISORY":
         raise ApiFailure("ADVISORY_AUTHORITY_INVALID", 503)
@@ -160,6 +163,27 @@ def evaluate(branch: str, reader: MemoryReader) -> dict[str, Any]:
     expected_verdict = "PROMOTE" if branch == "promote" else "REFUSE"
     if verdict != expected_verdict:
         raise ApiFailure("VERDICT_UNEXPECTED", 503)
+    checkpoint_hash = None
+    persist = getattr(reader, "persist_checkpoint", None)
+    if callable(persist):
+        decision_hash = digest({
+            "candidate_id": trial["candidate"]["candidate_id"],
+            "reason": reason,
+            "verdict": verdict,
+        })
+        checkpoint = build_checkpoint(
+            request_id=trial["request"]["request_id"],
+            task_id=trial["task_id"],
+            parent_hash=trial["state_hash"],
+            request_hash=trial["request"]["request_hash"],
+            decision_hash=decision_hash,
+            receipt_hash=trial["receipt_hash"],
+            preservation_hash=trial["state_hash"],
+            verdict=verdict,
+            recovered_paths=["src/trajectory.py"] if verdict == "PROMOTE" else [],
+        )
+        persist(checkpoint)
+        checkpoint_hash = checkpoint["record_hash"]
     body = {
         "version": "ck-public-demo-v1",
         "mode": "LIVE_COCKROACH_MEMORY_WITH_DETERMINISTIC_LOCAL_AUTHORITY",
@@ -187,8 +211,11 @@ def evaluate(branch: str, reader: MemoryReader) -> dict[str, Any]:
         "cockroachdb_operations": [
             "TRANSACTIONAL_RECEIPT_LINKAGE_QUERY",
             "DISTRIBUTED_VECTOR_INDEX_QUERY",
+            "APPEND_ONLY_CHECKPOINT_WRITE_READBACK",
         ],
     }
+    if checkpoint_hash is not None:
+        body["checkpoint_hash"] = checkpoint_hash
     body["receipt_hash"] = digest(body)
     return body
 
@@ -236,10 +263,12 @@ def _classify_dependency_error(exc: Exception) -> str:
 def handler(event: Any, context: Any, reader: MemoryReader | None = None) -> dict[str, Any]:
     del context
     request_id = _request_id(event)
+    active_reader = reader
     try:
         bounded = _bounded_event(event)
         branch = _route(bounded)
-        result = evaluate(branch, reader or PgMemoryReader.from_environment())
+        active_reader = reader or PgMemoryReader.from_environment()
+        result = evaluate(branch, active_reader)
         return _http_response(200, result, request_id)
     except ApiFailure as exc:
         return _http_response(
@@ -263,6 +292,10 @@ def handler(event: Any, context: Any, reader: MemoryReader | None = None) -> dic
             },
             request_id,
         )
+    finally:
+        close = getattr(active_reader, "close", None)
+        if callable(close):
+            close()
 
 
 _SECRET_CACHE: tuple[float, dict[str, Any]] | None = None
@@ -322,7 +355,19 @@ class PgMemoryReader:
         return cls(connection)
 
     def fetch(self, branch: str, query_vector: list[float]) -> dict[str, Any]:
-        task_id = "ck-p9-live-promote-r1" if branch == "promote" else "ck-p9-live-refuse-r1"
+        # Keep the adapter bound to the same immutable trial identifiers as
+        # the coordinator; hard-coded historical IDs would make a fresh
+        # canary read stale rows or silently miss the seeded namespace.
+        try:
+            from p9_runtime import coordinator
+        except ModuleNotFoundError:
+            import coordinator
+
+        task_id = (
+            coordinator.PROMOTE_TRIAL_ID
+            if branch == "promote"
+            else coordinator.REFUSE_TRIAL_ID
+        )
         vector_text = "[" + ",".join(format(value, ".6f") for value in query_vector) + "]"
         linkage_sql = """
 WITH linkage AS (
@@ -351,7 +396,7 @@ LIMIT 1
 SELECT linkage.*, nearest.distance FROM linkage CROSS JOIN nearest
 """
         try:
-            rows = self.connection.run(
+            rows = self._run(
                 linkage_sql, task_id=task_id, query_vector=vector_text
             )
         except Exception as exc:
@@ -373,6 +418,20 @@ SELECT linkage.*, nearest.distance FROM linkage CROSS JOIN nearest
             "status": row[8],
             "distance": row[9],
         }
+
+    def _run(self, sql: str, *params: Any, **named: Any) -> Any:
+        """Use named pg8000 parameters while supporting ledger $N SQL."""
+        if params:
+            converted = re.sub(r"\$(\d+)", lambda match: ":p" + match.group(1), sql)
+            named = {f"p{index}": value for index, value in enumerate(params, 1)}
+            return self.connection.run(converted, **named)
+        return self.connection.run(sql, **named)
+
+    def run(self, sql: str, *params: Any) -> Any:
+        return self._run(sql, *params)
+
+    def persist_checkpoint(self, record: dict[str, Any]) -> dict[str, Any]:
+        return persist_checkpoint(self, record)
 
     def close(self) -> None:
         close = getattr(self.connection, "close", None)

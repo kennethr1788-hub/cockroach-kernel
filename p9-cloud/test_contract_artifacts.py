@@ -62,6 +62,9 @@ class TestDeploymentManifest(unittest.TestCase):
         self.assertEqual(manifest["function"]["name"], "ck-p9-evaluator")
         self.assertEqual(manifest["function"]["memory_mib"], 128)
         self.assertEqual(manifest["function"]["timeout_seconds"], 10)
+        self.assertEqual(
+            manifest["function"]["handler"], "live_lambda_handler.lambda_handler"
+        )
         self.assertEqual(manifest["function"]["reserved_concurrency"], 2)
         self.assertEqual(
             manifest["function"]["effective_account_concurrency_ceiling"], 10

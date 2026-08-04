@@ -94,18 +94,25 @@ def persist_checkpoint(connection: Any, record: dict[str, Any]) -> dict[str, Any
     duplicate checkpoint is accepted only when the read-back bytes match.
     """
     validate_checkpoint(record)
+    binary_fields = (
+        "parent_hash", "request_hash", "decision_hash", "receipt_hash",
+        "preservation_hash", "record_hash",
+    )
+    encoded = {name: bytes.fromhex(record[name]) for name in binary_fields}
     params = (
-        record["checkpoint_id"], record["task_id"], record["parent_hash"],
-        record["request_hash"], record["decision_hash"], record["receipt_hash"],
-        record["preservation_hash"], record["verdict"],
+        record["checkpoint_id"], record["task_id"], encoded["parent_hash"],
+        encoded["request_hash"], encoded["decision_hash"], encoded["receipt_hash"],
+        encoded["preservation_hash"], record["verdict"],
         canonical_json(record["recovered_paths"]).decode("utf-8"),
-        canonical_json(record).decode("utf-8"), record["record_hash"],
+        canonical_json(record).decode("utf-8"), encoded["record_hash"],
     )
     connection.run(CHECKPOINT_INSERT_SQL, *params)
     rows = connection.run(CHECKPOINT_READBACK_SQL, record["checkpoint_id"])
     if len(rows) != 1:
         raise CheckpointError("CHECKPOINT_READBACK_MISSING")
     raw_json, stored_hash = rows[0]
+    if isinstance(stored_hash, (bytes, bytearray, memoryview)):
+        stored_hash = bytes(stored_hash).hex()
     if stored_hash != record["record_hash"]:
         raise CheckpointError("CHECKPOINT_READBACK_HASH_MISMATCH")
     if isinstance(raw_json, str):
