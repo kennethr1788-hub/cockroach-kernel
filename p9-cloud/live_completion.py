@@ -10,6 +10,7 @@ local verifier is the only verdict authority.
 from __future__ import annotations
 
 import argparse
+import importlib
 import importlib.util
 import json
 from pathlib import Path
@@ -28,6 +29,13 @@ AWS_REQUEST_ID_RE = re.compile(r"^[A-Za-z0-9-]{8,64}$")
 
 
 def _load_verifier():
+    # Clean-clone/installed builds expose the authority under the declared
+    # package name. Prefer that stable package boundary over a source-tree
+    # path, while retaining the fallback for local development checkouts.
+    try:
+        return importlib.import_module("verifier_runtime.verifier")
+    except (ImportError, ModuleNotFoundError):
+        pass
     path = BASE / "p4-verifier" / "verifier.py"
     spec = importlib.util.spec_from_file_location("p4_live_authority", path)
     if spec is None or spec.loader is None:
