@@ -149,6 +149,36 @@ def evaluate_recovery(representations: Iterable[dict[str, Any]]) -> dict[str, An
     return dict(body, decision_id=digest(body))
 
 
+def evaluate_lineage_rows(rows: Iterable[Any]) -> dict[str, Any]:
+    """Evaluate already-fetched, strictly parsed lineage rows.
+
+    The adapter intentionally accepts rows only after ``parse_lineage_row``;
+    it performs no SQL, connection, or network operation itself.
+    """
+    from .continuation_lineage import parse_lineage_row
+
+    representations = []
+    for raw in rows:
+        row = parse_lineage_row(raw)
+        representations.append({
+            "representation_id": f"{row['task_id']}:{row['event_id']}",
+            "content_hash": row["event_hash"],
+            "lineage_hash": row["parent_event_hash"],
+            "status": "VERIFIED",
+            "facts": {
+                "task_hash": row["task_hash"],
+                "state_hash": row["state_hash"],
+                "sequence": row["sequence"],
+                "receipt_hash": row["receipt_hash"],
+                "request_hash": row["request_hash"],
+                "response_hash": row["response_hash"],
+                "result_hash": row["result_hash"],
+                "projection_hash": row["projection_hash"] or "UNKNOWN",
+            },
+        })
+    return evaluate_recovery(representations)
+
+
 def validate_decision(decision: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(decision, dict) or decision.get("version") != DECISION_VERSION:
         raise DecisionError("DECISION_VERSION_UNSUPPORTED")
