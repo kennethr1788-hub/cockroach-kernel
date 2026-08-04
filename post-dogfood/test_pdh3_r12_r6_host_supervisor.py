@@ -46,7 +46,7 @@ class HostSupervisorTests(unittest.TestCase):
                 calls.append(argv)
                 return mock.Mock(returncode=0, stdout=b"", stderr=b"")
 
-            with mock.patch.object(module, "screen_alive", return_value=True), \
+            with mock.patch.object(module, "screen_alive", side_effect=(False, True)), \
                  mock.patch.object(module.subprocess, "run", side_effect=fake_run):
                 self.assertEqual(module.start(config), 0)
             receipt = json.loads((runtime / "HOST_SUPERVISOR_LAUNCH.json").read_bytes())
@@ -75,8 +75,26 @@ class HostSupervisorTests(unittest.TestCase):
                  mock.patch.object(module.subprocess, "run", side_effect=fake_run):
                 self.assertEqual(module.start(config), 0)
             self.assertEqual(len(calls), 1)
-            self.assertEqual(sleep.call_count, 2)
+            self.assertEqual(sleep.call_count, 1)
             self.assertTrue((runtime / "HOST_SUPERVISOR_LAUNCH.json").is_file())
+
+    def test_start_accepts_nonzero_screen_return_when_exact_session_is_alive(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            runtime = root / "runtime"
+            runtime.mkdir()
+            config = self.config(root)
+
+            def fake_run(argv, **kwargs):
+                return mock.Mock(returncode=1, stdout=b"warning", stderr=b"screen warning")
+
+            with mock.patch.object(module, "screen_alive", side_effect=(False, True)), \
+                 mock.patch.object(module.subprocess, "run", side_effect=fake_run):
+                self.assertEqual(module.start(config), 0)
+            receipt = json.loads((runtime / "HOST_SUPERVISOR_LAUNCH.json").read_bytes())
+            self.assertEqual(receipt["screen_returncode"], 1)
+            self.assertTrue(receipt["screen_stdout_sha256"])
+            self.assertTrue(receipt["screen_stderr_sha256"])
 
     def test_status_reads_terminal_without_relaunch(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

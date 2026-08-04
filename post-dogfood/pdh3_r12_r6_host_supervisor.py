@@ -119,11 +119,13 @@ def start(config: dict[str, object]) -> int:
         if screen_alive(name):
             return 0
         raise RuntimeError("HOST_SUPERVISOR_LAUNCH_STALE")
+    if screen_alive(name):
+        raise RuntimeError("HOST_SUPERVISOR_SESSION_ALREADY_ALIVE")
     argv = command(config, name)
     completed = subprocess.run(argv, cwd=ROOT, stdin=subprocess.DEVNULL,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                check=False)
-    if completed.returncode != 0 or not wait_for_screen(name):
+    if not wait_for_screen(name):
         raise RuntimeError("HOST_SUPERVISOR_DETACH_FAILED")
     body = {
         "version": "ck-pdh3-r12-host-supervisor-launch-v1",
@@ -134,6 +136,9 @@ def start(config: dict[str, object]) -> int:
         "screen": "/usr/bin/screen",
         "caffeinate": "/usr/bin/caffeinate",
         "stage": str(STAGE),
+        "screen_returncode": completed.returncode,
+        "screen_stdout_sha256": sha256_bytes(completed.stdout),
+        "screen_stderr_sha256": sha256_bytes(completed.stderr),
         "utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }
     atomic_write(receipt, canonical(body))
