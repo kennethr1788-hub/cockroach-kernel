@@ -274,6 +274,21 @@ def _recover_command(args: argparse.Namespace) -> int:
     return run_cli(args)
 
 
+def _preview_command(args: argparse.Namespace) -> int:
+    from cockroach_kernel.recovery_preview import preview_recovery
+
+    report = preview_recovery(
+        request_path=args.request,
+        sandbox_root=args.sandbox_root,
+        workspace=args.workspace,
+        representation_root=args.representation_root,
+        custody_root=args.custody_root,
+        output_root=args.output_root,
+    )
+    print(canonical_json(report).decode("utf-8"))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="cockroach-kernel")
     subcommands = parser.add_subparsers(dest="command", required=True)
@@ -313,6 +328,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="existing empty root for canonical result records",
     )
     recover.set_defaults(handler=_recover_command)
+    preview = subcommands.add_parser(
+        "preview",
+        help="project recovery outcome without consuming custody or mutating the workspace",
+    )
+    preview.add_argument("--request", required=True, help="canonical typed recovery request")
+    preview.add_argument("--sandbox-root", required=True)
+    preview.add_argument("--workspace", required=True)
+    preview.add_argument("--representation-root", required=True)
+    preview.add_argument("--custody-root", required=True)
+    preview.add_argument("--output-root", required=True)
+    preview.set_defaults(handler=_preview_command)
     return parser
 
 
