@@ -9,7 +9,8 @@ GRANT SELECT, INSERT ON TABLE
   ck.receipts,
   ck.context_vectors,
   ck.worker_results,
-  ck.projection_events
+  ck.projection_events,
+  ck.recovery_checkpoints
 TO ck_runtime;
 
 GRANT SELECT ON TABLE ck.mcp_receipt_view TO ck_runtime;

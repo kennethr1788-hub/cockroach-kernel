@@ -15,10 +15,10 @@ def load_json(name):
 
 
 class TestIamTemplate(unittest.TestCase):
-    def test_execution_role_has_only_exact_log_actions(self):
+    def test_execution_role_has_exact_log_and_secret_actions(self):
         policy = load_json("iam_execution_role_template.json")
         self.assertEqual(policy["Version"], "2012-10-17")
-        self.assertEqual(len(policy["Statement"]), 1)
+        self.assertEqual(len(policy["Statement"]), 2)
         statement = policy["Statement"][0]
         self.assertEqual(statement["Effect"], "Allow")
         self.assertEqual(
@@ -31,6 +31,12 @@ class TestIamTemplate(unittest.TestCase):
             "arn:aws:logs:us-west-2:${AWS_ACCOUNT_ID}:log-group:/aws/lambda/ck-p9-evaluator:*",
         )
         self.assertEqual(statement["Resource"].count("*"), 1)
+        secret = policy["Statement"][1]
+        self.assertEqual(secret["Action"], ["secretsmanager:GetSecretValue"])
+        self.assertEqual(
+            secret["Resource"],
+            "arn:aws:secretsmanager:us-west-2:${AWS_ACCOUNT_ID}:secret:ck-p9-cockroach-runtime-*",
+        )
 
     def test_no_global_or_cross_resource_wildcard(self):
         serialized = json.dumps(load_json("iam_execution_role_template.json"), sort_keys=True)
@@ -55,16 +61,17 @@ class TestDeploymentManifest(unittest.TestCase):
         self.assertEqual(manifest["region"], "us-west-2")
         self.assertEqual(manifest["function"]["name"], "ck-p9-evaluator")
         self.assertEqual(manifest["function"]["memory_mib"], 128)
-        self.assertEqual(manifest["function"]["timeout_seconds"], 3)
-        self.assertIsNone(manifest["function"]["reserved_concurrency"])
+        self.assertEqual(manifest["function"]["timeout_seconds"], 10)
+        self.assertEqual(manifest["function"]["reserved_concurrency"], 2)
         self.assertEqual(
             manifest["function"]["effective_account_concurrency_ceiling"], 10
         )
         self.assertEqual(manifest["function"]["max_coordinator_in_flight"], 1)
+        self.assertEqual(manifest["function"]["request_budget_ms"], 8000)
         self.assertEqual(manifest["function"]["provisioned_concurrency"], 0)
         self.assertFalse(manifest["function"]["function_url"])
         self.assertFalse(manifest["function"]["network_calls"])
-        self.assertEqual(manifest["logs"]["retention_days"], 1)
+        self.assertEqual(manifest["logs"]["retention_days"], 14)
         self.assertEqual(manifest["limits"]["max_invocations"], 1000)
         self.assertEqual(manifest["limits"]["incremental_aws_cost_usd"], 5)
 
@@ -86,6 +93,8 @@ class TestRuntimeGrantTemplate(unittest.TestCase):
         self.assertIn("vector_digest bytes not null check", schema)
         self.assertNotIn("vector_digest bytes not null unique", schema)
         self.assertIn("unique (task_id, event_hash, namespace)", schema)
+        self.assertIn("receipts_task_id_idx", schema)
+        self.assertIn("create table if not exists ck.recovery_checkpoints", schema)
         self.assertIn("drop constraint if exists context_vectors_vector_digest_key", transition)
         self.assertIn("create index if not exists context_vectors_vector_digest_idx", transition)
 
@@ -104,6 +113,7 @@ class TestRuntimeGrantTemplate(unittest.TestCase):
         self.assertIn("grant select, insert on table", sql)
         self.assertIn("grant select on table ck.mcp_receipt_view to ck_runtime", sql)
         self.assertIn("grant changefeed on table ck.worker_results to ck_runtime", sql)
+        self.assertIn("ck.recovery_checkpoints", sql)
         self.assertNotIn("update", sql)
         self.assertNotIn("delete", sql)
         self.assertNotIn("all privileges", sql)

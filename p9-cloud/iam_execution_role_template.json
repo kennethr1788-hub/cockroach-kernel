@@ -9,6 +9,14 @@
         "logs:PutLogEvents"
       ],
       "Resource": "arn:aws:logs:us-west-2:${AWS_ACCOUNT_ID}:log-group:/aws/lambda/ck-p9-evaluator:*"
+    },
+    {
+      "Sid": "ReadOnlyExactDemoSecret",
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:GetSecretValue"
+      ],
+      "Resource": "arn:aws:secretsmanager:us-west-2:${AWS_ACCOUNT_ID}:secret:ck-p9-cockroach-runtime-*"
     }
   ]
 }

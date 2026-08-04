@@ -49,6 +49,11 @@ CREATE TABLE IF NOT EXISTS ck.receipts (
   receipt_json JSONB NOT NULL
 );
 
+-- The live linkage query filters by task_id. Keep this index explicit so the
+-- owner session can verify its target-scale plan before enabling traffic.
+CREATE INDEX IF NOT EXISTS receipts_task_id_idx
+  ON ck.receipts (task_id) STORING (status, event_hash);
+
 -- Authoritative event linkage plus the deterministic VECTOR(64) context
 -- projection. vector_digest binds the exact stored vector bytes and is
 -- intentionally non-unique: a many-to-one projection can produce the same
@@ -106,6 +111,23 @@ CREATE TABLE IF NOT EXISTS ck.projection_events (
   projected_json JSONB NOT NULL,
   projection_hash BYTES NOT NULL UNIQUE CHECK (length(projection_hash) = 32),
   UNIQUE (source_table, source_key, sequence)
+);
+
+-- Append-only recovery checkpoint ledger. The record_json hash is the
+-- canonical local checkpoint; the database stores it for transactional
+-- read-back and cross-session evidence, never for verdict authority.
+CREATE TABLE IF NOT EXISTS ck.recovery_checkpoints (
+  checkpoint_id STRING PRIMARY KEY,
+  task_id STRING NOT NULL REFERENCES ck.tasks (task_id),
+  parent_hash BYTES NOT NULL CHECK (length(parent_hash) = 32),
+  request_hash BYTES NOT NULL CHECK (length(request_hash) = 32),
+  decision_hash BYTES NOT NULL CHECK (length(decision_hash) = 32),
+  receipt_hash BYTES NOT NULL CHECK (length(receipt_hash) = 32),
+  preservation_hash BYTES NOT NULL CHECK (length(preservation_hash) = 32),
+  verdict STRING NOT NULL CHECK (verdict IN ('PROMOTE', 'REFUSE', 'INVALID', 'NO_ACTION')),
+  recovered_paths JSONB NOT NULL,
+  record_json JSONB NOT NULL,
+  record_hash BYTES NOT NULL UNIQUE CHECK (length(record_hash) = 32)
 );
 
 -- Minimal read-only query surface for Managed MCP: synthetic IDs, stable

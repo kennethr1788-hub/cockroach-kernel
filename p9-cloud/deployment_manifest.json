@@ -6,17 +6,18 @@
     "name": "ck-p9-evaluator",
     "role_name": "ck-p9-lambda-exec",
     "memory_mib": 128,
-    "timeout_seconds": 3,
-    "reserved_concurrency": null,
+    "timeout_seconds": 10,
+    "reserved_concurrency": 2,
     "effective_account_concurrency_ceiling": 10,
     "max_coordinator_in_flight": 1,
+    "request_budget_ms": 8000,
     "provisioned_concurrency": 0,
     "function_url": false,
     "network_calls": false
   },
   "logs": {
     "group": "/aws/lambda/ck-p9-evaluator",
-    "retention_days": 1
+    "retention_days": 14
   },
   "limits": {
     "max_invocations": 1000,
@@ -30,7 +31,8 @@
     "schema": "ck",
     "runtime_user": "ck_runtime",
     "region": "us-west-2",
-    "ca_path_class": "PROJECT_LOCAL_IGNORED_RUNTIME_ONLY"
+    "ca_path_class": "PROJECT_LOCAL_IGNORED_RUNTIME_ONLY",
+    "checkpoint_persistence": "ADAPTER_READY_READBACK_REQUIRED"
   },
   "managed_mcp": {
     "authentication": "OAUTH",

@@ -1,0 +1,31 @@
+{
+  "version": "ck-recovery-eval-v1",
+  "budget_seconds": 300,
+  "kill_seconds": 600,
+  "evaluator_command": [
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "cockroach_kernel",
+    "-p",
+    "test_*.py"
+  ],
+  "immutable_paths": [
+    "cockroach_kernel/recovery_decision.py",
+    "cockroach_kernel/recovery_surface.py",
+    "cockroach_kernel/checkpoint_ledger.py",
+    "cockroach_kernel/recovery_preview.py",
+    "p4-verifier/verifier.py"
+  ],
+  "mutable_scope": [
+    "benchmarks/recovery_autoresearch/scenarios/"
+  ],
+  "metrics": [
+    "preservation_coverage",
+    "refusal_correctness",
+    "determinism",
+    "latency_seconds",
+    "evidence_bytes"
+  ]
+}

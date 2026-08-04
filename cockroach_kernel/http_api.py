@@ -11,6 +11,7 @@ import hashlib
 import json
 import os
 import ssl
+import time
 from typing import Any, Protocol
 
 from cockroach_kernel.cli import canonical_json, digest
@@ -142,7 +143,12 @@ def _validate_memory(record: Any, trial: dict[str, Any]) -> dict[str, Any]:
 def evaluate(branch: str, reader: MemoryReader) -> dict[str, Any]:
     lambda_handler, live_completion = _runtime_modules()
     trial = _expected(branch)
-    memory = _validate_memory(reader.fetch(branch, trial["vector"]), trial)
+    try:
+        memory = _validate_memory(reader.fetch(branch, trial["vector"]), trial)
+    finally:
+        close = getattr(reader, "close", None)
+        if callable(close):
+            close()
     advisory = lambda_handler.evaluate(trial["request"])
     if advisory["status"] != "ADVISORY":
         raise ApiFailure("ADVISORY_AUTHORITY_INVALID", 503)
@@ -187,7 +193,9 @@ def evaluate(branch: str, reader: MemoryReader) -> dict[str, Any]:
     return body
 
 
-def _http_response(status: int, body: dict[str, Any]) -> dict[str, Any]:
+def _http_response(status: int, body: dict[str, Any], request_id: str | None = None) -> dict[str, Any]:
+    if request_id:
+        body = dict(body, request_id=request_id)
     raw = canonical_json(body)
     if len(raw) > MAX_HTTP_RESPONSE_BYTES:
         raise ApiFailure("RESPONSE_TOO_LARGE", 500)
@@ -203,13 +211,36 @@ def _http_response(status: int, body: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _request_id(event: Any) -> str | None:
+    if not isinstance(event, dict):
+        return None
+    context = event.get("requestContext")
+    value = context.get("requestId") if isinstance(context, dict) else None
+    return value if isinstance(value, str) and 1 <= len(value) <= 128 else None
+
+
+def _classify_dependency_error(exc: Exception) -> str:
+    name = exc.__class__.__name__.lower()
+    text = str(exc).lower()
+    if isinstance(exc, TimeoutError) or "timeout" in name or "timeout" in text:
+        return "DB_TIMEOUT"
+    if isinstance(exc, PermissionError) or any(word in name for word in ("auth", "permission", "denied")):
+        return "AUTHORIZATION_FAILED"
+    if "schema" in name or "schema" in text:
+        return "SCHEMA_INVALID"
+    if "connection" in name or "connection" in text:
+        return "COCKROACH_CONNECTION_FAILED"
+    return "DEPENDENCY_UNAVAILABLE"
+
+
 def handler(event: Any, context: Any, reader: MemoryReader | None = None) -> dict[str, Any]:
     del context
+    request_id = _request_id(event)
     try:
         bounded = _bounded_event(event)
         branch = _route(bounded)
         result = evaluate(branch, reader or PgMemoryReader.from_environment())
-        return _http_response(200, result)
+        return _http_response(200, result, request_id)
     except ApiFailure as exc:
         return _http_response(
             exc.status,
@@ -219,26 +250,30 @@ def handler(event: Any, context: Any, reader: MemoryReader | None = None) -> dic
                 "reason": exc.code,
                 "action_taken": "NONE",
             },
+            request_id,
         )
-    except Exception:
+    except Exception as exc:
         return _http_response(
             503,
             {
                 "version": "ck-public-demo-error-v1",
                 "verdict": "INVALID",
-                "reason": "DEPENDENCY_UNAVAILABLE",
+                "reason": _classify_dependency_error(exc),
                 "action_taken": "NONE",
             },
+            request_id,
         )
 
 
-_SECRET_CACHE: dict[str, Any] | None = None
+_SECRET_CACHE: tuple[float, dict[str, Any]] | None = None
+SECRET_CACHE_SECONDS = 30.0
 
 
 def _load_secret(secret_id: str) -> dict[str, Any]:
     global _SECRET_CACHE
-    if _SECRET_CACHE is not None:
-        return dict(_SECRET_CACHE)
+    now = time.monotonic()
+    if _SECRET_CACHE is not None and now - _SECRET_CACHE[0] < SECRET_CACHE_SECONDS:
+        return dict(_SECRET_CACHE[1])
     try:
         import boto3
 
@@ -254,7 +289,7 @@ def _load_secret(secret_id: str) -> dict[str, Any]:
     for key in required - {"port"}:
         if not isinstance(value[key], str) or not value[key]:
             raise ApiFailure("SECRET_SCHEMA_INVALID", 503)
-    _SECRET_CACHE = dict(value)
+    _SECRET_CACHE = (now, dict(value))
     return value
 
 
@@ -290,6 +325,7 @@ class PgMemoryReader:
         task_id = "ck-p9-live-promote-r1" if branch == "promote" else "ck-p9-live-refuse-r1"
         vector_text = "[" + ",".join(format(value, ".6f") for value in query_vector) + "]"
         linkage_sql = """
+WITH linkage AS (
 SELECT t.task_id,
        encode(r.receipt_hash, 'hex'),
        encode(r.event_hash, 'hex'),
@@ -305,25 +341,25 @@ JOIN ck.context_vectors AS v ON v.task_id = t.task_id AND v.event_hash = r.event
 JOIN ck.worker_results AS w ON w.task_id = t.task_id
 WHERE t.task_id = :task_id
 LIMIT 1
-"""
-        vector_sql = """
+), nearest AS (
 SELECT vector <-> CAST(:query_vector AS VECTOR(64)) AS distance
 FROM ck.context_vectors
 WHERE task_id = :task_id AND namespace = 'ck-p9-completion'
 ORDER BY vector <-> CAST(:query_vector AS VECTOR(64))
 LIMIT 1
+)
+SELECT linkage.*, nearest.distance FROM linkage CROSS JOIN nearest
 """
         try:
-            linkage_rows = self.connection.run(linkage_sql, task_id=task_id)
-            vector_rows = self.connection.run(
-                vector_sql, task_id=task_id, query_vector=vector_text
+            rows = self.connection.run(
+                linkage_sql, task_id=task_id, query_vector=vector_text
             )
         except Exception as exc:
             raise ApiFailure("COCKROACH_QUERY_FAILED", 503) from exc
-        if len(linkage_rows) != 1 or len(vector_rows) != 1:
+        if len(rows) != 1:
             raise ApiFailure("MEMORY_RECORD_MISSING", 503)
-        row = linkage_rows[0]
-        if not isinstance(row, (list, tuple)) or len(row) != 9:
+        row = rows[0]
+        if not isinstance(row, (list, tuple)) or len(row) != 10:
             raise ApiFailure("MEMORY_RECORD_INVALID", 503)
         return {
             "task_id": row[0],
@@ -335,8 +371,13 @@ LIMIT 1
             "result_hash": row[6],
             "candidate_id": row[7],
             "status": row[8],
-            "distance": vector_rows[0][0],
+            "distance": row[9],
         }
+
+    def close(self) -> None:
+        close = getattr(self.connection, "close", None)
+        if callable(close):
+            close()
 
 
 lambda_handler = handler

@@ -1,7 +1,8 @@
 import unittest
 
 from cockroach_kernel.checkpoint_ledger import (CHECKPOINT_INSERT_SQL, CheckpointError,
-                                                build_checkpoint, validate_checkpoint)
+                                                build_checkpoint, persist_checkpoint,
+                                                validate_checkpoint)
 
 
 HASHES = {
@@ -38,6 +39,39 @@ class CheckpointLedgerTests(unittest.TestCase):
         self.assertIn("$1", CHECKPOINT_INSERT_SQL)
         self.assertIn("ON CONFLICT (checkpoint_id) DO NOTHING", CHECKPOINT_INSERT_SQL)
         self.assertNotIn("DROP", CHECKPOINT_INSERT_SQL.upper())
+
+    def test_persist_requires_hash_matching_readback(self):
+        checkpoint = build_checkpoint(
+            request_id="request-1", task_id="task-1", verdict="PROMOTE",
+            recovered_paths=["src/feature.py"], **HASHES
+        )
+
+        class Connection:
+            def __init__(self):
+                self.calls = []
+
+            def run(self, sql, *params):
+                self.calls.append((sql, params))
+                if sql == CHECKPOINT_INSERT_SQL:
+                    return []
+                return [(checkpoint, checkpoint["record_hash"])]
+
+        self.assertEqual(persist_checkpoint(Connection(), checkpoint), checkpoint)
+
+    def test_persist_rejects_mismatched_readback(self):
+        checkpoint = build_checkpoint(
+            request_id="request-1", task_id="task-1", verdict="PROMOTE",
+            recovered_paths=["src/feature.py"], **HASHES
+        )
+
+        class Connection:
+            def run(self, sql, *params):
+                if sql == CHECKPOINT_INSERT_SQL:
+                    return []
+                return [({}, "0" * 64)]
+
+        with self.assertRaisesRegex(CheckpointError, "CHECKPOINT_READBACK_HASH_MISMATCH"):
+            persist_checkpoint(Connection(), checkpoint)
 
 
 if __name__ == "__main__":

@@ -19,6 +19,11 @@ CHECKPOINT_INSERT_SQL = (
     "ON CONFLICT (checkpoint_id) DO NOTHING"
 )
 
+CHECKPOINT_READBACK_SQL = (
+    "SELECT record_json, record_hash FROM ck.recovery_checkpoints "
+    "WHERE checkpoint_id = $1"
+)
+
 
 class CheckpointError(ValueError):
     pass
@@ -78,4 +83,34 @@ def validate_checkpoint(record: dict[str, Any]) -> dict[str, Any]:
     body.pop("record_hash")
     if supplied != digest(body):
         raise CheckpointError("CHECKPOINT_HASH_MISMATCH")
+    return record
+
+
+def persist_checkpoint(connection: Any, record: dict[str, Any]) -> dict[str, Any]:
+    """Write and hash-verify one checkpoint through an injected DB adapter.
+
+    The function owns no connection lifecycle and performs no network access;
+    callers must supply a bounded, read/write transaction and close it. A
+    duplicate checkpoint is accepted only when the read-back bytes match.
+    """
+    validate_checkpoint(record)
+    params = (
+        record["checkpoint_id"], record["task_id"], record["parent_hash"],
+        record["request_hash"], record["decision_hash"], record["receipt_hash"],
+        record["preservation_hash"], record["verdict"],
+        canonical_json(record["recovered_paths"]).decode("utf-8"),
+        canonical_json(record).decode("utf-8"), record["record_hash"],
+    )
+    connection.run(CHECKPOINT_INSERT_SQL, *params)
+    rows = connection.run(CHECKPOINT_READBACK_SQL, record["checkpoint_id"])
+    if len(rows) != 1:
+        raise CheckpointError("CHECKPOINT_READBACK_MISSING")
+    raw_json, stored_hash = rows[0]
+    if stored_hash != record["record_hash"]:
+        raise CheckpointError("CHECKPOINT_READBACK_HASH_MISMATCH")
+    if isinstance(raw_json, str):
+        import json
+        raw_json = json.loads(raw_json)
+    if raw_json != record:
+        raise CheckpointError("CHECKPOINT_READBACK_RECORD_MISMATCH")
     return record
