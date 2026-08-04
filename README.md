@@ -72,6 +72,15 @@ cockroach-kernel inspect <canonical-receipt.json>
 compatibility. `inspect` validates its canonical receipts. Neither substitutes
 for the external-input `recover` command.
 
+## Conflicting surviving evidence
+
+When more than one sealed representation survives, the continuation brief can
+carry a deterministic recovery decision. It returns `CONTINUE` only when the
+hash-bound facts agree, `QUARANTINE` for tampered or conflicting duplicate
+records, and `HUMAN_REVIEW_REQUIRED` when the evidence is incomplete or
+contradictory. It never selects a winner or creates missing bytes; the P4
+verifier remains the sole recovery authority.
+
 ## Safety boundary
 
 - All roots must already exist beneath one disposable envelope outside HOME.
