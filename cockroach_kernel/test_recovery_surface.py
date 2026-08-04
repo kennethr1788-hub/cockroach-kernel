@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 from cockroach_kernel import recovery_surface as surface
 from p7_runtime import records as p7
@@ -247,6 +248,28 @@ class RecoverySurfaceTests(unittest.TestCase):
             "candidate-r3-strong",
         )
         self.assertEqual((scenario.workspace / "notes/human.md").read_bytes(), survivor_before)
+
+    def test_preservation_proof_is_recorded_in_mutation_manifest(self):
+        scenario = self.scenario(lost_paths=["src/feature.py"])
+        status, summary = surface.execute_recovery(**scenario.kwargs())
+        self.assertEqual(status, 0)
+        mutation = json.loads((scenario.output / "mutation-manifest.json").read_bytes())
+        self.assertTrue(mutation["preservation"]["verified"])
+        self.assertIn("notes/human.md", mutation["preservation"]["preserved_paths"])
+        self.assertEqual(mutation["preservation"]["changed_paths"], [])
+
+    def test_preservation_mismatch_fails_closed_after_promotion(self):
+        scenario = self.scenario(lost_paths=["src/feature.py"])
+        original = surface._promote_staged
+
+        def mutate_after_promotion(*args, **kwargs):
+            promoted = original(*args, **kwargs)
+            (scenario.workspace / "notes/human.md").write_bytes(b"changed\n")
+            return promoted
+
+        with mock.patch.object(surface, "_promote_staged", mutate_after_promotion):
+            with self.assertRaisesRegex(surface.SurfaceError, "PRESERVATION_PROOF_FAILED"):
+                surface.execute_recovery(**scenario.kwargs())
 
     def test_clean_no_loss_is_no_action_and_does_not_consume_warrant(self):
         scenario = self.scenario(no_loss=True)

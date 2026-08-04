@@ -438,6 +438,7 @@ def _mutation_manifest(
     promoted: dict[str, bytes],
     *,
     interrupted: bool = False,
+    preservation: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     body = {
         "version": "ck-mutation-manifest-v1",
@@ -445,8 +446,48 @@ def _mutation_manifest(
         "promoted_paths": sorted(promoted),
         "file_hashes": {path: p7.sha256_hex(promoted[path]) for path in sorted(promoted)},
         "interrupted": interrupted,
+        "preservation": preservation or {
+            "verified": False,
+            "before_hash": None,
+            "after_hash": None,
+            "preserved_paths": [],
+        },
     }
     return dict(body, manifest_hash=p7.sha256_hex(body))
+
+
+def _workspace_snapshot(workspace: Path) -> dict[str, str]:
+    """Hash every pre-existing regular file in the successor workspace."""
+    snapshot: dict[str, str] = {}
+    for root, directories, files in os.walk(workspace, topdown=True, followlinks=False):
+        root_path = Path(root)
+        for name in sorted(directories):
+            if (root_path / name).is_symlink():
+                raise SurfaceError("WORKSPACE_SYMLINK_UNSAFE")
+        for name in sorted(files):
+            path = root_path / name
+            if path.is_symlink() or not path.is_file():
+                raise SurfaceError("WORKSPACE_FILE_UNSAFE")
+            relative = path.relative_to(workspace).as_posix()
+            snapshot[relative] = p7.sha256_hex(path.read_bytes())
+    return snapshot
+
+
+def _preservation_proof(before: dict[str, str], after: dict[str, str]) -> dict[str, Any]:
+    changed = sorted(path for path, value in before.items() if after.get(path) != value)
+    if changed:
+        raise SurfaceError(
+            "PRESERVATION_PROOF_FAILED",
+            action_taken="WARRANT_CONSUMED_PRESERVATION_UNPROVEN",
+        )
+    body = {
+        "verified": True,
+        "before_hash": p7.sha256_hex(canonical_json(before)),
+        "after_hash": p7.sha256_hex(canonical_json(after)),
+        "preserved_paths": sorted(before),
+        "changed_paths": changed,
+    }
+    return body
 
 
 def _seal_no_action(request_hash: str) -> dict[str, Any]:
@@ -758,6 +799,7 @@ def execute_recovery(
     lock_fd = os.open(lock_path, flags, 0o600)
     stage: Path | None = None
     promoted: dict[str, bytes] = {}
+    preservation_before: dict[str, str] = {}
     try:
         fcntl.flock(lock_fd, fcntl.LOCK_EX)
         if state_path.exists():
@@ -776,6 +818,7 @@ def execute_recovery(
                 state_path,
                 _sidecar(warrant, request_hash, decision_hash, "ISSUED"),
             )
+        preservation_before = _workspace_snapshot(roots.workspace)
         stage = _stage_files(roots.workspace, request["request_id"], representations)
         _atomic_json(
             state_path,
@@ -806,7 +849,8 @@ def execute_recovery(
 
     receipt = p7.build_promotion_receipt(decision, dict(warrant, state="CONSUMED"), list(promoted))
     ledger = _unrecovered_ledger(request, list(promoted))
-    mutation = _mutation_manifest(request["request_id"], promoted)
+    preservation = _preservation_proof(preservation_before, _workspace_snapshot(roots.workspace))
+    mutation = _mutation_manifest(request["request_id"], promoted, preservation=preservation)
     fresh_ok, fresh_reason = fresh_context.verify_workspace(
         decision, candidate, roots.workspace
     )
