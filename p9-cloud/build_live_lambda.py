@@ -20,9 +20,13 @@ SOURCE_FILES = (
     ("p9-cloud", "p9_runtime"),
     ("p4-verifier", "verifier_runtime"),
 )
-DEPENDENCY_TOP_LEVEL = {"pg8000", "scramp", "asn1crypto", "dateutil", "six.py"}
+DEPENDENCY_TOP_LEVEL = {
+    "pg8000", "scramp", "asn1crypto", "dateutil", "six.py",
+    "boto3", "botocore", "jmespath", "s3transfer", "urllib3.py",
+}
 DEPENDENCY_DIST_PREFIXES = (
-    "pg8000-", "scramp-", "asn1crypto-", "python_dateutil-", "six-"
+    "pg8000-", "scramp-", "asn1crypto-", "python_dateutil-", "six-",
+    "boto3-", "botocore-", "jmespath-", "s3transfer-", "urllib3-"
 )
 
 
