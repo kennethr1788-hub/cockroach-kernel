@@ -18,6 +18,7 @@ from typing import Any, BinaryIO
 
 from p7_runtime import fresh_context
 from p7_runtime import records as p7
+from .checkpoint_ledger import build_checkpoint
 
 
 REQUEST_VERSION = "ck-recovery-request-v1"
@@ -512,6 +513,7 @@ def _write_outputs(
     reason: str,
     fresh_ok: bool,
     fresh_reason: str,
+    checkpoint: dict[str, Any],
 ) -> dict[str, Any]:
     receipt_name = (
         "promotion-receipt.json"
@@ -525,6 +527,7 @@ def _write_outputs(
         receipt_name: receipt,
         "unrecovered-ledger.json": ledger,
         "mutation-manifest.json": mutation,
+        "recovery-checkpoint.json": checkpoint,
     }
     for name, value in records.items():
         _atomic_json(output_root / name, value)
@@ -544,6 +547,7 @@ def _write_outputs(
         "network_used": False,
         "credentials_used": False,
         "files": sorted(records),
+        "checkpoint_hash": checkpoint["record_hash"],
     }
     summary = dict(body, summary_hash=p7.sha256_hex(body))
     _atomic_json(output_root / "summary.json", summary)
@@ -555,17 +559,40 @@ def _write_refusal(
 ) -> dict[str, Any]:
     decision = _refusal_decision(request, reason)
     receipt = p7.build_refusal_receipt(decision)
+    mutation = _mutation_manifest(request["request_id"], {})
+    checkpoint = _checkpoint_for(
+        request, request_hash, decision, receipt, mutation, "REFUSE", []
+    )
     return _write_outputs(
         roots.output,
         request_hash,
         decision,
         receipt,
         _unrecovered_ledger(request, []),
-        _mutation_manifest(request["request_id"], {}),
+        mutation,
         "REFUSE",
         reason,
         False,
         "NOT_A_PROMOTION",
+        checkpoint,
+    )
+
+
+def _checkpoint_for(
+    request: dict[str, Any], request_hash: str, decision: dict[str, Any],
+    receipt: dict[str, Any], mutation: dict[str, Any], verdict: str,
+    recovered_paths: list[str],
+) -> dict[str, Any]:
+    return build_checkpoint(
+        request_id=request["request_id"],
+        task_id=request["context"]["manifest"]["task_id"],
+        parent_hash=request["context"]["trajectory_receipt"]["trajectory_hash"],
+        request_hash=request_hash,
+        decision_hash=p7.sha256_hex(decision),
+        receipt_hash=receipt["receipt_hash"],
+        preservation_hash=mutation["manifest_hash"],
+        verdict=verdict,
+        recovered_paths=recovered_paths,
     )
 
 
@@ -693,17 +720,23 @@ def execute_recovery(
             "candidate_id": None,
             "candidates_hash": p7.sha256_hex([]),
         }
+        receipt = _seal_no_action(request_hash)
+        mutation = _mutation_manifest(request["request_id"], {})
+        checkpoint = _checkpoint_for(
+            request, request_hash, decision, receipt, mutation, "NO_ACTION", []
+        )
         summary = _write_outputs(
             roots.output,
             request_hash,
             decision,
-            _seal_no_action(request_hash),
+            receipt,
             _unrecovered_ledger(request, []),
-            _mutation_manifest(request["request_id"], {}),
+            mutation,
             "NO_ACTION",
             "NO_DECLARED_LOSS",
             False,
             "NO_RECOVERY_REQUIRED",
+            checkpoint,
         )
         return 0, summary
 
@@ -859,6 +892,9 @@ def execute_recovery(
             "PROMOTION_INTERRUPTED",
             action_taken="WARRANT_CONSUMED_PROMOTION_UNVERIFIED",
         )
+    checkpoint = _checkpoint_for(
+        request, request_hash, decision, receipt, mutation, "PROMOTE", list(promoted)
+    )
     summary = _write_outputs(
         roots.output,
         request_hash,
@@ -870,6 +906,7 @@ def execute_recovery(
         decision["reason"],
         fresh_ok,
         fresh_reason,
+        checkpoint,
     )
     return 0, summary
 

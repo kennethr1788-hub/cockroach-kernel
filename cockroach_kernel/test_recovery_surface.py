@@ -225,6 +225,10 @@ class RecoverySurfaceTests(unittest.TestCase):
         })
         receipt = json.loads((scenario.output / "promotion-receipt.json").read_bytes())
         self.assertEqual(receipt["promoted_paths"], sorted(scenario.files))
+        checkpoint = json.loads((scenario.output / "recovery-checkpoint.json").read_bytes())
+        self.assertTrue(checkpoint["append_only"])
+        self.assertEqual(checkpoint["verdict"], "PROMOTE")
+        self.assertEqual(summary["checkpoint_hash"], checkpoint["record_hash"])
 
     def test_partial_loss_selects_strongest_candidate_and_preserves_survivor(self):
         scenario = self.scenario(lost_paths=["src/feature.py"])
