@@ -34,6 +34,25 @@ class HostSupervisorTests(unittest.TestCase):
         self.assertRegex(value, r"^ck-r6-host-[A-Za-z0-9_.-]+$")
         self.assertLessEqual(len(value), 80)
 
+    def test_screen_alive_accepts_macos_detached_listing_status_one(self) -> None:
+        listing = mock.Mock(
+            returncode=1,
+            stdout="There is a screen on:\n"
+                   "\t123.ck-r6-host-example\t(Detached)\n"
+                   "1 Socket in /tmp/.screen.\n",
+        )
+        with mock.patch.object(module.subprocess, "run", return_value=listing):
+            self.assertTrue(module.screen_alive("ck-r6-host-example"))
+
+    def test_screen_alive_rejects_other_or_attached_session(self) -> None:
+        listing = mock.Mock(
+            returncode=1,
+            stdout="There is a screen on:\n"
+                   "\t123.ck-r6-host-example\t(Attached)\n",
+        )
+        with mock.patch.object(module.subprocess, "run", return_value=listing):
+            self.assertFalse(module.screen_alive("ck-r6-host-example"))
+
     def test_start_records_hash_bound_detached_receipt(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

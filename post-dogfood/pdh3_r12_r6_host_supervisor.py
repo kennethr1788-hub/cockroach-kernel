@@ -60,7 +60,11 @@ def screen_alive(name: str) -> bool:
         ["/usr/bin/screen", "-ls"], stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT, text=True, check=False,
     )
-    return listing.returncode == 0 and name in listing.stdout
+    # macOS screen returns status 1 for a listing containing detached
+    # sessions. The session listing, not that cosmetic status, is the
+    # authoritative existence signal; bind only to the exact session token.
+    return re.search(r"(?m)^\s*\d+\." + re.escape(name) + r"\s+\(Detached\)\s*$",
+                     listing.stdout) is not None
 
 
 def wait_for_screen(name: str, timeout: float = STARTUP_WAIT_SECONDS) -> bool:
