@@ -77,6 +77,27 @@ class CliTests(unittest.TestCase):
         self.assertIn("REASON: RECEIPT_HASH_MISMATCH", stderr.getvalue())
         self.assertIn("ACTION_TAKEN: NONE", stderr.getvalue())
 
+    def test_inspect_memory_is_read_only_and_advisory(self):
+        snapshot = {
+            "version": "ck-memory-snapshot-v1",
+            "receipts": [{"task_id": "task-1", "receipt_hash": "1" * 64,
+                           "event_hash": "2" * 64, "status": "SEALED"}],
+            "vectors": [{"task_id": "task-1", "event_hash": "2" * 64,
+                         "namespace": "trajectory", "vector_digest": "3" * 64,
+                         "distance": 0.0}],
+        }
+        with tempfile.TemporaryDirectory() as root:
+            path = Path(root) / "snapshot.json"
+            path.write_bytes(cli.canonical_json(snapshot))
+            with contextlib.redirect_stdout(io.StringIO()) as out:
+                status = cli.main(["inspect-memory", "--input", str(path)])
+        self.assertEqual(status, 0)
+        report = json.loads(out.getvalue())
+        self.assertEqual(report["status"], "INSPECTED")
+        self.assertEqual(report["authority"], "NONE_ADVISORY_ONLY")
+        self.assertFalse(report["mutation_performed"])
+        self.assertNotIn("verdict", report)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -22,6 +22,7 @@ aws-demo = [
 cockroach-kernel = "cockroach_kernel.cli:main"
 
 [tool.setuptools]
+include-package-data = false
 packages = ["cockroach_kernel", "p7_runtime", "p9_runtime", "verifier_runtime"]
 
 [tool.setuptools.package-dir]
@@ -29,3 +30,8 @@ cockroach_kernel = "cockroach_kernel"
 p7_runtime = "p7-recovery"
 p9_runtime = "p9-cloud"
 verifier_runtime = "p4-verifier"
+
+[tool.setuptools.package-data]
+p7_runtime = ["*.json", "migrations/*.sql"]
+p9_runtime = ["*.json", "migrations/*.sql"]
+verifier_runtime = ["*.json"]

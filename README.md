@@ -91,6 +91,24 @@ cockroach-kernel inspect <canonical-receipt.json>
 compatibility. `inspect` validates its canonical receipts. Neither substitutes
 for the external-input `recover` command.
 
+## Cockroach memory inspection skill
+
+The optional `inspect-memory` command is the judgeable, read-only boundary for
+the CockroachDB Agent Skill. An approved CockroachDB read surface supplies a
+small receipt/vector snapshot; the skill checks linkage, orphan vectors, and
+conflicting receipt identities, then emits a hash-bound advisory report:
+
+```bash
+cockroach-kernel inspect-memory --input snapshot.json
+```
+
+The snapshot format is `ck-memory-snapshot-v1` and is capped at 64 KiB and 64
+rows per class. The skill performs no network access, writes no database rows,
+invokes no AWS service, and never emits a recovery verdict. The deterministic
+local verifier remains the only authority for promotion, refusal, or invalid
+results. The machine-readable skill contract is in
+`skills/cockroach-memory-inspection/SKILL.md`.
+
 Every recovery outcome also carries an append-only checkpoint record linking
 the request, decision, receipt, preservation proof, verdict, and recovered
 paths. A CockroachDB adapter may persist that record transactionally; the local
@@ -117,3 +135,12 @@ verifier remains the sole recovery authority.
   bytes are capped at 1 MiB.
 
 The full frozen contract is in `SCENARIO_SURFACE_R3_CONTRACT.md`.
+
+## Cloud integration boundary
+
+CockroachDB is the authoritative memory layer for transactional records and
+distributed vector retrieval. The bounded cloud path uses read-only Managed MCP
+inspection and AWS Lambda as an advisory worker, with Secrets Manager and
+least-privilege IAM for runtime access. Lambda and model output are untrusted;
+the local verifier decides recovery. This project does not claim Bedrock,
+Bedrock Agents, SageMaker, ECS, EKS, or S3 integration.

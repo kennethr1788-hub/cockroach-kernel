@@ -1,6 +1,7 @@
 {
   "version": "p9-deployment-v1",
   "status": "PREMUTATION_APPROVED",
+  "live_readback": "live_deployment_readback.json",
   "region": "us-west-2",
   "function": {
     "name": "ck-p9-evaluator",

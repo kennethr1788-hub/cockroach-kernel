@@ -289,6 +289,23 @@ def _preview_command(args: argparse.Namespace) -> int:
     return 0
 
 
+def _inspect_memory_command(args: argparse.Namespace) -> int:
+    from cockroach_kernel.memory_skill import inspect_snapshot
+
+    path = Path(args.input)
+    if path.is_symlink() or not path.is_file():
+        raise ValueError("SNAPSHOT_PATH_INVALID")
+    raw = path.read_bytes()
+    if len(raw) > 65_536:
+        raise ValueError("SNAPSHOT_TOO_LARGE")
+    try:
+        snapshot = json.loads(raw)
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ValueError("SNAPSHOT_JSON_INVALID") from exc
+    print(canonical_json(inspect_snapshot(snapshot)).decode("utf-8"))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="cockroach-kernel")
     subcommands = parser.add_subparsers(dest="command", required=True)
@@ -339,6 +356,12 @@ def build_parser() -> argparse.ArgumentParser:
     preview.add_argument("--custody-root", required=True)
     preview.add_argument("--output-root", required=True)
     preview.set_defaults(handler=_preview_command)
+    inspect_memory = subcommands.add_parser(
+        "inspect-memory",
+        help="inspect a bounded Cockroach receipt/vector snapshot without authority",
+    )
+    inspect_memory.add_argument("--input", required=True, help="bounded JSON snapshot")
+    inspect_memory.set_defaults(handler=_inspect_memory_command)
     return parser
 
 
