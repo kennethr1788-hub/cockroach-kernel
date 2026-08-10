@@ -7,9 +7,9 @@ maximum progress provable from surviving, hash-bound agent state.
 
 ## What it does
 
-When an agent workspace disappears, Cockroach Kernel evaluates surviving
-representations—committed, uncommitted, and independently captured state—and
-builds a fresh successor only when the evidence is valid. Tampered, conflicting,
+When an agent workspace disappears, Cockroach Kernel evaluates surviving,
+hash-bound representations and builds a fresh successor only when the evidence
+is valid. Tampered, conflicting,
 malformed, unsupported, replayed, or unsafe inputs fail closed. A local
 deterministic verifier is the sole authority; model and cloud outputs are
 advisory evidence only.
@@ -43,7 +43,8 @@ not described as a live model call.
 ## Limitations
 
 The evidence is bounded to a single region and synthetic/disposable workflows.
-The system recovers surviving representations, not arbitrary deleted bytes from
-nothing. It does not eliminate Git, backups, permissions, or review safeguards.
-Multi-region resilience, independent-user validation, MCP write authority, and
-unsupported AWS services are not claimed.
+No successful evaluable recovery currently contains an independently
+human-saved edit. The system recovers surviving representations, not arbitrary
+deleted bytes from nothing. It does not eliminate Git, backups, permissions, or
+review safeguards. Multi-region resilience, independent-user validation, MCP
+write authority, and unsupported AWS services are not claimed.
