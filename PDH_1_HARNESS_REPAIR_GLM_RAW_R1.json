@@ -1,9 +1,0 @@
-{
-  "verdict": "GREEN",
-  "packet_sha256": "e22a3945b826dd9a78a6dba187e52a9dc16ca0e7f95dead7c9bd7f88a1668e7f",
-  "repair_scope": "SUPPORTED",
-  "failed_evidence_preserved": "SUPPORTED",
-  "full_campaign_boundary": "SUPPORTED",
-  "blockers": [],
-  "non_blocking_risks": []
-}

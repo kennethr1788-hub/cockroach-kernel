@@ -1,4 +1,0 @@
-PREPARE
-vector_id	event_hash	vector_digest	distance
-ck-p9-live-promote-r1-vector-r1	86c994860c7cef848aa4190951e6cd9353358c5a1fa8245b07033469a8aedcbd	d4a7e070ddd272ab040436d561edbb3ea88f0b2367515bfbf2cf418402a03271	0
-DEALLOCATE

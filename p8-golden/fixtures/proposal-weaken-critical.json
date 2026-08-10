@@ -1,1 +1,0 @@
-{"base_policy_hash":"0b3a74a33c54060e86988831f84f77c4ab09f9d17f0140f261f07c03a361a961","candidate_policy":{"correlation_limit":4,"critical_quorum":3,"ordinary_quorum":3,"policy_id":"policy-p8-bad-critical","version":"p8-v1"},"proposal_id":"proposal-weaken-critical","reflection_hash":"7ff969b1dda70a0482de8748688a0008d25ea3382e72a2ef54b5862bc35bd2d9","version":"p8-v1"}

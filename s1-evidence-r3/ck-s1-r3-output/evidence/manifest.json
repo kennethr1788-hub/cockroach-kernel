@@ -1,1 +1,0 @@
-{"checkpoint_seconds":60,"cockroach_binary_sha256":"97a8836b3e816745ba698f47616ff5038ba55f5e252a2959924e9e2d41014d7f","database_growth_limit_bytes":268435456,"duration_seconds":3600,"evidence_growth_limit_bytes":67108864,"migration_sha256":"f28a8ffa1ed3163b3d31f319b1c1351dd057070235a7cc2c15bbdc27ec9491ac","schema_version":"s1-v1","synthetic_only":true}

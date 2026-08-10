@@ -57,18 +57,16 @@ class TestIamTemplate(unittest.TestCase):
 class TestDeploymentManifest(unittest.TestCase):
     def test_fixed_resource_and_cost_bounds(self):
         manifest = load_json("deployment_manifest.json")
-        self.assertEqual(manifest["status"], "PREMUTATION_APPROVED")
+        self.assertEqual(manifest["status"], "BOUNDED_ADVISORY_REFERENCE")
         self.assertEqual(manifest["region"], "us-west-2")
         self.assertEqual(manifest["function"]["name"], "ck-p9-evaluator")
-        self.assertEqual(manifest["function"]["memory_mib"], 128)
-        self.assertEqual(manifest["function"]["timeout_seconds"], 10)
+        self.assertEqual(manifest["function"]["memory_mib"], 256)
+        self.assertEqual(manifest["function"]["timeout_seconds"], 30)
         self.assertEqual(
             manifest["function"]["handler"], "live_lambda_handler.lambda_handler"
         )
-        self.assertEqual(manifest["function"]["reserved_concurrency"], 2)
-        self.assertEqual(
-            manifest["function"]["effective_account_concurrency_ceiling"], 10
-        )
+        self.assertIsNone(manifest["function"]["reserved_concurrency"])
+        self.assertIsNone(manifest["function"]["effective_account_concurrency_ceiling"])
         self.assertEqual(manifest["function"]["max_coordinator_in_flight"], 1)
         self.assertEqual(manifest["function"]["request_budget_ms"], 8000)
         self.assertEqual(manifest["function"]["provisioned_concurrency"], 0)

@@ -1,3 +1,0 @@
-
-[agy-judge] provider execution bound: authenticated inventory -> exact backend override (Gemini 3.1 Pro (High)) -> provider response
-[agy-judge] response-level served-model metadata remains unavailable in CLI 1.1.8

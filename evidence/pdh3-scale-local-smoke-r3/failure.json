@@ -1,1 +1,0 @@
-{"campaign_id":"ck-pdh3-scale-local-r3","exception_type":"CampaignError","failure_sha256":"2ed55306984cdfa1243617ca463e5c4282a7429d7bc390e5f3ff968f55c6e484","journal_prior_hash":"44f6fc7eb67c69791a17a6be8b9798e3ccb932d26f6afda56846bc2b4188c1a2","reason":"DISK_USED_FRACTION_LIMIT","version":"ck-pdh3-scale-failure-v1"}

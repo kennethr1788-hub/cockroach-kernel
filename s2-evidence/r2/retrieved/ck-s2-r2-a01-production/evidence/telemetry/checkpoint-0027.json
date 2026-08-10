@@ -1,1 +1,0 @@
-{"classes":{"database":342921051,"manifest":1325,"receipt":154582,"telemetry":8971,"workload":53111},"elapsed":8100.0,"sequence":27,"state":{"database_growth_bytes":122035972,"disk_free_bytes":20435484672,"evidence_growth_bytes":164878,"non_loopback_connections":[],"process":{"open_files":55,"pid":8830,"rss_bytes":793108480,"status":"RUNNING"}}}

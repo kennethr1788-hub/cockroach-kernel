@@ -8,9 +8,9 @@ Devpost submission.
 
 ## Frozen candidate
 
-- Candidate branch: `submission-candidate-20260810`
-- Base source commit: `8f56f430be6ff06480325b7ee3421aab0ebf316f`
-- Candidate HEAD at final documentation pass: `81ab327`
+- Candidate branch: `public-release-candidate-20260810`
+- Source candidate commit: `577ba6f11686a386c48ffc878686f31a35f63708`
+- Sanitized export: explicit allowlist; see `PUBLIC_EXPORT_MANIFEST_R1.md`
 - Python target: Python 3.12
 - Dependency policy: runtime standard library; build backend pinned to
   `setuptools==75.6.0`
@@ -33,8 +33,8 @@ Observed on 2026-08-10:
 
 | Trial | Fresh environment | Help | Demo promotion | Demo refusal | Memory inspection |
 | --- | --- | ---: | ---: | ---: | ---: |
-| 1 | `/tmp/ck-release-final-venv.52IAUB` | pass | pass | pass | pass |
-| 2 | `/tmp/ck-release-final2-venv.KldsO3` | pass | pass | pass | pass |
+| 1 | `/tmp/ck-public-final-1-venv.DIMapQ` | pass | pass | pass | pass |
+| 2 | `/tmp/ck-public-final-2-venv.FrdQ9W` | pass | pass | pass | pass |
 
 The two demo outputs were byte-identical:
 
@@ -62,4 +62,4 @@ source-test module. The repository still contains development/audit material
 that must be excluded from a public export; the public release must be built
 from an allowlist rather than publishing this checkout wholesale.
 
-Recorded UTC: `2026-08-10T08:59:57Z`
+Recorded UTC: `2026-08-10T10:47:56Z`

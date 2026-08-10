@@ -1,16 +1,15 @@
 {
-  "version": "p9-deployment-v1",
-  "status": "PREMUTATION_APPROVED",
+  "version": "p9-deployment-v2",
+  "status": "BOUNDED_ADVISORY_REFERENCE",
   "live_readback": "live_deployment_readback.json",
   "region": "us-west-2",
   "function": {
     "name": "ck-p9-evaluator",
-    "role_name": "ck-p9-lambda-exec",
     "handler": "live_lambda_handler.lambda_handler",
-    "memory_mib": 128,
-    "timeout_seconds": 10,
-    "reserved_concurrency": 2,
-    "effective_account_concurrency_ceiling": 10,
+    "memory_mib": 256,
+    "timeout_seconds": 30,
+    "reserved_concurrency": null,
+    "effective_account_concurrency_ceiling": null,
     "max_coordinator_in_flight": 1,
     "request_budget_ms": 8000,
     "provisioned_concurrency": 0,
@@ -18,7 +17,6 @@
     "network_calls": false
   },
   "logs": {
-    "group": "/aws/lambda/ck-p9-evaluator",
     "retention_days": 14
   },
   "limits": {
@@ -43,9 +41,9 @@
     "view": "ck.mcp_receipt_view",
     "max_rows": 64
   },
-  "live_blockers": [
-    "LIVE_ACCOUNT_ID_SUBSTITUTION",
-    "LIVE_IAM_SIMULATION",
-    "LIVE_MCP_OAUTH_SCOPE_PROOF"
-  ]
+  "claims_boundary": {
+    "lambda_is_advisory": true,
+    "local_verifier_is_authority": true,
+    "mcp_write_ddl_recovery_authority": false
+  }
 }

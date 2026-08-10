@@ -1,4 +1,0 @@
-PREPARE
-vector_id	event_hash	vector_digest	distance
-ck-p9-live-refuse-r1-vector-r1	aebce260d27cd13f6d19d882f2987c5d74ad2397b120f123374e52d07e612ac9	b72c08c01327f9f38a6c4e62dbe803721099b4369af7ffc851453d814096b4cb	0
-DEALLOCATE

@@ -1,1 +1,0 @@
-{"failure_code":"PYTHON_RUNTIME_MISMATCH","hidden_seed_created":false,"measured_campaign_credit":false,"model_actor_invocations":0,"observed_runtime":"Python 3.9.6","required_runtime":"Python 3.12","status":"INVALID_INFRASTRUCTURE","teardown_verified":true,"version":"ck-ev3-scenario-canary-failure-v1"}
