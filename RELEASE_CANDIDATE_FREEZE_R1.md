@@ -9,6 +9,7 @@ transition nor a Devpost submission.
 
 - Branch: `submission-candidate-20260810`
 - Base commit: `8f56f430be6ff06480325b7ee3421aab0ebf316f`
+- Candidate HEAD: `81ab327` (`Tighten release claim limitations`)
 - Freeze date: 2026-08-10 (UTC)
 - Target platform: macOS arm64 or another Python 3.12 environment with the
   documented standard-library runtime

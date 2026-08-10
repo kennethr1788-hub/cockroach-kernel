@@ -10,6 +10,7 @@ Devpost submission.
 
 - Candidate branch: `submission-candidate-20260810`
 - Base source commit: `8f56f430be6ff06480325b7ee3421aab0ebf316f`
+- Candidate HEAD at final documentation pass: `81ab327`
 - Python target: Python 3.12
 - Dependency policy: runtime standard library; build backend pinned to
   `setuptools==75.6.0`
