@@ -32,6 +32,6 @@ p9_runtime = "p9-cloud"
 verifier_runtime = "p4-verifier"
 
 [tool.setuptools.package-data]
-p7_runtime = ["*.json", "migrations/*.sql"]
+p7_runtime = ["*.json", "fixtures/*.json", "migrations/*.sql"]
 p9_runtime = ["*.json", "migrations/*.sql"]
 verifier_runtime = ["*.json"]

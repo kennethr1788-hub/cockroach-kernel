@@ -24,3 +24,6 @@ build/
 
 # Python compilation residue is never release evidence.
 __pycache__/
+
+# The deterministic demo writes receipts to this local output root.
+cockroach-kernel-evidence/

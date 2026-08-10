@@ -21,6 +21,22 @@ python3.12 -m venv .venv
 Runtime behavior uses only the Python standard library. The optional AWS demo
 dependency is not required for local recovery.
 
+## Judge path
+
+From a clean clone, run:
+
+```bash
+python3.12 -m venv .venv
+.venv/bin/python -m pip install .
+.venv/bin/cockroach-kernel --help
+.venv/bin/cockroach-kernel demo --explain --output-root /tmp/cockroach-kernel-demo
+```
+
+The demo writes only to the explicitly supplied output root. It shows one
+successful deterministic promotion and one tampered-candidate refusal. The demo
+is a labeled local replay; it is not presented as a live model call or proof of
+arbitrary undelete.
+
 ## Scenario-driven recovery
 
 Create one disposable envelope outside HOME. Inside it, create five existing,
@@ -109,6 +125,12 @@ local verifier remains the only authority for promotion, refusal, or invalid
 results. The machine-readable skill contract is in
 `skills/cockroach-memory-inspection/SKILL.md`.
 
+For a synthetic offline smoke test:
+
+```bash
+.venv/bin/cockroach-kernel inspect-memory --input examples/memory-snapshot.json
+```
+
 Every recovery outcome also carries an append-only checkpoint record linking
 the request, decision, receipt, preservation proof, verdict, and recovered
 paths. A CockroachDB adapter may persist that record transactionally; the local
@@ -139,8 +161,25 @@ The full frozen contract is in `SCENARIO_SURFACE_R3_CONTRACT.md`.
 ## Cloud integration boundary
 
 CockroachDB is the authoritative memory layer for transactional records and
-distributed vector retrieval. The bounded cloud path uses read-only Managed MCP
-inspection and AWS Lambda as an advisory worker, with Secrets Manager and
-least-privilege IAM for runtime access. Lambda and model output are untrusted;
-the local verifier decides recovery. This project does not claim Bedrock,
-Bedrock Agents, SageMaker, ECS, EKS, or S3 integration.
+distributed vector retrieval. The project uses two CockroachDB tools:
+
+1. Distributed Vector Indexing for receipt-linked trajectory retrieval.
+2. The Managed MCP Server in read-only mode for a bounded receipt-view
+   inspection.
+
+AWS Lambda is the one AWS service used as a bounded advisory worker. Its output
+is untrusted and never decides recovery; the local deterministic verifier remains
+the authority. The live cloud evidence is single-region and bounded. This project
+does not claim MCP write/DDL/recovery authority, Bedrock, Bedrock Agents,
+SageMaker, ECS, EKS, or S3 integration.
+
+The cloud artifacts are implementation and readback evidence, not a promise of
+production-scale durability or multi-region resilience.
+
+## Test scope
+
+The clean-clone install and judge path above is the supported test path and
+requires no credentials. The source test modules additionally cover refusal,
+tamper, replay, quarantine, one-use custody, memory-linkage, and advisory-cloud
+boundaries; historical integration tests that require package-specific import
+roots are not part of the minimal judge path.
