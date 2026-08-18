@@ -1,15 +1,18 @@
 # Public export manifest R1
 
-Status: `PUBLIC_RELEASE_VERIFIED_R2`
+Status: `PUBLIC_RELEASE_VERIFIED_R3`
 
-This branch is the sanitized public release. Historical R1 provenance fields
-are superseded by the immutable release identity below.
+This branch is the sanitized public release. The immutable commit/tree binding
+is held in the external R5 release packet; this manifest deliberately does not
+hard-code its own commit and therefore cannot become self-stale after a normal
+metadata commit.
 
 ## Provenance
 
 - Export branch: `public-release-candidate-20260810`
-- Public release commit: `3053166d2dc2909e7329e35e5621bffa2907f23e`
-- Public release tree: `0d25af55cde4fbf58789c520293156c656e65d29`
+- Public release identity: verify with `git rev-parse HEAD` and
+  `git rev-parse HEAD^{tree}`; the exact values are recorded in the external
+  R5 release packet and its binding.
 - Export construction: explicit Git allowlist; historical audit/runtime paths
   were removed from this branch, not copied into a public repository.
 
@@ -55,7 +58,7 @@ Removed from this release branch:
 
 ## Verification record
 
-An anonymous clone of this branch resolved to the release commit and tree
-above. The clean-clone CLI path, public demo routes, and public video were
-verified separately. Devpost field entry and final submission remain
-human-controlled actions.
+An anonymous clone of this branch resolved to the exact commit/tree recorded in
+the external R5 release packet. The clean-clone CLI path, public demo routes,
+and public video were verified separately. Devpost field entry and final
+submission remain human-controlled actions.

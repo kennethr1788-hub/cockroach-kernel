@@ -1,6 +1,6 @@
 # Cockroach Kernel release-candidate freeze R1
 
-Status: `RELEASE_CANDIDATE_VERIFIED_PUBLIC_R2`
+Status: `RELEASE_CANDIDATE_VERIFIED_PUBLIC_R3`
 
 This freeze identifies the public candidate. It authorizes neither editing
 Devpost fields nor the final Devpost submission.
@@ -8,8 +8,9 @@ Devpost fields nor the final Devpost submission.
 ## Candidate identity
 
 - Branch: `public-release-candidate-20260810`
-- Candidate commit: `3053166d2dc2909e7329e35e5621bffa2907f23e`
-- Candidate tree: `0d25af55cde4fbf58789c520293156c656e65d29`
+- Candidate commit/tree: verify with `git rev-parse HEAD` and
+  `git rev-parse HEAD^{tree}`; the exact values are recorded in the external
+  R5 release packet and its binding.
 - Sanitized export manifest: `PUBLIC_EXPORT_MANIFEST_R1.md`
 - Freeze date: 2026-08-18 (UTC)
 - Target platform: macOS arm64 or another Python 3.12 environment with the
@@ -49,11 +50,10 @@ conservative submission draft is `DEVPOST_SUBMISSION_DRAFT.md`.
 
 ## Public-export boundary
 
-Do not publish this checkout wholesale. Before any public action, construct a
-fresh export from an explicit allowlist, scan it for secrets/private paths,
-run the clean-clone trial from that export, and obtain the required release
-gate. Historical audit packets, runtime directories, local paths, and raw
-provider receipts are not automatically public assets.
+The public branch is the completed allowlisted export. Historical audit
+packets, runtime directories, local paths, and raw provider receipts are not
+public assets. The external R5 packet records the final scan, exact
+commit/tree, and anonymous clone verification.
 
 The intended implementation allowlist is limited to the runtime and judgeable
 documentation: `LICENSE`, `README.md`, `pyproject.toml`, `cockroach_kernel/`,
