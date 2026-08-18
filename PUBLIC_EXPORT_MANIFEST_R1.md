@@ -1,14 +1,15 @@
 # Public export manifest R1
 
-Status: `SANITIZED_PRIVATE_RELEASE_CANDIDATE`
+Status: `PUBLIC_RELEASE_VERIFIED_R2`
 
-This branch is a release candidate only. It has not been pushed or made public.
+This branch is the sanitized public release. Historical R1 provenance fields
+are superseded by the immutable release identity below.
 
 ## Provenance
 
-- Source branch: `submission-candidate-20260810`
-- Source candidate head: `577ba6f11686a386c48ffc878686f31a35f63708`
 - Export branch: `public-release-candidate-20260810`
+- Public release commit: `3053166d2dc2909e7329e35e5621bffa2907f23e`
+- Public release tree: `0d25af55cde4fbf58789c520293156c656e65d29`
 - Export construction: explicit Git allowlist; historical audit/runtime paths
   were removed from this branch, not copied into a public repository.
 
@@ -46,9 +47,15 @@ Removed from this release branch:
 - provider credentials/configuration, local runtime state, and unrelated
   project artifacts.
 
-## Verification required before public action
+## Verified public surfaces
 
-From a fresh clone of this branch, run the commands in
-`RELEASE_JUDGE_PATH_CHECK_R1.md`, then perform a secret/private-path scan and
-an anonymous clone check. Public visibility, video publication, and Devpost
-submission remain separate gates.
+- Repository: `https://github.com/kennethr1788-hub/cockroach-kernel/tree/public-release-candidate-20260810`
+- Functional demo: `https://2et5iaygrpngfnesptlncnfjha0ixyjz.lambda-url.us-west-2.on.aws/demo/promote`
+- Video: `https://youtu.be/vNYngdxJyS8`
+
+## Verification record
+
+An anonymous clone of this branch resolved to the release commit and tree
+above. The clean-clone CLI path, public demo routes, and public video were
+verified separately. Devpost field entry and final submission remain
+human-controlled actions.

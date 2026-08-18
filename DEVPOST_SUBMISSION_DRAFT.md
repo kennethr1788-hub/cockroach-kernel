@@ -5,6 +5,12 @@
 Cockroach Kernel is a deterministic recovery layer that promotes only the
 maximum progress provable from surviving, hash-bound agent state.
 
+## Public surfaces
+
+- Repository: https://github.com/kennethr1788-hub/cockroach-kernel/tree/public-release-candidate-20260810
+- Functional demo: https://2et5iaygrpngfnesptlncnfjha0ixyjz.lambda-url.us-west-2.on.aws/demo/promote
+- Video: https://youtu.be/vNYngdxJyS8
+
 ## What it does
 
 When an agent workspace disappears, Cockroach Kernel evaluates surviving,

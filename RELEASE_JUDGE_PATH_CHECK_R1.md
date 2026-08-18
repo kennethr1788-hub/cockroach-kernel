@@ -1,6 +1,6 @@
 # Release judge-path check R1
 
-Status: `LOCAL_JUDGE_PATH_GREEN`
+Status: `LOCAL_JUDGE_PATH_GREEN_R2`
 
 This is a local, keyless packaging check. It is not a public-release receipt,
 an AWS deployment receipt, or a substitute for the required public video and
@@ -9,7 +9,8 @@ Devpost submission.
 ## Frozen candidate
 
 - Candidate branch: `public-release-candidate-20260810`
-- Source candidate commit: `577ba6f11686a386c48ffc878686f31a35f63708`
+- Source candidate commit: `3053166d2dc2909e7329e35e5621bffa2907f23e`
+- Source candidate tree: `0d25af55cde4fbf58789c520293156c656e65d29`
 - Sanitized export: explicit allowlist; see `PUBLIC_EXPORT_MANIFEST_R1.md`
 - Python target: Python 3.12
 - Dependency policy: runtime standard library; build backend pinned to
@@ -62,4 +63,15 @@ source-test module. The repository still contains development/audit material
 that must be excluded from a public export; the public release must be built
 from an allowlist rather than publishing this checkout wholesale.
 
-Recorded UTC: `2026-08-10T10:47:56Z`
+## Current anonymous-clone verification
+
+On 2026-08-18 UTC, an anonymous shallow clone resolved to the commit and tree
+above. A fresh Python 3.12 environment passed `--help`, the deterministic
+promotion/refusal demo, and `inspect-memory` without credentials or network
+use. Output hashes were:
+
+- help: `4c9edda665667bba105a7d6b16cf4d6a1126c211e768c904e7e79fca9697459a`
+- demo: `66f19fce175da266d5a6b26f0c063f0ceee5997965e3beaf7ad1577571005bf6`
+- memory inspection: `37a564d80cc48daeff9b75a1ecda5bfa00bc41caba63066c7df376c204d1a3a9`
+
+Recorded UTC: `2026-08-18T05:00:48Z`

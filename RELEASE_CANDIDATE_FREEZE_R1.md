@@ -1,18 +1,17 @@
 # Cockroach Kernel release-candidate freeze R1
 
-Status: `RELEASE_CANDIDATE_FROZEN_LOCALLY`
+Status: `RELEASE_CANDIDATE_VERIFIED_PUBLIC_R2`
 
-This freeze is local and private. It authorizes neither a public repository
-transition nor a Devpost submission.
+This freeze identifies the public candidate. It authorizes neither editing
+Devpost fields nor the final Devpost submission.
 
 ## Candidate identity
 
-- Branch: `submission-candidate-20260810`
-- Base commit: `8f56f430be6ff06480325b7ee3421aab0ebf316f`
-- Candidate HEAD: `81ab327` (`Tighten release claim limitations`)
-- Sanitized export branch: `public-release-candidate-20260810`
+- Branch: `public-release-candidate-20260810`
+- Candidate commit: `3053166d2dc2909e7329e35e5621bffa2907f23e`
+- Candidate tree: `0d25af55cde4fbf58789c520293156c656e65d29`
 - Sanitized export manifest: `PUBLIC_EXPORT_MANIFEST_R1.md`
-- Freeze date: 2026-08-10 (UTC)
+- Freeze date: 2026-08-18 (UTC)
 - Target platform: macOS arm64 or another Python 3.12 environment with the
   documented standard-library runtime
 - Judge-path receipt: `RELEASE_JUDGE_PATH_CHECK_R1.md`
